@@ -12,6 +12,7 @@ namespace PATween.Internal
 		private double elapsed;
 		private IInterpolator<T> interpolator;
 		private bool relative;
+		private EaseRef ease;
 
 		public Func<T> Getter
 		{
@@ -61,6 +62,12 @@ namespace PATween.Internal
 			set => relative = value;
 		}
 
+		public EaseRef Ease
+		{
+			get => ease;
+			set => ease = value;
+		}
+
 		public override void Step(double scaledDelta, double unscaledDelta)
 		{
 			if (Status != TweenStatus.Playing)
@@ -88,7 +95,8 @@ namespace PATween.Internal
 				t = (float)(elapsed / duration);
 			}
 
-			var value = interpolator.Lerp(startValue, endValue, t);
+			var easedT = ease.Evaluate(t);
+			var value = interpolator.Lerp(startValue, endValue, easedT);
 			setter(value);
 
 			if (completed)
@@ -113,6 +121,7 @@ namespace PATween.Internal
 			elapsed = 0d;
 			interpolator = null;
 			relative = false;
+			ease = Easing.Linear();
 		}
 	}
 }

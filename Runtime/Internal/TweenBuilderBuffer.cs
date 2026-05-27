@@ -18,6 +18,7 @@ namespace PATween.Internal
 		private Action<T> setter;
 		private T endValue;
 		private float duration;
+		private EaseRef ease;
 		private List<Action> onComplete;
 		private List<Action> onKill;
 
@@ -76,6 +77,12 @@ namespace PATween.Internal
 		{
 			get => duration;
 			set => duration = value;
+		}
+
+		public EaseRef Ease
+		{
+			get => ease;
+			set => ease = value;
 		}
 
 		public List<Action> OnComplete => onComplete;
@@ -145,6 +152,7 @@ namespace PATween.Internal
 			setter = null;
 			endValue = default;
 			duration = 0f;
+			ease = Easing.Linear();
 			onComplete?.Clear();
 			onKill?.Clear();
 		}

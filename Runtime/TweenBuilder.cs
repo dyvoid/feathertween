@@ -58,6 +58,20 @@ namespace PATween
 			return this;
 		}
 
+		public TweenBuilder<T> SetEase(EaseRef ease)
+		{
+			ValidateOrThrow();
+			buffer.Ease = ease;
+			return this;
+		}
+
+		public TweenBuilder<T> SetEase(UnityEngine.AnimationCurve curve)
+		{
+			ValidateOrThrow();
+			buffer.Ease = Easing.Curve(curve);
+			return this;
+		}
+
 		public TweenBuilder<T> OnComplete(Action cb)
 		{
 			ValidateOrThrow();
@@ -86,6 +100,7 @@ namespace PATween
 			data.EndValue = buffer.EndValue;
 			data.Duration = buffer.Duration;
 			data.Relative = buffer.Relative;
+			data.Ease = buffer.Ease;
 			data.Interpolator = Interpolators.Get<T>();
 
 			if (data.Getter != null)
