@@ -31,4 +31,49 @@ public static class PATween
 		buf.Duration = duration;
 		return new TweenBuilder<T>(buf);
 	}
+
+	public static TweenBuilder<T> From<T>(Func<T> getter, Action<T> setter, T fromValue, float duration)
+	{
+		if (getter == null)
+		{
+			throw new ArgumentNullException(nameof(getter));
+		}
+		if (setter == null)
+		{
+			throw new ArgumentNullException(nameof(setter));
+		}
+		if (duration < 0f)
+		{
+			throw new ArgumentOutOfRangeException(nameof(duration));
+		}
+
+		var buf = TweenBuilderBufferPool<T>.Rent();
+		buf.Getter = getter;
+		buf.Setter = setter;
+		buf.EndValue = fromValue;
+		buf.Duration = duration;
+		buf.SnapMode = SnapMode.From;
+		return new TweenBuilder<T>(buf);
+	}
+
+	public static TweenBuilder<T> FromTo<T>(Func<T> getter, Action<T> setter, T from, T to, float duration)
+	{
+		if (setter == null)
+		{
+			throw new ArgumentNullException(nameof(setter));
+		}
+		if (duration < 0f)
+		{
+			throw new ArgumentOutOfRangeException(nameof(duration));
+		}
+
+		var buf = TweenBuilderBufferPool<T>.Rent();
+		buf.Getter = getter;
+		buf.Setter = setter;
+		buf.FromValue = from;
+		buf.EndValue = to;
+		buf.Duration = duration;
+		buf.SnapMode = SnapMode.FromTo;
+		return new TweenBuilder<T>(buf);
+	}
 }
