@@ -34,7 +34,7 @@ A robust, minimal C# tween engine for Unity. Compositional sequences, static-met
 5. **Three update phases from M1**: `Update`, `LateUpdate`, `FixedUpdate`. Plus a `Manual` mode that takes an explicit `deltaTime`.
 6. **Ease as `EaseRef` value type** produced by `Easing.X(...)` factories (`Easing.OutBack(overshoot)`, `Easing.Elastic(strength, period)`, `Easing.BounceExact(amplitudeMeters)`, `Easing.Curve(animCurve)`, `Easing.Custom(easeFunc)`). The ease and its parameters travel together; the tween stores one `EaseRef`. Plug new eases in without API change.
 7. **`[Serializable] TweenSettings` and `TweenSettings<T>`** structs for designer-facing inspector workflows. The generic form bundles `startValue`/`endValue` plus a `WithDirection(bool toEndValue)` helper for show/hide style toggles.
-8. **Custom awaiter in core** (`await tween;`, zero managed alloc per await). UniTask asmdef remains optional for cancellation ergonomics.
+8. **Custom awaiter** (`await tween;`, zero managed alloc per await). Deferred to M2; core callback surface covers the same use cases. UniTask asmdef remains optional for cancellation ergonomics.
 9. **Per-frame auto-kill** for `UnityEngine.Object` targets (`obj == null` check).
 10. **SoA-friendly internal layout** to keep a future Burst path cheap; not a public concern.
 11. **Parent-sequence model from M1**: every animation has `_start`, `_end`, `_timeScale`, `_parent`. A hidden root sequence owned by the runner contains all top-level tweens. M2 nested sequences slot in for free. The public type is named `Sequence` to avoid clashing with Unity's `Timeline` package.

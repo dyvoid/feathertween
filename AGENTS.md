@@ -10,6 +10,16 @@ Single source of truth for AI agents working on this codebase.
 - **Test framework**: Unity Test Framework (EditMode + PlayMode)
 - **Target platforms**: All Unity supports ( Burst path kept open for future )
 
+## Package Structure
+
+```text
+Runtime/              -- PATween.asmdef (core, Editor references allowed for EditMode)
+Editor/               -- PATween.Editor.asmdef (drawers, debugger)
+Tests/
+  Editor/             -- EditMode tests asmdef
+  Runtime/            -- PlayMode tests asmdef
+```
+
 ## AI Skill Reference
 
 When writing Unity C# for this project, apply the **unity dev skill**.
