@@ -8,6 +8,9 @@ namespace PATween.Internal
 		private TweenStatus status;
 		private UpdatePhase phase;
 		private bool autoKill;
+		private bool ignoreTimeScale;
+		private object target;
+		private bool isUnityObject;
 		private List<Action> onComplete;
 		private List<Action> onKill;
 
@@ -27,6 +30,28 @@ namespace PATween.Internal
 		{
 			get => autoKill;
 			set => autoKill = value;
+		}
+
+		public bool IgnoreTimeScale
+		{
+			get => ignoreTimeScale;
+			set => ignoreTimeScale = value;
+		}
+
+		public object Target
+		{
+			get => target;
+			set
+			{
+				target = value;
+				isUnityObject = value is UnityEngine.Object;
+			}
+		}
+
+		public bool IsUnityObject => isUnityObject;
+
+		public virtual void Step(double scaledDelta, double unscaledDelta)
+		{
 		}
 
 		public void AddOnComplete(Action cb)
@@ -78,6 +103,9 @@ namespace PATween.Internal
 			status = TweenStatus.Disposed;
 			phase = UpdatePhase.Update;
 			autoKill = true;
+			ignoreTimeScale = false;
+			target = null;
+			isUnityObject = false;
 			onComplete?.Clear();
 			onKill?.Clear();
 		}

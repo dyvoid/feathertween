@@ -12,6 +12,12 @@ namespace PATween.Internal
 		private UpdatePhase phase;
 		private bool ignoreTimeScale;
 		private bool autoKill;
+		private bool relative;
+		private object target;
+		private Func<T> getter;
+		private Action<T> setter;
+		private T endValue;
+		private float duration;
 		private List<Action> onComplete;
 		private List<Action> onKill;
 
@@ -34,6 +40,42 @@ namespace PATween.Internal
 		{
 			get => autoKill;
 			set => autoKill = value;
+		}
+
+		public bool Relative
+		{
+			get => relative;
+			set => relative = value;
+		}
+
+		public object Target
+		{
+			get => target;
+			set => target = value;
+		}
+
+		public Func<T> Getter
+		{
+			get => getter;
+			set => getter = value;
+		}
+
+		public Action<T> Setter
+		{
+			get => setter;
+			set => setter = value;
+		}
+
+		public T EndValue
+		{
+			get => endValue;
+			set => endValue = value;
+		}
+
+		public float Duration
+		{
+			get => duration;
+			set => duration = value;
 		}
 
 		public List<Action> OnComplete => onComplete;
@@ -97,6 +139,12 @@ namespace PATween.Internal
 			phase = UpdatePhase.Update;
 			ignoreTimeScale = false;
 			autoKill = true;
+			relative = false;
+			target = null;
+			getter = null;
+			setter = null;
+			endValue = default;
+			duration = 0f;
 			onComplete?.Clear();
 			onKill?.Clear();
 		}

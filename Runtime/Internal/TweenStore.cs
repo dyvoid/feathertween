@@ -168,6 +168,32 @@ namespace PATween.Internal
 			return data[id];
 		}
 
+		internal static TweenData GetByIndex(int id)
+		{
+			if (data == null || id < 0 || id >= data.Length)
+			{
+				return null;
+			}
+			return data[id];
+		}
+
+		internal static bool HasLiveOfType<T>()
+		{
+			if (data == null)
+			{
+				return false;
+			}
+			var target = typeof(TweenData<T>);
+			for (var i = 0; i < data.Length; i++)
+			{
+				if (data[i] != null && data[i].GetType() == target)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 		private static void EnsureInitialized()
 		{
 			if (!initialized)
