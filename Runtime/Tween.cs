@@ -28,6 +28,132 @@ namespace PATween
 			this.generation = generation;
 		}
 
+		public void Play()
+		{
+			var data = TweenStore.Get(id, generation);
+			if (data == null)
+			{
+				return;
+			}
+			if (data.Status == TweenStatus.Paused)
+			{
+				data.Status = TweenStatus.Playing;
+				return;
+			}
+			if (data.Status == TweenStatus.Completed)
+			{
+				data.Status = TweenStatus.Playing;
+			}
+		}
+
+		public void Pause()
+		{
+			var data = TweenStore.Get(id, generation);
+			if (data == null)
+			{
+				return;
+			}
+			if (data.Status == TweenStatus.Playing || data.Status == TweenStatus.Delayed)
+			{
+				data.Status = TweenStatus.Paused;
+			}
+		}
+
+		public void Resume()
+		{
+			var data = TweenStore.Get(id, generation);
+			if (data == null)
+			{
+				return;
+			}
+			if (data.Status == TweenStatus.Paused)
+			{
+				data.Status = TweenStatus.Playing;
+			}
+		}
+
+		public void Restart()
+		{
+			var data = TweenStore.Get(id, generation);
+			if (data == null)
+			{
+				return;
+			}
+			if (data.Status == TweenStatus.Disposed)
+			{
+				return;
+			}
+			data.Status = TweenStatus.Playing;
+		}
+
+		public void Complete()
+		{
+			var data = TweenStore.Get(id, generation);
+			if (data == null)
+			{
+				return;
+			}
+			if (data.Status == TweenStatus.Disposed || data.Status == TweenStatus.Cancelled)
+			{
+				return;
+			}
+			var alreadyCompleted = data.Status == TweenStatus.Completed;
+			data.Status = TweenStatus.Completed;
+			if (!alreadyCompleted)
+			{
+				data.InvokeOnComplete();
+			}
+			if (data.AutoKill)
+			{
+				data.InvokeOnKill();
+				TweenStore.Free(id);
+			}
+		}
+
+		public void Kill(bool complete = false)
+		{
+			var data = TweenStore.Get(id, generation);
+			if (data == null)
+			{
+				return;
+			}
+			if (complete && data.Status != TweenStatus.Completed && data.Status != TweenStatus.Cancelled)
+			{
+				data.Status = TweenStatus.Completed;
+				data.InvokeOnComplete();
+			}
+			else if (!complete && data.Status != TweenStatus.Completed)
+			{
+				data.Status = TweenStatus.Cancelled;
+			}
+			data.InvokeOnKill();
+			TweenStore.Free(id);
+		}
+
+		public Tween OnComplete(Action cb)
+		{
+			var data = TweenStore.Get(id, generation);
+			if (data == null)
+			{
+				cb?.Invoke();
+				return this;
+			}
+			data.AddOnComplete(cb);
+			return this;
+		}
+
+		public Tween OnKill(Action cb)
+		{
+			var data = TweenStore.Get(id, generation);
+			if (data == null)
+			{
+				cb?.Invoke();
+				return this;
+			}
+			data.AddOnKill(cb);
+			return this;
+		}
+
 		public bool Equals(Tween other) => id == other.id && generation == other.generation;
 
 		public override bool Equals(object obj) => obj is Tween other && Equals(other);

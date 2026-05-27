@@ -83,9 +83,18 @@ namespace PATween.Internal
 
 			var id = freeList.Pop();
 			var gen = generations[id];
-			data[id] ??= new TweenData();
-			data[id].Status = TweenStatus.Delayed;
 			return (id, gen);
+		}
+
+		public static void SetData(int id, TweenData newData)
+		{
+			AssertMainThread();
+			if (id < 0 || id >= data.Length)
+			{
+				return;
+			}
+			data[id] = newData;
+			AddToActiveList(id, newData.Phase);
 		}
 
 		public static void Free(int id)
@@ -98,13 +107,47 @@ namespace PATween.Internal
 				return;
 			}
 
-			data[id]?.Reset();
+			if (data[id] != null)
+			{
+				RemoveFromActiveList(id, data[id].Phase);
+				data[id] = null;
+			}
 			generations[id] = unchecked(generations[id] + 1);
 			if (generations[id] == 0)
 			{
 				generations[id] = 1;
 			}
 			freeList.Push(id);
+		}
+
+		private static void AddToActiveList(int id, UpdatePhase phase)
+		{
+			GetActiveList(phase).Add(id);
+		}
+
+		private static void RemoveFromActiveList(int id, UpdatePhase phase)
+		{
+			var list = GetActiveList(phase);
+			for (var i = list.Count - 1; i >= 0; i--)
+			{
+				if (list[i] == id)
+				{
+					list.RemoveAt(i);
+					return;
+				}
+			}
+		}
+
+		private static List<int> GetActiveList(UpdatePhase phase)
+		{
+			return phase switch
+			{
+				UpdatePhase.Update => activeUpdate,
+				UpdatePhase.Late => activeLate,
+				UpdatePhase.Fixed => activeFixed,
+				UpdatePhase.Manual => activeManual,
+				_ => activeUpdate,
+			};
 		}
 
 		public static bool IsAlive(int id, uint generation)
@@ -163,7 +206,7 @@ namespace PATween.Internal
 
 			for (var i = 0; i < data.Length; i++)
 			{
-				data[i]?.Reset();
+				data[i] = null;
 				generations[i] = unchecked(generations[i] + 1);
 				if (generations[i] == 0)
 				{
