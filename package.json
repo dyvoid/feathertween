@@ -1,0 +1,16 @@
+{
+  "name": "com.patween.patween",
+  "version": "0.0.0-dev",
+  "displayName": "PATween",
+  "description": "A robust, minimal C# tween engine for Unity. Compositional sequences, static-method API, struct handles, PlayerLoop runner.",
+  "unity": "6000.3",
+  "author": {
+    "name": "PATween"
+  },
+  "keywords": [
+    "tween",
+    "animation",
+    "sequence",
+    "playerloop"
+  ]
+}
