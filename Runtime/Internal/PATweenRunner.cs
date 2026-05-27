@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.LowLevel;
@@ -12,6 +13,8 @@ namespace PATween.Internal
 		private static RootSequenceData rootLate;
 		private static RootSequenceData rootFixed;
 		private static RootSequenceData rootManual;
+
+		private static readonly List<int> pendingKills = new List<int>(64);
 
 		private static int mainThreadId;
 		private static bool installed;
@@ -35,6 +38,7 @@ namespace PATween.Internal
 			rootLate = new RootSequenceData(UpdatePhase.Late);
 			rootFixed = new RootSequenceData(UpdatePhase.Fixed);
 			rootManual = new RootSequenceData(UpdatePhase.Manual);
+			pendingKills.Clear();
 		}
 
 		public static void Install()
@@ -71,6 +75,7 @@ namespace PATween.Internal
 		{
 			AssertMainThread();
 			rootManual.Advance(deltaTime, deltaTime);
+			TickActive(TweenStore.ActiveManual, deltaTime, deltaTime);
 			LeakDetector.Drain();
 		}
 
@@ -78,26 +83,86 @@ namespace PATween.Internal
 		{
 			AssertMainThread();
 			rootUpdate.Advance(deltaTime, deltaTime);
+			TickActive(TweenStore.ActiveUpdate, deltaTime, deltaTime);
 			LeakDetector.Drain();
 		}
 
 		internal static void TickUpdate()
 		{
 			AssertMainThread();
-			rootUpdate.Advance(Time.deltaTime, Time.unscaledDeltaTime);
+			double scaled = Time.deltaTime;
+			double unscaled = Time.unscaledDeltaTime;
+			rootUpdate.Advance(scaled, unscaled);
+			TickActive(TweenStore.ActiveUpdate, scaled, unscaled);
 			LeakDetector.Drain();
 		}
 
 		internal static void TickLate()
 		{
 			AssertMainThread();
-			rootLate.Advance(Time.deltaTime, Time.unscaledDeltaTime);
+			double scaled = Time.deltaTime;
+			double unscaled = Time.unscaledDeltaTime;
+			rootLate.Advance(scaled, unscaled);
+			TickActive(TweenStore.ActiveLate, scaled, unscaled);
 		}
 
 		internal static void TickFixed()
 		{
 			AssertMainThread();
-			rootFixed.Advance(Time.fixedDeltaTime, Time.fixedUnscaledDeltaTime);
+			double scaled = Time.fixedDeltaTime;
+			double unscaled = Time.fixedUnscaledDeltaTime;
+			rootFixed.Advance(scaled, unscaled);
+			TickActive(TweenStore.ActiveFixed, scaled, unscaled);
+		}
+
+		private static void TickActive(List<int> active, double scaledDt, double unscaledDt)
+		{
+			for (var i = 0; i < active.Count; i++)
+			{
+				var id = active[i];
+				var data = TweenStore.GetByIndex(id);
+				if (data == null)
+				{
+					continue;
+				}
+
+				if (data.IsUnityObject)
+				{
+					var uo = data.Target as UnityEngine.Object;
+					if (uo == null)
+					{
+						data.Status = TweenStatus.Cancelled;
+						data.InvokeOnKill();
+						pendingKills.Add(id);
+						continue;
+					}
+				}
+
+				var status = data.Status;
+				if (status == TweenStatus.Paused
+					|| status == TweenStatus.Completed
+					|| status == TweenStatus.Cancelled
+					|| status == TweenStatus.Disposed)
+				{
+					continue;
+				}
+
+				data.Step(scaledDt, unscaledDt);
+
+				if (data.Status == TweenStatus.Completed && data.AutoKill)
+				{
+					pendingKills.Add(id);
+				}
+			}
+
+			if (pendingKills.Count > 0)
+			{
+				for (var i = 0; i < pendingKills.Count; i++)
+				{
+					TweenStore.Free(pendingKills[i]);
+				}
+				pendingKills.Clear();
+			}
 		}
 
 		private static void InsertAfter<TAnchor>(ref PlayerLoopSystem loop, Type newType, PlayerLoopSystem.UpdateFunction update)

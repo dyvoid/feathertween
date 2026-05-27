@@ -44,6 +44,20 @@ namespace PATween
 			return this;
 		}
 
+		public TweenBuilder<T> SetTarget(object target)
+		{
+			ValidateOrThrow();
+			buffer.Target = target;
+			return this;
+		}
+
+		public TweenBuilder<T> SetRelative(bool value)
+		{
+			ValidateOrThrow();
+			buffer.Relative = value;
+			return this;
+		}
+
 		public TweenBuilder<T> OnComplete(Action cb)
 		{
 			ValidateOrThrow();
@@ -65,6 +79,29 @@ namespace PATween
 			var data = new TweenData<T>();
 			data.Phase = buffer.Phase;
 			data.AutoKill = buffer.AutoKill;
+			data.IgnoreTimeScale = buffer.IgnoreTimeScale;
+			data.Target = buffer.Target;
+			data.Getter = buffer.Getter;
+			data.Setter = buffer.Setter;
+			data.EndValue = buffer.EndValue;
+			data.Duration = buffer.Duration;
+			data.Relative = buffer.Relative;
+			data.Interpolator = Interpolators.Get<T>();
+
+			if (data.Getter != null)
+			{
+				data.StartValue = data.Getter();
+			}
+			else
+			{
+				data.StartValue = default;
+			}
+
+			if (data.Relative)
+			{
+				data.EndValue = data.Interpolator.Add(data.StartValue, data.EndValue);
+			}
+
 			if (buffer.OnComplete != null)
 			{
 				for (var i = 0; i < buffer.OnComplete.Count; i++)

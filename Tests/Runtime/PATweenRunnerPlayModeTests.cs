@@ -41,6 +41,24 @@ namespace PATween.Tests
 		}
 
 		[UnityTest]
+		public IEnumerator AutoKill_FiresFrameAfter_ObjectDestroy()
+		{
+			var go = new GameObject("__patween_destroy_target__");
+			var t = global::PATween.To(() => 0f, _ => { }, 1f, 30f)
+				.SetTarget(go)
+				.Start();
+
+			yield return null;
+			Assert.That(t.IsAlive, Is.True);
+
+			Object.Destroy(go);
+			yield return null;
+			yield return null;
+
+			Assert.That(t.IsAlive, Is.False);
+		}
+
+		[UnityTest]
 		public IEnumerator RunnerTicks_AfterScriptUpdate()
 		{
 			var go = new GameObject("PATweenProbe");
