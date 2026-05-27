@@ -71,18 +71,21 @@ namespace PATween.Internal
 		{
 			AssertMainThread();
 			rootManual.Advance(deltaTime, deltaTime);
+			LeakDetector.Drain();
 		}
 
 		internal static void TickEditorDelta(double deltaTime)
 		{
 			AssertMainThread();
 			rootUpdate.Advance(deltaTime, deltaTime);
+			LeakDetector.Drain();
 		}
 
 		internal static void TickUpdate()
 		{
 			AssertMainThread();
 			rootUpdate.Advance(Time.deltaTime, Time.unscaledDeltaTime);
+			LeakDetector.Drain();
 		}
 
 		internal static void TickLate()
