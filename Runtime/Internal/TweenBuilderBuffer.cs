@@ -17,8 +17,10 @@ namespace PATween.Internal
 		private Func<T> getter;
 		private Action<T> setter;
 		private T endValue;
+		private T fromValue;
 		private float duration;
 		private EaseRef ease;
+		private SnapMode snapMode;
 		private List<Action> onComplete;
 		private List<Action> onKill;
 
@@ -83,6 +85,18 @@ namespace PATween.Internal
 		{
 			get => ease;
 			set => ease = value;
+		}
+
+		public T FromValue
+		{
+			get => fromValue;
+			set => fromValue = value;
+		}
+
+		public SnapMode SnapMode
+		{
+			get => snapMode;
+			set => snapMode = value;
 		}
 
 		public List<Action> OnComplete => onComplete;
@@ -151,8 +165,10 @@ namespace PATween.Internal
 			getter = null;
 			setter = null;
 			endValue = default;
+			fromValue = default;
 			duration = 0f;
 			ease = Easing.Linear();
+			snapMode = SnapMode.None;
 			onComplete?.Clear();
 			onKill?.Clear();
 		}

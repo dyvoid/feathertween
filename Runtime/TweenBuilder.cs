@@ -72,6 +72,13 @@ namespace PATween
 			return this;
 		}
 
+		public TweenBuilder<T> From()
+		{
+			ValidateOrThrow();
+			buffer.SnapMode = SnapMode.From;
+			return this;
+		}
+
 		public TweenBuilder<T> OnComplete(Action cb)
 		{
 			ValidateOrThrow();
@@ -103,18 +110,33 @@ namespace PATween
 			data.Ease = buffer.Ease;
 			data.Interpolator = Interpolators.Get<T>();
 
-			if (data.Getter != null)
+			var snapValue = default(T);
+			var snap = false;
+			switch (buffer.SnapMode)
 			{
-				data.StartValue = data.Getter();
-			}
-			else
-			{
-				data.StartValue = default;
+				case SnapMode.None:
+					data.StartValue = data.Getter != null ? data.Getter() : default;
+					if (data.Relative)
+					{
+						data.EndValue = data.Interpolator.Add(data.StartValue, data.EndValue);
+					}
+					break;
+				case SnapMode.From:
+					data.StartValue = data.EndValue;
+					data.EndValue = data.Getter != null ? data.Getter() : default;
+					snapValue = data.StartValue;
+					snap = true;
+					break;
+				case SnapMode.FromTo:
+					data.StartValue = buffer.FromValue;
+					snapValue = data.StartValue;
+					snap = true;
+					break;
 			}
 
-			if (data.Relative)
+			if (snap && data.Setter != null)
 			{
-				data.EndValue = data.Interpolator.Add(data.StartValue, data.EndValue);
+				data.Setter(snapValue);
 			}
 
 			if (buffer.OnComplete != null)
