@@ -27,9 +27,7 @@ namespace PATween.Internal
 		internal static List<int> ActiveFixed => activeFixed;
 		internal static List<int> ActiveManual => activeManual;
 
-#if UNITY_2019_3_OR_NEWER
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-#endif
 		private static void RuntimeBootstrap()
 		{
 			Reset();
