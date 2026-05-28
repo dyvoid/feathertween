@@ -86,6 +86,28 @@ namespace PATween
 			data.Status = TweenStatus.Playing;
 		}
 
+		public void Reverse()
+		{
+			var data = TweenStore.Get(id, generation);
+			if (data == null)
+			{
+				return;
+			}
+			data.Direction = -data.Direction;
+		}
+
+		public void SetRemainingCycles(int cycles)
+		{
+			var data = TweenStore.Get(id, generation);
+			data?.SetRemainingCyclesAbsolute(cycles);
+		}
+
+		public void SetRemainingCycles(bool stopAtEndValue)
+		{
+			var data = TweenStore.Get(id, generation);
+			data?.SetStopAtNextBoundary(stopAtEndValue);
+		}
+
 		public void Complete()
 		{
 			var data = TweenStore.Get(id, generation);

@@ -4,5 +4,6 @@ namespace PATween
 	{
 		T Lerp(T from, T to, float t);
 		T Add(T a, T b);
+		T Subtract(T a, T b);
 	}
 }

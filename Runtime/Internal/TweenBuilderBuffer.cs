@@ -21,8 +21,13 @@ namespace PATween.Internal
 		private float duration;
 		private EaseRef ease;
 		private SnapMode snapMode;
+		private int loopCount;
+		private LoopType loopType;
+		private float delay;
+		private DelayType delayType;
 		private List<Action> onComplete;
 		private List<Action> onKill;
+		private List<Action> onRewind;
 
 		public uint Generation => generation;
 		public bool Released => released;
@@ -99,8 +104,33 @@ namespace PATween.Internal
 			set => snapMode = value;
 		}
 
+		public int LoopCount
+		{
+			get => loopCount;
+			set => loopCount = value;
+		}
+
+		public LoopType LoopType
+		{
+			get => loopType;
+			set => loopType = value;
+		}
+
+		public float Delay
+		{
+			get => delay;
+			set => delay = value;
+		}
+
+		public DelayType DelayType
+		{
+			get => delayType;
+			set => delayType = value;
+		}
+
 		public List<Action> OnComplete => onComplete;
 		public List<Action> OnKill => onKill;
+		public List<Action> OnRewind => onRewind;
 
 		public TweenBuilderBuffer()
 		{
@@ -137,6 +167,16 @@ namespace PATween.Internal
 			onKill.Add(cb);
 		}
 
+		public void AddOnRewind(Action cb)
+		{
+			if (cb == null)
+			{
+				return;
+			}
+			onRewind ??= new List<Action>();
+			onRewind.Add(cb);
+		}
+
 		public void Rent()
 		{
 			released = false;
@@ -153,6 +193,7 @@ namespace PATween.Internal
 			}
 			onComplete?.Clear();
 			onKill?.Clear();
+			onRewind?.Clear();
 		}
 
 		private void ResetConfig()
@@ -169,8 +210,13 @@ namespace PATween.Internal
 			duration = 0f;
 			ease = Easing.Linear();
 			snapMode = SnapMode.None;
+			loopCount = 1;
+			loopType = LoopType.Restart;
+			delay = 0f;
+			delayType = DelayType.FirstLoop;
 			onComplete?.Clear();
 			onKill?.Clear();
+			onRewind?.Clear();
 		}
 	}
 }
