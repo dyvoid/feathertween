@@ -11,8 +11,19 @@ namespace PATween.Internal
 		private bool ignoreTimeScale;
 		private object target;
 		private bool isUnityObject;
+		private int direction = 1;
 		private List<Action> onComplete;
 		private List<Action> onKill;
+		private List<Action> onRewind;
+
+		public int Direction
+		{
+			get => direction;
+			set => direction = value == 0 ? 1 : (value > 0 ? 1 : -1);
+		}
+
+		public virtual void SetRemainingCyclesAbsolute(int cycles) { }
+		public virtual void SetStopAtNextBoundary(bool stopAtEndValue) { }
 
 		public TweenStatus Status
 		{
@@ -74,6 +85,28 @@ namespace PATween.Internal
 			onKill.Add(cb);
 		}
 
+		public void AddOnRewind(Action cb)
+		{
+			if (cb == null)
+			{
+				return;
+			}
+			onRewind ??= new List<Action>();
+			onRewind.Add(cb);
+		}
+
+		public void InvokeOnRewind()
+		{
+			if (onRewind == null)
+			{
+				return;
+			}
+			for (var i = 0; i < onRewind.Count; i++)
+			{
+				onRewind[i]?.Invoke();
+			}
+		}
+
 		public void InvokeOnComplete()
 		{
 			if (onComplete == null)
@@ -106,8 +139,10 @@ namespace PATween.Internal
 			ignoreTimeScale = false;
 			target = null;
 			isUnityObject = false;
+			direction = 1;
 			onComplete?.Clear();
 			onKill?.Clear();
+			onRewind?.Clear();
 		}
 	}
 }

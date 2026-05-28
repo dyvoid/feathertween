@@ -79,6 +79,33 @@ namespace PATween
 			return this;
 		}
 
+		public TweenBuilder<T> SetLoops(int count, LoopType type = LoopType.Restart)
+		{
+			ValidateOrThrow();
+			buffer.LoopCount = count < 0 ? -1 : count;
+			buffer.LoopType = type;
+			return this;
+		}
+
+		public TweenBuilder<T> SetDelay(float seconds, DelayType type = DelayType.FirstLoop)
+		{
+			ValidateOrThrow();
+			if (seconds < 0f)
+			{
+				seconds = 0f;
+			}
+			buffer.Delay = seconds;
+			buffer.DelayType = type;
+			return this;
+		}
+
+		public TweenBuilder<T> OnRewind(Action cb)
+		{
+			ValidateOrThrow();
+			buffer.AddOnRewind(cb);
+			return this;
+		}
+
 		public TweenBuilder<T> OnComplete(Action cb)
 		{
 			ValidateOrThrow();
@@ -108,6 +135,11 @@ namespace PATween
 			data.Duration = buffer.Duration;
 			data.Relative = buffer.Relative;
 			data.Ease = buffer.Ease;
+			data.LoopCount = buffer.LoopCount;
+			data.LoopType = buffer.LoopType;
+			data.Delay = buffer.Delay;
+			data.DelayType = buffer.DelayType;
+			data.Direction = 1;
 			data.Interpolator = Interpolators.Get<T>();
 
 			var snapValue = default(T);
@@ -153,7 +185,16 @@ namespace PATween
 					data.AddOnKill(buffer.OnKill[i]);
 				}
 			}
-			data.Status = TweenStatus.Playing;
+			if (buffer.OnRewind != null)
+			{
+				for (var i = 0; i < buffer.OnRewind.Count; i++)
+				{
+					data.AddOnRewind(buffer.OnRewind[i]);
+				}
+			}
+			data.Status = buffer.Delay > 0f && buffer.DelayType == DelayType.FirstLoop
+				? TweenStatus.Delayed
+				: TweenStatus.Playing;
 
 			var (id, gen) = TweenStore.Allocate();
 			TweenStore.SetData(id, data);
