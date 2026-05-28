@@ -9,7 +9,7 @@ namespace PATween.Internal
 		private T startValue;
 		private T endValue;
 		private float duration;
-		private double playhead;
+		private double localTime;
 		private IInterpolator<T> interpolator;
 		private bool relative;
 		private EaseRef ease;
@@ -53,10 +53,10 @@ namespace PATween.Internal
 			set => duration = value;
 		}
 
-		public double Playhead
+		public double LocalTime
 		{
-			get => playhead;
-			set => playhead = value;
+			get => localTime;
+			set => localTime = value;
 		}
 
 		public IInterpolator<T> Interpolator
@@ -128,35 +128,47 @@ namespace PATween.Internal
 
 			var dir = Direction;
 			var dt = IgnoreTimeScale ? unscaledDelta : scaledDelta;
-			playhead += dt * dir;
-			if (playhead < 0d)
-			{
-				playhead = 0d;
-			}
 
 			var everyLoop = delayType == DelayType.EveryLoop && delay > 0f;
 			double cycleSlot = everyLoop ? (delay + duration) : Math.Max(duration, 1e-9);
 			double firstDelayOffset = everyLoop ? 0d : delay;
 
-			if (!everyLoop && playhead < delay)
+			localTime += dt * dir;
+			if (localTime < 0d)
+			{
+				if (loopCount < 0)
+				{
+					localTime += cycleSlot;
+					if (lastCycleIndex == 0)
+					{
+						InvokeOnRewind();
+					}
+				}
+				else
+				{
+					localTime = 0d;
+				}
+			}
+
+			if (!everyLoop && localTime < delay)
 			{
 				Status = TweenStatus.Delayed;
 				return;
 			}
 
-			var activePlayhead = playhead - firstDelayOffset;
-			if (activePlayhead < 0d)
+			var activeLocalTime = localTime - firstDelayOffset;
+			if (activeLocalTime < 0d)
 			{
-				activePlayhead = 0d;
+				activeLocalTime = 0d;
 			}
 
-			var cycleIndex = (int)Math.Floor(activePlayhead / cycleSlot);
+			var cycleIndex = (int)Math.Floor(activeLocalTime / cycleSlot);
 			if (cycleIndex < 0)
 			{
 				cycleIndex = 0;
 			}
 
-			var inSlot = activePlayhead - cycleIndex * cycleSlot;
+			var inSlot = activeLocalTime - cycleIndex * cycleSlot;
 
 			var inDelay = false;
 			float tInCycle;
@@ -285,7 +297,7 @@ namespace PATween.Internal
 			startValue = default;
 			endValue = default;
 			duration = 0f;
-			playhead = 0d;
+			localTime = 0d;
 			interpolator = null;
 			relative = false;
 			ease = Easing.Linear();

@@ -133,7 +133,9 @@ Supported value types in M1: `float`, `Vector2`, `Vector3`, `Vector4`, `Color`, 
 ```csharp
 public interface IInterpolator<T>
 {
-    T Lerp(in T from, in T to, float t);
+    T Lerp(T from, T to, float t);
+    T Add(T a, T b);
+    T Subtract(T a, T b);
 }
 
 // Register at startup:
