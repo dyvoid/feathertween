@@ -9,3 +9,5 @@
 | [0005](0005-ease-as-valuetype.md) | Ease as `EaseRef` value type | Accepted |
 | [0006](0006-parent-sequence-model.md) | Parent-sequence model from M1 | Accepted |
 | [0007](0007-from-snap-semantics.md) | `From` / `FromTo` snap semantics | Accepted |
+| [0008](0008-interpolator-add-subtract.md) | `IInterpolator<T>` carries `Add` and `Subtract` | Accepted |
+| [0009](0009-infinite-loop-reverse-wrap.md) | Infinite-loop `Reverse()` wraps instead of clamping | Accepted |

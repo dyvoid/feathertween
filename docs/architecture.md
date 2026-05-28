@@ -23,7 +23,7 @@ Every animation (`Tween` or `Sequence`) has:
 - `_start`, `_end` — position in parent-local seconds
 - `_timeScale` — local time multiplier
 - `_paused`, `_reversed`
-- `_localTime` — current playhead in own duration
+- `localTime` — current playhead in own duration (double precision)
 
 The runner owns a hidden `_rootSequence` for each `UpdatePhase`. Top-level tweens are children of the root. When the runner ticks a root with `deltaTime`, the root advances its playhead and recursively renders children at their parent-local times. Recursive `timeScale`, `pause`, `reverse`, `seek` fall out for free.
 
@@ -31,7 +31,7 @@ Implementation note: the root is iterated by index over a flat list of active ch
 
 ### 4.3 Storage and handles
 
-`TweenData` is the abstract base (holds `_parent`, `_start`, `_end`, `_timeScale`, `_localTime`, `_paused`, `_reversed`, status, callbacks, target ref). The typed subclass `TweenData<T>` adds `start: T`, `end: T`, `getter`, `setter`, and the `IInterpolator<T>` used to lerp. The runner iterates `List<TweenData>` and calls a virtual `Step(double dt)` per child. This means one vtable dispatch per tween per frame in v1; an acceptable cost (~1-2 ns on modern CPUs). M5 SoA replaces this with per-`(TValue, TInterpolator)` storage and a `[BurstCompile]` job, see §10 M5.
+`TweenData` is the abstract base (holds `_parent`, `_start`, `_end`, `_timeScale`, `localTime`, `_paused`, `_reversed`, status, callbacks, target ref). The typed subclass `TweenData<T>` adds `start: T`, `end: T`, `getter`, `setter`, and the `IInterpolator<T>` used to lerp. The runner iterates `List<TweenData>` and calls a virtual `Step(double dt)` per child. This means one vtable dispatch per tween per frame in v1; an acceptable cost (~1-2 ns on modern CPUs). M5 SoA replaces this with per-`(TValue, TInterpolator)` storage and a `[BurstCompile]` job, see §10 M5.
 
 ```csharp
 internal static class TweenStore
@@ -47,7 +47,7 @@ internal static class TweenStore
 
 **Pool exhaustion**: when `_free` is empty and the pool is at capacity, `TweenStore` grows by doubling the backing arrays (same strategy as `List<T>`). This is an allocation, but it is bounded to startup / burst-creation periods. A `Debug.LogWarning` is emitted in Editor when growth occurs, so the developer can pre-size via `PATween.SetCapacity` instead. There is no eviction and no hard ceiling in v1; refusing to create would be a silent correctness failure worse than the alloc.
 
-`TweenData<T>` layout groups blittable floats (`_start, _end, _duration, _elapsed, _timeScale, _easeParamA, _easeParamB`) at the top of the base class so the M5 SoA split is mechanical.
+`TweenData<T>` layout groups blittable scalars (`start, end, duration, localTime, timeScale, easeParamA, easeParamB`) at the top of the base class so the M5 SoA split is mechanical.
 
 ### 4.4 Runner (PlayerLoop)
 
@@ -79,11 +79,11 @@ For each active root:
 
 ```text
 1. dt = caller-provided                             // double precision
-2. root._localTime += dt * root._timeScale          // double accumulator
+2. root.localTime += dt * root._timeScale           // double accumulator
 3. for each child in root.activeChildren (snapshot):
    3a. if child._isUnityObject && targetRef == null: queue auto-kill, continue
-   3b. if root._localTime < child._start: continue
-   3c. childLocal = (root._localTime - child._start) * child._timeScale
+   3b. if root.localTime < child._start: continue
+   3c. childLocal = (root.localTime - child._start) * child._timeScale
    3d. compute loop iteration + eased t (eased t cast to float for setter)
    3e. setter(Lerp(start, end, easedT))             // safe-mode wrapped
    3f. fire OnUpdate; fire OnStepComplete/OnComplete as needed (multicast)
@@ -92,7 +92,7 @@ For each active root:
 5. apply queued kills (no list mutation mid-iter)
 ```
 
-**Time precision**: internal time accumulators (`_localTime`, root playhead) are `double` to bound drift over long sessions, repeated seeks, and nested timescales. Interpolation output is `float`. The eased `t` is cast to `float` immediately before the setter call.
+**Time precision**: internal time accumulators (`localTime`, root playhead) are `double` to bound drift over long sessions, repeated seeks, and nested timescales. Interpolation output is `float`. The eased `t` is cast to `float` immediately before the setter call.
 
 **Auto-kill flag**: `TweenData` caches `_isUnityObject` (bool) at creation time so the hot loop is a flag check + cached `targetRef == null` (Unity's overloaded `==`), not a runtime type test per tween per frame.
 
@@ -172,7 +172,7 @@ A `[Conditional]`-style wrapper around `setter(...)` and each callback invocatio
 
 Every node carries a `_direction` flag. `Reverse()` flips the flag on the node it's called on, nothing else. The runner ticks each node by composing parent direction with own direction at evaluation time:
 
-- **Leaf tween** (direct child of the hidden root): `Reverse()` flips its own `_direction`. The hidden root never reverses, so leaf reversal is local. The tween rewinds its own `_localTime` toward `0`. For an **infinite-loop** leaf tween whose reversed `_localTime` would go below `0`: wrap to the current loop boundary (i.e., subtract the modulo remainder so `_localTime` lands at the start of the current iteration). The tween continues playing backwards from there.
+- **Leaf tween** (direct child of the hidden root): `Reverse()` flips its own `_direction`. The hidden root never reverses, so leaf reversal is local. The tween rewinds its own `localTime` toward `0`. For an **infinite-loop** leaf tween whose reversed `localTime` would go below `0`: wrap by adding one cycle slot so `localTime` lands inside the previous iteration. The tween continues playing backwards from there, preserving the oscillation.
 - **Sequence**: `Reverse()` flips the sequence's `_direction`. Children continue to interpolate `start → end` in their own local time; what changes is the order in which the parent playhead reaches them. A reversed parent at local time `t` exposes its children at their normal forward progress within their own `[_start, _end]` windows.
 - **Yoyo**: implemented as automatic `_direction` flip at each loop boundary on the node carrying the yoyo loop type. Independent from `Reverse()`. A yoyo-looped child inside a yoyo-looped parent composes per-node, not by direction multiplication.
 

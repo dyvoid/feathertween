@@ -1,0 +1,28 @@
+# ADR 0009 — Infinite-loop `Reverse()` wraps instead of clamping
+
+## Status
+
+Accepted (M1, phase 1.7).
+
+## Context
+
+When a leaf tween is reversed, `localTime` decreases each tick. For a finite-loop tween, hitting `localTime == 0` is a meaningful terminal state (the tween is "fully rewound to start") and clamping is correct.
+
+For an **infinite-loop** tween, the user's intent in calling `Reverse()` is to keep the oscillation alive in the opposite direction, not to rewind to the absolute origin and freeze. Clamping at `0` produces a dead tween that the user must explicitly restart, which contradicts the "infinite" contract.
+
+## Decision
+
+When `localTime` would become negative on a reverse step:
+
+- Finite-loop tween (`loopCount >= 1`): clamp `localTime = 0`. Tween holds at start.
+- Infinite-loop tween (`loopCount < 0`): wrap by adding one cycle slot (`delay + duration` for `EveryLoop` delay, otherwise `duration`). The tween reenters the previous iteration window and continues playing backwards.
+
+`OnRewind` fires on the wrap, treating it as a normal cycle-boundary crossing.
+
+## Consequences
+
+`Reverse()` on an infinite tween is now safe to call at any `localTime` without freezing. Pairs naturally with Yoyo: an infinite Yoyo + Reverse keeps oscillating, just inverted in phase.
+
+The wrap operation is one addition per Step on the rare frame where rewind crosses zero — negligible cost.
+
+This deviates from the simpler clamp-only model, but the simpler model breaks the user's mental model of "infinite means infinite, in either direction".
