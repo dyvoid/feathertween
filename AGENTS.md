@@ -20,6 +20,8 @@ Editor/               -- PATween.Editor.asmdef (drawers, debugger)
 Tests/
   Editor/             -- EditMode tests asmdef
   Runtime/            -- PlayMode tests asmdef
+  Performance/        -- EditMode allocation guards + throughput asmdef
+Samples~/             -- importable package samples (BasicUsage demo)
 ```
 
 ## AI Skill Reference
@@ -36,6 +38,8 @@ When writing Unity C# for this project, apply the **unity dev skill**.
 - **Ease as value type**: `EaseRef` produced by `Easing.X(...)` factories. Parameters travel with the ease; tween stores one `EaseRef`.
 - **SoA-friendly internal layout**: keeps a future Burst/Jobs path cheap. Not a public concern.
 
+Full design and locked anchors: `docs/design.md` §2 and `docs/architecture.md`.
+
 ## Invariants (Do Not Break)
 
 1. `TweenBuilder<T>` and `Tween` remain structs. Never convert to classes.
@@ -47,17 +51,7 @@ When writing Unity C# for this project, apply the **unity dev skill**.
 
 ## Code Style
 
-- Tab size 4, keep tabs.
-- Braces on own line; always use braces for `if`/`else`.
-- PascalCase classes, structs, enums, methods, properties, events.
-- camelCase private fields, parameters.
-- Interfaces prefix with `I`.
-- Boolean names affirmative/negative (`isAlive`, `hasAmmo`).
-- Fields never public/internal; expose via `[SerializeField]` or public properties.
-- Public properties have explicit `get`/`set`.
-- One statement / one declaration per line.
-- Attributes one per line for classes/methods.
-- Dispose/clean up: instantiated objects, coroutines, event listeners, `Resources` assets, IO files.
+Apply the unity dev skill (see above). Canonical written conventions: `docs/conventions.md`.
 
 ## Adding New Features
 
@@ -102,5 +96,9 @@ If a change touches behavior described in a doc and the doc is not updated, the 
 | `docs/design.md` | Goals, non-goals, locked anchors |
 | `docs/api.md` | Public API reference |
 | `docs/architecture.md` | Internal design |
+| `docs/implementation.md` | Milestone/phase plan, performance plan |
+| `docs/conventions.md` | Code style conventions |
 | `docs/testing.md` | Test structure, running, consumer setup |
+| `docs/editor.md` | Editor & integration |
+| `docs/reference.md` | Reference & engine comparison |
 | `docs/adrs/` | Architectural decision records |

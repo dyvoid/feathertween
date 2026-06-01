@@ -52,6 +52,8 @@ A robust, minimal C# tween engine for Unity. Compositional sequences, static-met
 |-------|----------|
 | Public API | [docs/api.md](docs/api.md) |
 | Architecture | [docs/architecture.md](docs/architecture.md) |
+| Code conventions | [docs/conventions.md](docs/conventions.md) |
+| Testing | [docs/testing.md](docs/testing.md) |
 | Editor & integration | [docs/editor.md](docs/editor.md) |
 | Implementation plan | [docs/implementation.md](docs/implementation.md) |
 | Reference & comparison | [docs/reference.md](docs/reference.md) |
