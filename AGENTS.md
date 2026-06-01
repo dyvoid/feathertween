@@ -119,6 +119,18 @@ When PATween is consumed as a UPM package (linked via `file:`), Unity hides its 
 
 The name must match `package.json` (`com.patween.patween`). Embedding the source under `Assets/` instead would surface tests automatically, but the `testables` entry is the correct mechanism for the package workflow.
 
+## Documentation Discipline
+
+Keep state and design docs in sync with the code. Update as part of the same change, not later.
+
+- **Every session**: update `PROGRESS.md` (current position, done, next up, test status) as the closing step.
+- **Finishing a phase or milestone**: update `PROGRESS.md` and reconcile the affected docs (`docs/implementation.md` phase status, `docs/api.md` if the public surface changed, `docs/architecture.md` if internals changed). Move the milestone tag only on explicit user go-ahead.
+- **Any architectural decision or deviation from a doc**: add or update an ADR in `docs/adrs/` and its `README.md` index. Do not let code silently contradict a doc.
+- **New public API**: document it in `docs/api.md` in the same change that adds it.
+- **New test category or required dependency**: document it in the Testing section above and in `PROGRESS.md` consumer reminders.
+
+If a change touches behavior described in a doc and the doc is not updated, the change is incomplete.
+
 ## Git Workflow
 
 - **Branching**: feature branches from `develop`; name `feature/1.x-phase-name`.
