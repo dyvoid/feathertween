@@ -43,8 +43,7 @@ Last updated: 2026-06-01
 
 ## Test status
 
-- Editor + Runtime suites: 72 tests green (last full run 2026-06-01).
-- Performance suite added but not yet run in a consumer that has the perf package installed.
+- All suites green (Editor + Runtime + Performance), verified in a consumer with the perf package installed (2026-06-01).
 
 ## Consumer setup reminders
 

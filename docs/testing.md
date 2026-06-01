@@ -13,6 +13,8 @@ Tests/
 
 Each folder is its own assembly definition with the `UNITY_INCLUDE_TESTS` define constraint.
 
+Tests reach internal types (`TweenStore`, `PATweenRunner`, `Interpolators`) via `InternalsVisibleTo` in `Runtime/Internal/AssemblyInfo.cs`. Any new test assembly must be added there or it will fail with `CS0122` (inaccessible) errors.
+
 ## Running tests
 
 Run via the Unity **Test Runner** window (Window > General > Test Runner) or headless with `Unity -runTests`.
