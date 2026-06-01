@@ -66,15 +66,39 @@ When writing Unity C# for this project, apply the **unity dev skill**.
 
 ## Testing
 
-Intended structure (created when implementation starts):
-
 ```text
 Tests/
-  Editor/          -- EditMode tests ( builder validation, leak detection )
-  Runtime/         -- PlayMode tests ( playback, sequences, callbacks, await )
+  Editor/          -- EditMode tests ( builder validation, lifecycle, loops, easing, leak detection )
+  Runtime/         -- PlayMode tests ( PlayerLoop ticking, update order, auto-kill timing )
+  Performance/     -- EditMode tests ( allocation guards + throughput benchmarks )
 ```
 
 Run via Unity Test Runner or `Unity -runTests`.
+
+### Performance & allocation testing
+
+Two distinct concerns, deliberately separated by intent:
+
+- **Allocation guards (hard fail).** Steady-state ticking must allocate zero managed bytes. Measured deterministically with `System.GC.GetAllocatedBytesForCurrentThread()` around a synchronous `PATweenRunner.ManualTick` loop (no frame/thread noise). These protect the core pooled, zero-alloc design promise and are CI-safe hard failures.
+- **Throughput benchmarks (report only).** Tick cost at 1k/10k tweens and `Start()` cost, measured with `Unity.PerformanceTesting`'s `Measure.Method`. Numbers are noisy (machine/thermal dependent) and must never gate a build. Run locally when investigating a perf question.
+
+The suite lives in an isolated `Tests/Performance` EditMode asmdef so the slow/noisy benchmarks do not run alongside the fast correctness tests and so the `Unity.PerformanceTesting` dependency is contained.
+
+Why EditMode + `ManualTick` instead of PlayMode: `ManualTick` advances the runner synchronously, giving deterministic, frame-independent allocation measurements.
+
+### Required test dependency
+
+The performance asmdef references `Unity.PerformanceTesting`. The **consuming project** must have the package installed (it is test-only). Add to the consuming project's `Packages/manifest.json`:
+
+```json
+{
+  "dependencies": {
+    "com.unity.test-framework.performance": "3.0.3"
+  }
+}
+```
+
+Use the version that resolves for your Unity 6000.3 install if 3.0.3 is unavailable.
 
 ### Tests not showing in Test Runner
 

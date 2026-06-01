@@ -1,0 +1,25 @@
+{
+  "name": "PATween.Tests.Performance",
+  "rootNamespace": "PATween.Tests.Performance",
+  "references": [
+    "PATween",
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner",
+    "Unity.PerformanceTesting"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

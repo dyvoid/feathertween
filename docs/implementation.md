@@ -12,11 +12,23 @@
 
 Hot fields (`_start, _end, _localTime, _duration, _timeScale, _easeParamA, _easeParamB`) sit at the top of `TweenData` in a struct-of-floats region. The M5 SoA split into `NativeArray<TweenHot>` + managed sidecar does not break public API.
 
-### 8.3 Benchmark methodology (to run before M1 ship)
+### 8.3 Benchmark methodology
 
-- 10k concurrent float tweens, measure per-frame ms vs DOTween, PrimeTween, LeanTween, LitMotion.
-- 1k sequences of 10 children each, same comparison.
-- GC alloc test: run 1k tweens for 60 seconds, assert `Profiler.GetMonoUsedSizeLong()` delta is bounded.
+Implemented in the `Tests/Performance` EditMode asmdef. Two separate concerns:
+
+**Allocation guards (hard fail).** Deterministic zero-managed-alloc assertions using `System.GC.GetAllocatedBytesForCurrentThread()` around a synchronous `PATweenRunner.ManualTick` loop. `ManualTick` avoids frame/thread noise, so the delta is exact and CI-safe.
+
+- Steady-state tick of 1k tweens after warmup: delta must be exactly 0 bytes.
+- Tick after a kill/realloc cycle: free-list reuse must not allocate.
+
+**Throughput benchmarks (report only).** `Unity.PerformanceTesting` `Measure.Method` cases; numbers are machine-dependent and must never gate a build.
+
+- Tick cost at 1k and 10k concurrent float tweens.
+- `Start()` cost per tween.
+
+Cross-engine comparison (DOTween, PrimeTween, LitMotion) is deferred until there is a competitive claim to make; the harness structure mirrors LitMotion's `Tests.Benchmark` so it can be added apples-to-apples later.
+
+The `Unity.PerformanceTesting` package (`com.unity.test-framework.performance`) is a test-only dependency the consuming project must install.
 
 ---
 
