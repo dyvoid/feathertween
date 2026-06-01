@@ -76,6 +76,23 @@ Tests/
 
 Run via Unity Test Runner or `Unity -runTests`.
 
+### Tests not showing in Test Runner
+
+When PATween is consumed as a UPM package (linked via `file:`), Unity hides its tests by default. The test asmdefs use the `UNITY_INCLUDE_TESTS` define constraint, which is only active for packages listed as `testables`. To see the tests, add the package to the **consuming project's** `Packages/manifest.json`:
+
+```json
+{
+  "dependencies": {
+    "com.patween.patween": "file:../path/to/Tween"
+  },
+  "testables": [
+    "com.patween.patween"
+  ]
+}
+```
+
+The name must match `package.json` (`com.patween.patween`). Embedding the source under `Assets/` instead would surface tests automatically, but the `testables` entry is the correct mechanism for the package workflow.
+
 ## Git Workflow
 
 - **Branching**: feature branches from `develop`; name `feature/1.x-phase-name`.
