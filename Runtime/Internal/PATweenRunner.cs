@@ -33,6 +33,14 @@ namespace PATween.Internal
 			Install();
 		}
 
+		public static void EnsureInitialized()
+		{
+			if (mainThreadId == 0 || rootManual == null)
+			{
+				Reset();
+			}
+		}
+
 		public static void Reset()
 		{
 			mainThreadId = Thread.CurrentThread.ManagedThreadId;

@@ -20,6 +20,7 @@ namespace PATween.Editor
 			{
 				return;
 			}
+			PATweenRunner.EnsureInitialized();
 			lastTime = EditorApplication.timeSinceStartup;
 			EditorApplication.update += Tick;
 			subscribed = true;
