@@ -42,7 +42,8 @@ namespace PATween
 			}
 			if (data.Status == TweenStatus.Completed)
 			{
-				data.Status = TweenStatus.Playing;
+				data.ResetPlayhead();
+				data.Status = data.StartsDelayed() ? TweenStatus.Delayed : TweenStatus.Playing;
 			}
 		}
 
@@ -83,7 +84,8 @@ namespace PATween
 			{
 				return;
 			}
-			data.Status = TweenStatus.Playing;
+			data.ResetPlayhead();
+			data.Status = data.StartsDelayed() ? TweenStatus.Delayed : TweenStatus.Playing;
 		}
 
 		public void Reverse()
@@ -120,6 +122,10 @@ namespace PATween
 				return;
 			}
 			var alreadyCompleted = data.Status == TweenStatus.Completed;
+			if (!alreadyCompleted)
+			{
+				data.ForceComplete();
+			}
 			data.Status = TweenStatus.Completed;
 			if (!alreadyCompleted)
 			{
@@ -141,6 +147,7 @@ namespace PATween
 			}
 			if (complete && data.Status != TweenStatus.Completed && data.Status != TweenStatus.Cancelled)
 			{
+				data.ForceComplete();
 				data.Status = TweenStatus.Completed;
 				data.InvokeOnComplete();
 			}

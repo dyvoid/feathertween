@@ -119,6 +119,31 @@ namespace PATween.Internal
 			stopAtStartBoundary = !stopAtEndValue;
 		}
 
+		public override void ResetPlayhead()
+		{
+			localTime = 0d;
+			lastCycleIndex = 0;
+			stopAtNextBoundary = false;
+			stopAtStartBoundary = false;
+			Direction = 1;
+		}
+
+		public override bool StartsDelayed()
+		{
+			return delay > 0f && delayType == DelayType.FirstLoop;
+		}
+
+		public override void ForceComplete()
+		{
+			if (setter == null)
+			{
+				return;
+			}
+			var finalIndex = loopCount > 0 ? loopCount - 1 : lastCycleIndex;
+			GetCycleEnds(finalIndex, out _, out var cycleTo);
+			setter(cycleTo);
+		}
+
 		public override void Step(double scaledDelta, double unscaledDelta)
 		{
 			if (Status != TweenStatus.Playing && Status != TweenStatus.Delayed)

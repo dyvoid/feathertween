@@ -15,6 +15,8 @@ namespace PATween.Internal
 		private static RootSequenceData rootManual;
 
 		private static readonly List<int> pendingKills = new List<int>(64);
+		private static readonly List<int> tickSnapshotIds = new List<int>(256);
+		private static readonly List<uint> tickSnapshotGens = new List<uint>(256);
 
 		private static int mainThreadId;
 		private static bool installed;
@@ -104,6 +106,7 @@ namespace PATween.Internal
 			double unscaled = Time.unscaledDeltaTime;
 			rootLate.Advance(scaled, unscaled);
 			TickActive(TweenStore.ActiveLate, scaled, unscaled);
+			LeakDetector.Drain();
 		}
 
 		internal static void TickFixed()
@@ -113,13 +116,27 @@ namespace PATween.Internal
 			double unscaled = Time.fixedUnscaledDeltaTime;
 			rootFixed.Advance(scaled, unscaled);
 			TickActive(TweenStore.ActiveFixed, scaled, unscaled);
+			LeakDetector.Drain();
 		}
 
 		private static void TickActive(List<int> active, double scaledDt, double unscaledDt)
 		{
+			tickSnapshotIds.Clear();
+			tickSnapshotGens.Clear();
 			for (var i = 0; i < active.Count; i++)
 			{
-				var id = active[i];
+				var snapId = active[i];
+				tickSnapshotIds.Add(snapId);
+				tickSnapshotGens.Add(TweenStore.GetGeneration(snapId));
+			}
+
+			for (var i = 0; i < tickSnapshotIds.Count; i++)
+			{
+				var id = tickSnapshotIds[i];
+				if (!TweenStore.IsAlive(id, tickSnapshotGens[i]))
+				{
+					continue;
+				}
 				var data = TweenStore.GetByIndex(id);
 				if (data == null)
 				{

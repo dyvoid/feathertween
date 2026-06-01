@@ -24,6 +24,9 @@ namespace PATween.Internal
 
 		public virtual void SetRemainingCyclesAbsolute(int cycles) { }
 		public virtual void SetStopAtNextBoundary(bool stopAtEndValue) { }
+		public virtual void ResetPlayhead() { }
+		public virtual void ForceComplete() { }
+		public virtual bool StartsDelayed() => false;
 
 		public TweenStatus Status
 		{
