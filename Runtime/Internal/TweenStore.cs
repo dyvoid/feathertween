@@ -177,6 +177,15 @@ namespace PATween.Internal
 			return data[id];
 		}
 
+		internal static uint GetGeneration(int id)
+		{
+			if (generations == null || id < 0 || id >= generations.Length)
+			{
+				return 0;
+			}
+			return generations[id];
+		}
+
 		internal static bool HasLiveOfType<T>()
 		{
 			if (data == null)
