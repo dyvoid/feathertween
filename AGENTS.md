@@ -68,56 +68,11 @@ When writing Unity C# for this project, apply the **unity dev skill**.
 
 ## Testing
 
-```text
-Tests/
-  Editor/          -- EditMode tests ( builder validation, lifecycle, loops, easing, leak detection )
-  Runtime/         -- PlayMode tests ( PlayerLoop ticking, update order, auto-kill timing )
-  Performance/     -- EditMode tests ( allocation guards + throughput benchmarks )
-```
+Three asmdefs: `Tests/Editor` (EditMode correctness), `Tests/Runtime` (PlayMode), `Tests/Performance` (EditMode allocation guards + throughput).
 
-Run via Unity Test Runner or `Unity -runTests`.
+Principle: **allocation guards hard-fail** (zero managed bytes in steady-state ticking, CI-safe), **throughput benchmarks are report-only** (noisy, never gate a build).
 
-### Performance & allocation testing
-
-Two distinct concerns, deliberately separated by intent:
-
-- **Allocation guards (hard fail).** Steady-state ticking must allocate zero managed bytes. Measured deterministically with `System.GC.GetAllocatedBytesForCurrentThread()` around a synchronous `PATweenRunner.ManualTick` loop (no frame/thread noise). These protect the core pooled, zero-alloc design promise and are CI-safe hard failures.
-- **Throughput benchmarks (report only).** Tick cost at 1k/10k tweens and `Start()` cost, measured with `Unity.PerformanceTesting`'s `Measure.Method`. Numbers are noisy (machine/thermal dependent) and must never gate a build. Run locally when investigating a perf question.
-
-The suite lives in an isolated `Tests/Performance` EditMode asmdef so the slow/noisy benchmarks do not run alongside the fast correctness tests and so the `Unity.PerformanceTesting` dependency is contained.
-
-Why EditMode + `ManualTick` instead of PlayMode: `ManualTick` advances the runner synchronously, giving deterministic, frame-independent allocation measurements.
-
-### Required test dependency
-
-The performance asmdef references `Unity.PerformanceTesting`. The **consuming project** must have the package installed (it is test-only). Add to the consuming project's `Packages/manifest.json`:
-
-```json
-{
-  "dependencies": {
-    "com.unity.test-framework.performance": "3.0.3"
-  }
-}
-```
-
-Use the version that resolves for your Unity 6000.3 install if 3.0.3 is unavailable.
-
-### Tests not showing in Test Runner
-
-When PATween is consumed as a UPM package (linked via `file:`), Unity hides its tests by default. The test asmdefs use the `UNITY_INCLUDE_TESTS` define constraint, which is only active for packages listed as `testables`. To see the tests, add the package to the **consuming project's** `Packages/manifest.json`:
-
-```json
-{
-  "dependencies": {
-    "com.patween.patween": "file:../path/to/Tween"
-  },
-  "testables": [
-    "com.patween.patween"
-  ]
-}
-```
-
-The name must match `package.json` (`com.patween.patween`). Embedding the source under `Assets/` instead would surface tests automatically, but the `testables` entry is the correct mechanism for the package workflow.
+Full run instructions, consumer-project setup (`testables` + perf package), and Test Runner troubleshooting: see `docs/testing.md`.
 
 ## Documentation Discipline
 
@@ -127,7 +82,7 @@ Keep state and design docs in sync with the code. Update as part of the same cha
 - **Finishing a phase or milestone**: update `PROGRESS.md` and reconcile the affected docs (`docs/implementation.md` phase status, `docs/api.md` if the public surface changed, `docs/architecture.md` if internals changed). Move the milestone tag only on explicit user go-ahead.
 - **Any architectural decision or deviation from a doc**: add or update an ADR in `docs/adrs/` and its `README.md` index. Do not let code silently contradict a doc.
 - **New public API**: document it in `docs/api.md` in the same change that adds it.
-- **New test category or required dependency**: document it in the Testing section above and in `PROGRESS.md` consumer reminders.
+- **New test category or required dependency**: document it in `docs/testing.md` and in `PROGRESS.md` consumer reminders.
 
 If a change touches behavior described in a doc and the doc is not updated, the change is incomplete.
 
@@ -147,4 +102,5 @@ If a change touches behavior described in a doc and the doc is not updated, the 
 | `docs/design.md` | Goals, non-goals, locked anchors |
 | `docs/api.md` | Public API reference |
 | `docs/architecture.md` | Internal design |
+| `docs/testing.md` | Test structure, running, consumer setup |
 | `docs/adrs/` | Architectural decision records |

@@ -47,5 +47,4 @@ Last updated: 2026-06-01
 
 ## Consumer setup reminders
 
-- Add PATween to consuming project's `Packages/manifest.json` `testables` to see tests in Test Runner.
-- Add `com.unity.test-framework.performance` dependency to run the performance suite.
+- Tests require consumer-project setup (`testables` + `com.unity.test-framework.performance`). Full steps: `docs/testing.md`.
