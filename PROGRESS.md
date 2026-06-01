@@ -21,6 +21,7 @@ Last updated: 2026-06-01
 - **Edit-mode fix**: `PATweenRunner.EnsureInitialized()` captures main thread id for editor ticking.
 - **Sample**: `Samples~/BasicUsage/PATweenDemo.cs` (move/scale/rotate/color/bounce), registered in `package.json`.
 - **Performance suite**: `Tests/Performance` EditMode asmdef. Hard-fail zero-alloc guards + report-only throughput benchmarks.
+- **Docs/process infra**: `PROGRESS.md` (this file) + AGENTS.md session-state pointer; AGENTS.md Documentation Discipline section; extracted `docs/testing.md`; extracted `docs/conventions.md`; lean-AGENTS.md audit (gist + pointers, no info living only in AGENTS.md).
 
 ## In flight
 
