@@ -2,6 +2,8 @@
 
 Single source of truth for AI agents working on this codebase.
 
+> **Session state lives in `PROGRESS.md`** (repo root). Read it at the start of every session for current position, what's done, and what's next. Update it at the end of every session. This `AGENTS.md` holds stable conventions; `PROGRESS.md` holds volatile state.
+
 ## Stack
 
 - **Unity**: 6000.3.8f1
