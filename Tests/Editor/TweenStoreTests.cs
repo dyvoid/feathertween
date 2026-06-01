@@ -169,11 +169,11 @@ namespace PATween.Tests
 		public void SetCapacity_Grows_ButDoesNotShrink()
 		{
 			var initial = TweenStore.Capacity;
-			global::PATween.SetCapacity(initial * 4, 0);
+			global::PATween.PATween.SetCapacity(initial * 4, 0);
 			Assert.That(TweenStore.Capacity, Is.GreaterThanOrEqualTo(initial * 4));
 
 			var grown = TweenStore.Capacity;
-			global::PATween.SetCapacity(8, 0);
+			global::PATween.PATween.SetCapacity(8, 0);
 			Assert.That(TweenStore.Capacity, Is.EqualTo(grown), "SetCapacity must not shrink.");
 		}
 

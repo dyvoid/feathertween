@@ -44,7 +44,7 @@ namespace PATween.Tests
 		public IEnumerator AutoKill_FiresFrameAfter_ObjectDestroy()
 		{
 			var go = new GameObject("__patween_destroy_target__");
-			var t = global::PATween.To(() => 0f, _ => { }, 1f, 30f)
+			var t = global::PATween.PATween.To(() => 0f, _ => { }, 1f, 30f)
 				.SetTarget(go)
 				.Start();
 

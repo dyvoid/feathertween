@@ -20,7 +20,7 @@ namespace PATween.Tests
 		public void Yoyo_PingPongs_AcrossTwoCycles()
 		{
 			var v = 0f;
-			global::PATween.To(() => v, x => v = x, 1f, 1f)
+			global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetLoops(2, LoopType.Yoyo)
 				.Start();
@@ -42,7 +42,7 @@ namespace PATween.Tests
 		public void Incremental_AddsDeltaEachCycle()
 		{
 			var v = 0f;
-			global::PATween.To(() => v, x => v = x, 1f, 1f)
+			global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetLoops(3, LoopType.Incremental)
 				.Start();
@@ -64,7 +64,7 @@ namespace PATween.Tests
 		public void Restart_RepeatsSamePattern()
 		{
 			var v = 0f;
-			global::PATween.To(() => v, x => v = x, 1f, 1f)
+			global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetLoops(2, LoopType.Restart)
 				.Start();
@@ -77,7 +77,7 @@ namespace PATween.Tests
 		public void Reverse_RewindsPlayhead_TowardZero()
 		{
 			var v = 0f;
-			var t = global::PATween.To(() => v, x => v = x, 10f, 1f)
+			var t = global::PATween.PATween.To(() => v, x => v = x, 10f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -97,7 +97,7 @@ namespace PATween.Tests
 		{
 			var v = 0f;
 			var rewinds = 0;
-			var t = global::PATween.To(() => v, x => v = x, 1f, 1f)
+			var t = global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetLoops(3, LoopType.Restart)
 				.OnRewind(() => rewinds++)
@@ -118,7 +118,7 @@ namespace PATween.Tests
 		public void EveryLoopDelay_AppliedPerCycle()
 		{
 			var v = 0f;
-			global::PATween.To(() => v, x => v = x, 1f, 1f)
+			global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetLoops(2, LoopType.Restart)
 				.SetDelay(0.5f, DelayType.EveryLoop)
@@ -144,7 +144,7 @@ namespace PATween.Tests
 		public void FirstLoopDelay_OnlyOnce()
 		{
 			var v = 0f;
-			global::PATween.To(() => v, x => v = x, 1f, 1f)
+			global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetLoops(2, LoopType.Restart)
 				.SetDelay(0.5f, DelayType.FirstLoop)
@@ -165,7 +165,7 @@ namespace PATween.Tests
 		{
 			var v = 0f;
 			var completed = false;
-			var t = global::PATween.To(() => v, x => v = x, 1f, 1f)
+			var t = global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetLoops(-1, LoopType.Restart)
 				.OnComplete(() => completed = true)
@@ -183,7 +183,7 @@ namespace PATween.Tests
 		public void From_WithDelay_SnapsAtStart_InterpolationStartsAfterDelay()
 		{
 			var v = 5f;
-			global::PATween.From(() => v, x => v = x, 0f, 1f)
+			global::PATween.PATween.From(() => v, x => v = x, 0f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetDelay(0.5f, DelayType.FirstLoop)
 				.Start();

@@ -100,7 +100,7 @@ namespace PATween.Tests
 		public void SetEase_AppliedDuringStep()
 		{
 			var v = 0f;
-			global::PATween.To(() => v, x => v = x, 1f, 1f)
+			global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetEase(Easing.InQuad())
 				.Start();
@@ -114,7 +114,7 @@ namespace PATween.Tests
 		{
 			var curve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 			var v = 0f;
-			global::PATween.To(() => v, x => v = x, 1f, 1f)
+			global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetEase(curve)
 				.Start();
