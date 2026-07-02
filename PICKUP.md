@@ -43,7 +43,7 @@ Last updated: 2026-07-02
 
 ## Known issues / tech debt
 
-- `Kill(target)` is an O(n) linear scan of the active list (acceptable for now; target-indexed map deferred to M2). See `docs/implementation.md` §8.1.
+- `Kill(target)` is an O(n) linear scan of the active list (acceptable for now; the target-indexed multimap lands in phase 1.12). See `docs/implementation.md` §8.1.
 - Performance tests require the consuming project to install `com.unity.test-framework.performance` (test-only dependency).
 - An abandoned (never-started) `SequenceBuilder` leaks its already-allocated child store slots until the next `TweenStore.Reset()`; the LeakDetector warns via finalizer.
 

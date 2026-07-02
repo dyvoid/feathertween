@@ -6,7 +6,7 @@
 - Per-frame step: 0 managed alloc.
 - Callback dispatch: 0 alloc; single delegates, not delegate lists, not params arrays.
 - Awaiter: `TweenAwaiter` struct is alloc-free on the await side. The continuation registration allocates one delegate per await (standard C# state machine behavior). No `TaskCompletionSource`.
-- `Kill(target)` is a linear scan of the active list; O(n) per call. Acceptable for occasional use; if profiled as a hot path in user code, add a target-indexed multimap in M2 at the cost of extra memory.
+- `Kill(target)` is a linear scan of the active list; O(n) per call. Replaced by the target-indexed multimap in phase 1.12 (filters and bulk ops).
 
 ### 8.2 SoA-readiness
 

@@ -12,7 +12,7 @@ A robust, minimal C# tween engine for Unity. Compositional sequences, static-met
 
 ## Status
 
-Early development — M1 (Core) is in progress. Phases 1.1–1.7 are complete; 1.8 onward is planned. Expect breaking changes until M1 ships.
+Early development — M1 (Core) is in progress. Phases 1.1–1.8 are complete (through the sequence builder); 1.9–1.14 remain (callbacks, seek/control, shortcuts, filters, safe mode, acceptance). Expect breaking changes until M1 ships.
 
 ## Getting Started
 
@@ -20,7 +20,7 @@ PATween is distributed as a UPM package.
 
 1. Add the repository as an embedded or scoped-registry package in your Unity project.
 2. Install the `com.unity.test-framework.performance` package if you want to run the performance benchmarks (test-only dependency).
-3. Open `Window > Package Manager > PATween > Samples` and import **BasicUsage** for a quick demo.
+3. Open `Window > Package Manager > PATween > Samples` and import **Basic Usage** (tween features) or **Sequence Demo** (sequence choreography) for a quick demo.
 
 See [`docs/guides/testing.md`](docs/guides/testing.md) for consumer-project setup details.
 
