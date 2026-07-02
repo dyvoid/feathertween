@@ -36,11 +36,11 @@ The `Unity.PerformanceTesting` package (`com.unity.test-framework.performance`) 
 
 ### M1 — Core (decomposed into testable phases)
 
-M1 is the foundation that everything else is built on. It is divided into 16 sequenced phases. Each phase has a narrow deliverable, a green test suite, and an exit criterion. **Phase 1.1 produces scaffolding only — not a working tween engine.** Each subsequent phase layers one capability on top of the previous, and only that capability is what gets tested at that phase's gate.
+M1 is the foundation that everything else is built on. It is divided into 14 sequenced phases. Each phase has a narrow deliverable, a green test suite, and an exit criterion. **Phase 1.1 produces scaffolding only — not a working tween engine.** Each subsequent phase layers one capability on top of the previous, and only that capability is what gets tested at that phase's gate.
 
-Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared complete when phase 1.16 passes. The base architecture lands in 1.1–1.3 and is frozen against retroactive change after 1.3 ships.
+Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared complete when phase 1.14 passes. The base architecture lands in 1.1–1.3 and is frozen against retroactive change after 1.3 ships.
 
-**Production-cut reshuffle (2026-07-02, after 1.8 shipped)**: M1 is trimmed to the minimum for a production-ready engine — correctness and footgun-removal over polish. Phase numbers stay stable as identifiers, but **1.12 (hand-written zero-alloc fast paths) and 1.15 (TweenSettings serialization) are deferred to M2**: per-frame ticking is already zero-alloc, so 1.12 only removes a per-creation delegate pair (pure optimization, no API impact), and 1.15 is designer-facing sugar with no consumer yet. The cross-engine comparative benchmark moves out of the 1.16 gate to M2 for the same reason (marketing claim, not production readiness). Remaining execution order: **1.9 → 1.10 → 1.11 → 1.13 → 1.14 → 1.16**.
+**Production-cut reshuffle (2026-07-02, after 1.8 shipped)**: M1 was trimmed to the minimum for a production-ready engine — correctness and footgun-removal over polish — and renumbered to stay linear. Hand-written zero-alloc fast paths (originally 1.12) and TweenSettings serialization (originally 1.15) moved to M2 with their full specs: per-frame ticking is already zero-alloc, so fast paths only remove a per-creation delegate pair (pure optimization, no API impact), and TweenSettings is designer-facing sugar with no consumer yet. The cross-engine comparative benchmark moved out of the acceptance gate to M2 for the same reason (marketing claim, not production readiness). Renumbering: old 1.13 → 1.12 (filters), old 1.14 → 1.13 (safe mode), old 1.16 → 1.14 (acceptance). Git history and documents predating this date use the old numbering.
 
 #### Phase 1.1 — Storage and handle scaffold (no animation)
 
@@ -191,39 +191,25 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 **Tests**:
 
 - Each shortcut moves the right component to the right value over time
-- Target auto-set so `PATween.Kill(target)` reaches the tween (verified in 1.13)
+- Target auto-set so `PATween.Kill(target)` reaches the tween (verified in 1.12)
 - `From()` chained on each shortcut snaps the right property
 
 **Exit**: ergonomic API surface against the lambda core.
 
-#### Phase 1.12 — Hand-written zero-alloc fast paths *(deferred to M2)*
-
-**Deferred**: per-frame ticking is already zero-alloc; this phase only removes the per-creation delegate pair. Pure optimization with no API impact — lands in M2 after v0.1 has a real consumer.
-
-**Deliverable**: override `Move` / `LocalMove` / `Scale` / `Fade` / `Color` to bypass the lambda core; each emits a static `IInterpolator<T>` instance and a no-closure setter dispatched through a typed-shortcut handle. Generic `PATween.To` keeps the lambda pair until M5.
-
-**Tests**:
-
-- 10k `PATween.Move` tweens for 60s: 0 per-frame **and** 0 per-Start managed alloc (Profiler.GetMonoUsedSizeLong delta bounded)
-- Behavior identical to the 1.11 lambda fallback (golden-trace test seeded with same RNG / same easing)
-- Hand-written and lambda paths can coexist in the same sequence
-
-**Exit**: production-grade allocation profile for the common cases.
-
-#### Phase 1.13 — Filters and bulk ops
+#### Phase 1.12 — Filters and bulk ops
 
 **Deliverable**: `Dictionary<object, List<int>>` target-indexed multimap maintained on Start / Kill / Recycle. `Kill(target)`, `IsTweening(target)`, `Kill(id)`, `KillAll`, `PauseAll`, `ResumeAll`.
 
 **Tests**:
 
-- 1k tweens across 100 targets: `Kill(target)` removes only that target's tweens, completes under N μs (target hardware budget set in 1.16)
+- 1k tweens across 100 targets: `Kill(target)` removes only that target's tweens, completes under N μs (target hardware budget set in 1.14)
 - Multimap entry removed when the last tween for a target dies
 - `IsTweening(target)` returns true iff at least one live tween exists for the target
 - Sequence with `SetTarget` participates in the multimap
 
 **Exit**: O(1) bulk filtering.
 
-#### Phase 1.14 — Safe mode and assertions
+#### Phase 1.13 — Safe mode and assertions
 
 **Deliverable**: `[Conditional]`-style try/catch wrapper around setter and callback invocations; toggleable per tween via `SetSafeMode`. Default on in Editor, off in release. `SetCancelOnError`. Off-thread assertion in safe mode.
 
@@ -235,24 +221,9 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 **Exit**: safe mode and assertion path verified.
 
-#### Phase 1.15 — TweenSettings serialization *(deferred to M2)*
+#### Phase 1.14 — M1 acceptance
 
-**Deferred**: designer-facing sugar with no consumer until the engine is in a real project. Lands in M2.
-
-**Deliverable**: `[Serializable] TweenSettings` and `TweenSettings<T>`. `WithDirection`. PropertyDrawer with foldout; AnimationCurve hidden unless `ease == Curve`.
-
-**Tests**:
-
-- Round-trip serialize/deserialize an instance
-- `WithDirection(true)` swaps start/end on `TweenSettings<T>`
-- PropertyDrawer renders the documented one-line + foldout layout (Editor-only snapshot)
-- `PATween.From(rect, settings)` plays the configured tween
-
-**Exit**: designer-facing API ready.
-
-#### Phase 1.16 — M1 acceptance (slimmed to the production cut)
-
-**Deliverable**: composed demo (intro + sequenced multi-tween + overlap + callback + From + label). Performance benchmark suite: 10k float tweens; 1k 10-child sequences. The cross-engine comparative benchmark (DOTween / PrimeTween recordings, LitMotion cost comparison) is deferred to M2 — it is a competitive claim, not a production-readiness gate.
+**Deliverable**: composed demo (intro + sequenced multi-tween + overlap + callback + From + label). Performance benchmark suite: 10k float tweens; 1k 10-child sequences. The cross-engine comparative benchmark (DOTween / PrimeTween recordings, LitMotion cost comparison) lives in M2 — it is a competitive claim, not a production-readiness gate.
 
 **Tests**:
 
@@ -264,9 +235,26 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 ### M2 — Polish and ecosystem
 
-- **Hand-written zero-alloc fast paths** (deferred phase 1.12: bypass the lambda core for `Move` / `LocalMove` / `Scale` / `Fade` / `Color`)
-- **TweenSettings serialization** (deferred phase 1.15: `[Serializable] TweenSettings<T>`, `WithDirection`, PropertyDrawer)
-- **Cross-engine comparative benchmark** (deferred from 1.16: DOTween / PrimeTween reference recordings, per-tween cost vs LitMotion's managed dispatch path, documented falsifiable configuration)
+The first three items carry full specs because they were moved out of M1 in the production-cut reshuffle.
+
+#### Hand-written zero-alloc fast paths (moved from M1)
+
+**Deliverable**: override `Move` / `LocalMove` / `Scale` / `Fade` / `Color` to bypass the lambda core; each emits a static `IInterpolator<T>` instance and a no-closure setter dispatched through a typed-shortcut handle. Generic `PATween.To` keeps the lambda pair until M5.
+
+**Tests**: 10k `PATween.Move` tweens for 60s: 0 per-frame **and** 0 per-Start managed alloc (Profiler.GetMonoUsedSizeLong delta bounded). Behavior identical to the 1.11 lambda baseline (golden-trace test seeded with same RNG / same easing). Hand-written and lambda paths can coexist in the same sequence.
+
+#### TweenSettings serialization (moved from M1)
+
+**Deliverable**: `[Serializable] TweenSettings` and `TweenSettings<T>`. `WithDirection`. PropertyDrawer with foldout; AnimationCurve hidden unless `ease == Curve`.
+
+**Tests**: round-trip serialize/deserialize; `WithDirection(true)` swaps start/end; PropertyDrawer renders the documented one-line + foldout layout (Editor-only snapshot); `PATween.From(rect, settings)` plays the configured tween.
+
+#### Cross-engine comparative benchmark (moved from M1 acceptance)
+
+Composed demo reproducible against DOTween / PrimeTween reference recordings. Per-tween cost within 1.5x of LitMotion's **managed dispatch path** (force-enabled by using a non-blittable value type or `WithCancelOnError`, which bypasses LitMotion's Burst job). The benchmark configuration must be documented alongside results so the number is falsifiable.
+
+#### Remaining M2 items
+
 - Zero-alloc target-capture overloads for all callbacks (`OnStart`, `OnPlay`, `OnPause`, `OnUpdate`, `OnStepComplete`, `OnRewind`)
 - `SetLink(GameObject, LinkBehavior)` with KillOn/PauseOn/Restart variants
 - Typed shortcuts: `RectTransform`, `Material` (color/float/vector by property name), `SpriteRenderer`, `Camera`, `Light`, `AudioSource`

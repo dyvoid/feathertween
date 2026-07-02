@@ -23,15 +23,15 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Safe mode and assertions | Planned | Try/catch wrapper, off-thread assertions, release-build skip | — |
 | M1 acceptance (production cut) | Planned | Composed demo, all suites green, zero-alloc verified; v0.1 tag | — |
 
-Production-cut reshuffle (2026-07-02): hand-written zero-alloc fast paths (phase 1.12), TweenSettings serialization (phase 1.15), and the cross-engine comparative benchmark moved to M2. See `implementation.md` §10.
+Production-cut reshuffle (2026-07-02): hand-written zero-alloc fast paths, TweenSettings serialization, and the cross-engine comparative benchmark moved to M2; M1 renumbered to stay linear (now 14 phases, acceptance is 1.14). See `implementation.md` §10.
 
 ## M2 — Polish and ecosystem
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Hand-written zero-alloc fast paths | Planned | Deferred phase 1.12: bypass lambda core for common shortcuts, 0 alloc on `Start` |
-| TweenSettings serialization | Planned | Deferred phase 1.15: `[Serializable] TweenSettings<T>`, PropertyDrawer, `WithDirection` |
-| Cross-engine comparative benchmark | Planned | Deferred from 1.16: DOTween/PrimeTween recordings, cost vs LitMotion managed path |
+| Hand-written zero-alloc fast paths | Planned | Moved from M1: bypass lambda core for common shortcuts, 0 alloc on `Start` |
+| TweenSettings serialization | Planned | Moved from M1: `[Serializable] TweenSettings<T>`, PropertyDrawer, `WithDirection` |
+| Cross-engine comparative benchmark | Planned | Moved from M1 acceptance: DOTween/PrimeTween recordings, cost vs LitMotion managed path |
 | Zero-alloc target-capture overloads for all callbacks | Candidate | Extend beyond `OnComplete` / `OnKill` |
 | `SetLink(GameObject, LinkBehavior)` | Candidate | KillOn/PauseOn/RestartOn variants |
 | Typed shortcuts expansion | Candidate | `RectTransform`, `Material`, `SpriteRenderer`, `Camera`, `Light`, `AudioSource` |
