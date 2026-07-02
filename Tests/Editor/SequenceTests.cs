@@ -197,6 +197,26 @@ namespace PATween.Tests
 		}
 
 		[Test]
+		public void CallbackOrderedAfterPause_AtSameTime_HeldUntilResume()
+		{
+			var v = 0f;
+			var log = new List<string>();
+			var sb = ManualSequence();
+			sb.Append(FloatTween(() => v, x => v = x, 1f, 1f));
+			sb.AddPause(1f);
+			sb.AppendCallback(() => log.Add("after"));
+			var seq = sb.Start();
+
+			PATweenRunner.ManualTick(1.5);
+			Assert.That(log, Is.Empty, "callback positioned after the pause must not fire while paused");
+			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Paused));
+
+			seq.Resume();
+			PATweenRunner.ManualTick(0.01);
+			Assert.That(log, Is.EqualTo(new[] { "after" }));
+		}
+
+		[Test]
 		public void EmptySequence_CompletesOnFirstTick()
 		{
 			var completed = false;

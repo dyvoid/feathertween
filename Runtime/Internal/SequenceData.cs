@@ -70,7 +70,10 @@ namespace PATween.Internal
 				}
 			}
 
-			for (var i = 0; i < entries.Length; i++)
+			// Entries after the pause in (start, order) ordering are held until
+			// resume, even at the exact same timestamp.
+			var limit = pauseIndex >= 0 ? pauseIndex : entries.Length - 1;
+			for (var i = 0; i <= limit; i++)
 			{
 				ref var e = ref entries[i];
 				if (e.Finished)

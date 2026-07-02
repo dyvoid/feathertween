@@ -18,6 +18,11 @@
       "displayName": "Basic Usage",
       "description": "A demo MonoBehaviour that spawns primitives showcasing move, scale, rotate, color, and bounce tweens.",
       "path": "Samples~/BasicUsage"
+    },
+    {
+      "displayName": "Sequence Demo",
+      "description": "A choreographed show exercising sequence features: Append/Join, SetDefaults cascade, callbacks, AddPause with auto-resume, label-based Insert, deferred From snap, and Restart looping.",
+      "path": "Samples~/SequenceDemo"
     }
   ]
 }
