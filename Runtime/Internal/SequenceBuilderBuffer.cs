@@ -31,8 +31,6 @@ namespace PATween.Internal
 		private bool hasDefaultLoops;
 		private float defaultDelay;
 		private bool hasDefaultDelay;
-		private float defaultDuration;
-		private bool hasDefaultDuration;
 
 		private readonly List<SequenceChildEntry> entries = new List<SequenceChildEntry>();
 		private readonly List<Action> callbacks = new List<Action>();
@@ -128,8 +126,7 @@ namespace PATween.Internal
 			EaseRef? ease,
 			int? loops,
 			LoopType loopType,
-			float? childDelay,
-			float? duration)
+			float? childDelay)
 		{
 			if (ease.HasValue)
 			{
@@ -147,11 +144,6 @@ namespace PATween.Internal
 				defaultDelay = childDelay.Value < 0f ? 0f : childDelay.Value;
 				hasDefaultDelay = true;
 			}
-			if (duration.HasValue)
-			{
-				defaultDuration = duration.Value;
-				hasDefaultDuration = true;
-			}
 		}
 
 		public void ApplyDefaults<T>(TweenBuilderBuffer<T> child)
@@ -167,10 +159,6 @@ namespace PATween.Internal
 			if (hasDefaultDelay && !child.DelayExplicit)
 			{
 				child.ApplyDefaultDelay(defaultDelay);
-			}
-			if (hasDefaultDuration && !child.DurationExplicit)
-			{
-				child.ApplyDefaultDuration(defaultDuration);
 			}
 		}
 
@@ -419,7 +407,6 @@ namespace PATween.Internal
 			hasDefaultEase = false;
 			hasDefaultLoops = false;
 			hasDefaultDelay = false;
-			hasDefaultDuration = false;
 			entries.Clear();
 			callbacks.Clear();
 			labels.Clear();

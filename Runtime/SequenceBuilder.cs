@@ -53,15 +53,16 @@ namespace PATween
 			return this;
 		}
 
+		// No duration default: every creation method requires an explicit
+		// duration, so a duration cascade could never apply (ADR 0010).
 		public SequenceBuilder SetDefaults(
-			float? duration = null,
 			EaseRef? ease = null,
 			int? loops = null,
 			LoopType loopType = LoopType.Restart,
 			float? delay = null)
 		{
 			ValidateOrThrow();
-			buffer.SetDefaults(ease, loops, loopType, delay, duration);
+			buffer.SetDefaults(ease, loops, loopType, delay);
 			return this;
 		}
 

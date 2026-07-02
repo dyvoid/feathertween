@@ -44,7 +44,7 @@ All signatures accept builders, never started handles.
 
 ### 5.4 Defaults cascade
 
-`SetDefaults(duration, ease, loops, ...)` on a `SequenceBuilder` pushes those values into every **subsequently** appended builder that has not explicitly overridden them. Captured at append time, then frozen on the child (see §5.2). Calling `SetDefaults` after `Append/Insert/Join` does **not** retroactively affect already-appended children.
+`SetDefaults(ease, loops, delay)` on a `SequenceBuilder` (no duration — every creation method requires an explicit duration, see ADR 0010) pushes those values into every **subsequently** appended builder that has not explicitly overridden them. Captured at append time, then frozen on the child (see §5.2). Calling `SetDefaults` after `Append/Insert/Join` does **not** retroactively affect already-appended children.
 
 ### 5.4a Label resolution timing
 

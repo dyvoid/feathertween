@@ -157,6 +157,8 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 **Deliverable**: builder-side `OnStart` / `OnPlay` / `OnPause` / `OnUpdate` / `OnStepComplete` / `OnComplete` / `OnKill` / `OnRewind`. Zero-alloc target-capture overloads on `OnComplete` and `OnKill` only; standard delegates for all other callbacks. Handle-side multicast for completion-shaped events. Deferred-mutation command buffer drained at end of tick.
 
+**Design constraint (feeds 1.10)**: `SequenceData.Step` is currently a forward-only delta walk; phase 1.10 reworks it into a shared `AdvanceTo(from, to, fireCallbacks)` boundary walk used by both tick and `Seek`, in both directions. The 1.9 command buffer and `OnUpdate` / `OnStepComplete` dispatch must not bake in forward-only or tick-only assumptions — callbacks fire from boundary crossings, not from "the tick advanced".
+
 **Tests**:
 
 - Firing matrix in §3.14 verified end-to-end for tween and sequence

@@ -171,7 +171,7 @@ Snap timing (see anchor 13):
 
 ```csharp
 SequenceBuilder sb = PATween.Sequence()
-    .SetDefaults(duration: 0.5f, ease: Easing.OutQuad);
+    .SetDefaults(ease: Easing.OutQuad);
 
 sb.Append(PATween.Move(transform, p1, 0.5f));            // builder consumed by sequence
 sb.Append(PATween.Rotate(transform, r1, 0.5f));
@@ -185,7 +185,7 @@ sb.Insert(Position.AtLabel("intro", +0.3f), nextTweenBuilder);
 Sequence seq = sb.Start();
 ```
 
-`SetDefaults` cascades duration/ease/loops to child tweens. `Append`/`Insert`/`Join` take a `TweenBuilder<T>` or `SequenceBuilder`, never a started `Tween`/`Sequence`.
+`SetDefaults` cascades ease/loops/delay to child tweens (no duration: creation methods require it explicitly, ADR 0010). `Append`/`Insert`/`Join` take a `TweenBuilder<T>` or `SequenceBuilder`, never a started `Tween`/`Sequence`.
 
 ### 3.7 Position type
 

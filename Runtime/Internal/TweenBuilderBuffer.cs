@@ -35,7 +35,6 @@ namespace PATween.Internal
 		private bool easeExplicit;
 		private bool loopsExplicit;
 		private bool delayExplicit;
-		private bool durationExplicit;
 
 		public uint Generation => generation;
 		public bool Released => released;
@@ -44,7 +43,6 @@ namespace PATween.Internal
 		public bool EaseExplicit => easeExplicit;
 		public bool LoopsExplicit => loopsExplicit;
 		public bool DelayExplicit => delayExplicit;
-		public bool DurationExplicit => durationExplicit;
 
 		public UpdatePhase Phase
 		{
@@ -101,11 +99,7 @@ namespace PATween.Internal
 		public float Duration
 		{
 			get => duration;
-			set
-			{
-				duration = value;
-				durationExplicit = true;
-			}
+			set => duration = value;
 		}
 
 		public EaseRef Ease
@@ -221,7 +215,6 @@ namespace PATween.Internal
 		}
 
 		public void ApplyDefaultDelay(float value) => delay = value;
-		public void ApplyDefaultDuration(float value) => duration = value;
 		public void ApplyInheritedPhase(UpdatePhase value, bool inheritedIgnoreTimeScale)
 		{
 			phase = value;
@@ -326,7 +319,6 @@ namespace PATween.Internal
 			easeExplicit = false;
 			loopsExplicit = false;
 			delayExplicit = false;
-			durationExplicit = false;
 			onComplete?.Clear();
 			onKill?.Clear();
 			onRewind?.Clear();
