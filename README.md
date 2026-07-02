@@ -1,10 +1,9 @@
 # PATween
 
+<!-- shields.io badges (package version, last commit, issues) can't read
+     private repos; restore them if this repo ever goes public. -->
 [![CI](https://github.com/dyvoid/patween/actions/workflows/ci.yml/badge.svg)](https://github.com/dyvoid/patween/actions/workflows/ci.yml)
 [![Unity](https://img.shields.io/badge/Unity-6000.3%2B-black?logo=unity)](https://unity.com)
-[![Version](https://img.shields.io/github/package-json/v/dyvoid/patween?label=package)](package.json)
-[![Last Commit](https://img.shields.io/github/last-commit/dyvoid/patween)](https://github.com/dyvoid/patween/commits/main)
-[![Issues](https://img.shields.io/github/issues/dyvoid/patween)](https://github.com/dyvoid/patween/issues)
 
 A robust, minimal C# tween engine for Unity. Compositional sequences, static-method API, struct handles, PlayerLoop runner.
 
