@@ -105,8 +105,8 @@ If a change touches behavior described in a doc and the doc is not updated, the 
 
 See [`docs/git-strategy.md`](docs/git-strategy.md) for full branching, merging, and commit rules. In brief:
 
-- Feature branches from `develop`; name `feature/1.x-phase-name`.
-- Merge to `develop` with `--no-ff`; fast-forward to `main` is user-handled.
+- Trunk-based: single `main` branch, short-lived task/fix branches (`task/1.x-phase-name`, `fix/...`).
+- Rebase onto `main`, fast-forward merge only — no merge commits.
 - No squashing — atomic commits are the audit trail.
 
 ## Key Documents

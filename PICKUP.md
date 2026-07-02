@@ -10,11 +10,11 @@ Last updated: 2026-06-01
 - **Milestone**: M1 (Core), 16 phases. See `docs/implementation.md` §10.
 - **Done through**: Phase 1.7 (loops, delays, reverse). Plus post-1.7 hardening (code-review fixes), a sample, and a performance suite.
 - **Next phase**: 1.8 — Sequence builder.
-- **Branch**: work on `develop`; feature branches `feature/1.x-phase-name`.
+- **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
 
 ## Done
 
-- **Phases 1.1–1.7** (merged to `develop`): storage/handle scaffold, PlayerLoop runner, builder/handle split, generic tween core, full ease system, From/FromTo, loops/delays/direction/reverse.
+- **Phases 1.1–1.7** (merged to `main`): storage/handle scaffold, PlayerLoop runner, builder/handle split, generic tween core, full ease system, From/FromTo, loops/delays/direction/reverse.
 - **Docs reconciliation**: renamed `localTime`, `IInterpolator` Add/Subtract, infinite-loop reverse wrap, ADRs 0008/0009.
 - **Code-review lifecycle fixes**: playhead reset on Restart/Play, ForceComplete snap on Complete/Kill(true), TickActive reentrancy hardening (snapshot + generation guard), LeakDetector.Drain in TickLate/TickFixed. Regression tests in `Tests/Editor/LifecycleTests.cs`.
 - **Namespace fix**: `PATween` class moved into `namespace PATween`; test refs updated to `global::PATween.PATween`.
@@ -25,12 +25,11 @@ Last updated: 2026-06-01
 
 ## In flight
 
-- Nothing half-built. `develop` is clean and ahead of `origin/develop`.
+- Nothing half-built. `main` is clean and up to date with `origin/main`.
 
 ## Next up
 
-1. Push `develop` to origin when ready (currently a few commits ahead).
-2. Begin Phase 1.8 — Sequence builder (`SequenceBuilder`, Append/Insert/Join, Position values, labels). See `docs/implementation.md` §10 phase 1.8 for deliverable + test list.
+1. Begin Phase 1.8 — Sequence builder (`SequenceBuilder`, Append/Insert/Join, Position values, labels). See `docs/implementation.md` §10 phase 1.8 for deliverable + test list.
 
 ## Open questions / decisions pending
 
