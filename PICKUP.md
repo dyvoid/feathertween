@@ -27,7 +27,13 @@ Last updated: 2026-07-02
 
 ## Next up
 
-1. Begin Phase 1.9 — Callbacks: builder-side `OnStart`/`OnPlay`/`OnPause`/`OnUpdate`/`OnStepComplete`/`OnComplete`/`OnKill`/`OnRewind`, zero-alloc target-capture overloads on `OnComplete`/`OnKill`, handle-side multicast, deferred-mutation command buffer drained at end of tick. See `docs/implementation.md` §10 phase 1.9.
+1. Begin Phase 1.9 — Callbacks: builder-side `OnStart`/`OnPlay`/`OnPause`/`OnUpdate`/`OnStepComplete`/`OnComplete`/`OnKill`/`OnRewind`, zero-alloc target-capture overloads on `OnComplete`/`OnKill`, handle-side multicast, deferred-mutation command buffer drained at end of tick. See `docs/implementation.md` §10 phase 1.9 — note the design constraint there: no forward-only assumptions (1.10 reworks sequence stepping into a bidirectional `AdvanceTo` boundary walk).
+
+## Infra (2026-07-02)
+
+- **.NET stub harness** (`tools/compile-check/`): compiles Runtime + Samples + EditMode tests against UnityEngine stubs, runs the suite via NUnitLite in <1s. Unity-only tests carry `[Category("RequiresUnity")]`.
+- **CI**: `.github/workflows/ci.yml` runs the harness on push to `main` and PRs. Branch protection (require CI, no direct push) still to be enabled on GitHub by the user.
+- **ADR 0010**: `SetDefaults` duration parameter removed (dead code — creation methods require explicit duration).
 
 ## Open questions / decisions pending
 
