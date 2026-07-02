@@ -90,7 +90,7 @@ namespace PATween.Tests
 		}
 
 		// Needs Unity's real PlayerLoop; excluded from the .NET compile-check
-		// harness (see tools/compile-check).
+		// harness (see tools~/compile-check).
 		[Test, Category("RequiresUnity")]
 		public void Install_InjectsThreePlayerLoopSubsystems()
 		{

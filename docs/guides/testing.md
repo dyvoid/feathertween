@@ -21,18 +21,18 @@ Run via the Unity **Test Runner** window (Window > General > Test Runner) or hea
 
 ## Fast feedback: the .NET stub harness (no Unity)
 
-`tools/compile-check/` compiles Runtime + Samples + EditMode tests against a
+`tools~/compile-check/` (tilde suffix: Unity ignores the folder, like `Samples~`) compiles Runtime + Samples + EditMode tests against a
 minimal `UnityEngine` stub and runs the EditMode suite via NUnitLite in well
 under a second. CI runs this on every push (`.github/workflows/ci.yml`).
 
 ```sh
-dotnet run --project tools/compile-check/PATween.TestRunner.csproj -c Release -- --noresult --where "cat != RequiresUnity"
+dotnet run --project tools~/compile-check/PATween.TestRunner.csproj -c Release -- --noresult --where "cat != RequiresUnity"
 ```
 
 Tests that genuinely need the Unity runtime are tagged `[Category("RequiresUnity")]`
 and excluded there. The harness is a fast pre-check, not a replacement: the
 in-Unity Editor + Runtime + Performance run remains the merge gate. See
-`tools/compile-check/README.md` for stub rules.
+`tools~/compile-check/README.md` for stub rules.
 
 ## Performance & allocation testing
 

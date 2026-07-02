@@ -56,6 +56,6 @@ reference/
 
 # .NET compile-check harness (tools/compile-check) - keep its projects,
 # ignore its build output
-!tools/compile-check/*.csproj
-tools/compile-check/bin/
-tools/compile-check/obj/
+!tools~/compile-check/*.csproj
+tools~/compile-check/bin/
+tools~/compile-check/obj/

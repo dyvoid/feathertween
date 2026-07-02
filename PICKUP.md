@@ -31,7 +31,7 @@ Last updated: 2026-07-02
 
 ## Infra (2026-07-02)
 
-- **.NET stub harness** (`tools/compile-check/`): compiles Runtime + Samples + EditMode tests against UnityEngine stubs, runs the suite via NUnitLite in <1s. Unity-only tests carry `[Category("RequiresUnity")]`.
+- **.NET stub harness** (`tools~/compile-check/`): compiles Runtime + Samples + EditMode tests against UnityEngine stubs, runs the suite via NUnitLite in <1s. Unity-only tests carry `[Category("RequiresUnity")]`.
 - **CI**: `.github/workflows/ci.yml` runs the harness on push to `main` and PRs. Branch protection (require CI, no direct push) still to be enabled on GitHub by the user.
 - **ADR 0010**: `SetDefaults` duration parameter removed (dead code — creation methods require explicit duration).
 

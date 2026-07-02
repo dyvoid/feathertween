@@ -17,9 +17,9 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Compile Runtime + Samples against Unity stubs
-        run: dotnet build tools/compile-check/PATween.CompileCheck.csproj -c Release
+        run: dotnet build tools~/compile-check/PATween.CompileCheck.csproj -c Release
 
       - name: Run EditMode suite (NUnitLite, excludes RequiresUnity)
         run: >
-          dotnet run --project tools/compile-check/PATween.TestRunner.csproj
+          dotnet run --project tools~/compile-check/PATween.TestRunner.csproj
           -c Release -- --noresult --where "cat != RequiresUnity"

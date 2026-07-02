@@ -1,5 +1,8 @@
 # compile-check — .NET test harness (no Unity required)
 
+This folder ends in `~` so Unity never imports it (same mechanism as `Samples~`).
+Never place build output or DLLs in a Unity-visible package folder.
+
 Compiles the package Runtime, Samples, and EditMode tests against a minimal
 `UnityEngine` stub (`UnityStubs.cs`) and runs the EditMode suite via NUnitLite.
 This is what CI runs on every push; it covers everything except code that needs

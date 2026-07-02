@@ -92,7 +92,7 @@ High-blast-radius files always get manual review:
 CI is load-bearing for trunk-based development — slow or weak pipelines break the entire strategy.
 
 `.github/workflows/ci.yml` runs on every push to `main` and every PR: it compiles Runtime + Samples
-and runs the EditMode suite via the .NET stub harness (`tools/compile-check/`, no Unity license
+and runs the EditMode suite via the .NET stub harness (`tools~/compile-check/`, no Unity license
 needed). Tests tagged `RequiresUnity` plus the PlayMode and Performance suites still require a
 manual Unity Test Runner pass before merge.
 
