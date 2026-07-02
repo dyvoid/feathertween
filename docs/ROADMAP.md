@@ -15,7 +15,7 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Full ease system | Done | `EaseRef`, `Easing.X` factories, parametric eases, static eval table | 0005 |
 | From / FromTo with deferred snap | Done | `From()` / `FromTo()` builder methods, snap semantics | 0007 |
 | Loops, delays, direction, reverse | Done | `SetLoops`, `SetDelay`, `Reverse()`, yoyo/incremental/rewind | 0009 |
-| Sequence builder | In flight | `SequenceBuilder`, Append/Insert/Join, labels, Position values | 0006 |
+| Sequence builder | Done | `SequenceBuilder`, Append/Insert/Join, labels, Position values | 0006 |
 | Callbacks (full set + multicast + reentrancy) | Planned | Builder-side callbacks, handle-side multicast, deferred mutation | — |
 | Seek and remaining control surface | Planned | `Seek`, `Restart`, `Complete`, `Kill(complete)`, mid-play `Insert` | — |
 | Typed shortcuts (lambda) | Planned | `Move`, `Rotate`, `Scale`, `Fade`, `Color` — lambda baseline | — |
