@@ -64,30 +64,44 @@ namespace PATween.Tests
 			var go = new GameObject("PATweenProbe");
 			var probe = go.AddComponent<UpdateOrderProbe>();
 
+			// Two frames: a newly added component's first Update can be
+			// deferred, so guarantee at least one full Update+LateUpdate pass.
+			yield return null;
 			yield return null;
 
-			Assert.That(probe.UpdateRanThisFrame, Is.True);
-			Assert.That(probe.RootTimeAfterUpdate, Is.GreaterThan(probe.RootTimeBeforeUpdate),
+			Assert.That(probe.SawUpdate, Is.True);
+			Assert.That(probe.TickedBetweenUpdateAndLate, Is.True,
 				"PATween runner must tick after ScriptRunBehaviourUpdate.");
 
 			Object.Destroy(go);
 		}
 
+		// The before/after pair must be sampled within a single frame; comparing
+		// across frames races with script execution order (no runner tick happens
+		// between one frame's LateUpdate and the next frame's Update).
 		private class UpdateOrderProbe : MonoBehaviour
 		{
-			public double RootTimeBeforeUpdate { get; private set; }
-			public double RootTimeAfterUpdate { get; private set; }
-			public bool UpdateRanThisFrame { get; private set; }
+			public bool SawUpdate { get; private set; }
+			public bool TickedBetweenUpdateAndLate { get; private set; }
+
+			private double rootTimeAtUpdate;
+			private bool updateRanThisFrame;
 
 			private void Update()
 			{
-				RootTimeBeforeUpdate = PATweenRunner.RootUpdate.LocalTime;
-				UpdateRanThisFrame = true;
+				rootTimeAtUpdate = PATweenRunner.RootUpdate.LocalTime;
+				updateRanThisFrame = true;
+				SawUpdate = true;
 			}
 
 			private void LateUpdate()
 			{
-				RootTimeAfterUpdate = PATweenRunner.RootUpdate.LocalTime;
+				if (updateRanThisFrame
+					&& PATweenRunner.RootUpdate.LocalTime > rootTimeAtUpdate)
+				{
+					TickedBetweenUpdateAndLate = true;
+				}
+				updateRanThisFrame = false;
 			}
 		}
 	}
