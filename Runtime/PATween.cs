@@ -10,6 +10,12 @@ namespace PATween
 			TweenStore.EnsureCapacity(tweens + sequences);
 		}
 
+		public static SequenceBuilder Sequence()
+		{
+			var buf = SequenceBuilderBufferPool.Rent();
+			return new SequenceBuilder(buf);
+		}
+
 		public static TweenBuilder<T> To<T>(Func<T> getter, Action<T> setter, T end, float duration)
 		{
 			if (getter == null)

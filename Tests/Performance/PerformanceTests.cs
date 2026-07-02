@@ -82,6 +82,32 @@ namespace PATween.Tests.Performance
 				$"Ticking after kill/realloc allocated {delta} bytes; free-list reuse must not allocate.");
 		}
 
+		[Test]
+		public void Tick_SteadyState100Sequences_ZeroManagedAlloc()
+		{
+			for (var i = 0; i < 100; i++)
+			{
+				var sb = global::PATween.PATween.Sequence()
+					.SetUpdate(UpdatePhase.Manual)
+					.SetAutoKill(false);
+				sb.Append(global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f));
+				sb.Join(global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f));
+				sb.Append(global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f));
+				sb.Start();
+			}
+			Warmup(120);
+
+			var before = GC.GetAllocatedBytesForCurrentThread();
+			for (var i = 0; i < 600; i++)
+			{
+				PATweenRunner.ManualTick(0.016);
+			}
+			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
+
+			Assert.That(delta, Is.Zero,
+				$"Steady-state sequence ticking allocated {delta} bytes over 600 ticks; must be zero.");
+		}
+
 		[Test, Performance]
 		public void Throughput_Tick1kTweens()
 		{

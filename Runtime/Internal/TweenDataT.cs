@@ -19,6 +19,10 @@ namespace PATween.Internal
 		private float delay;
 		private DelayType delayType;
 
+		private SnapMode snapMode;
+		private T fromValue;
+		private bool snapPending;
+
 		private int lastCycleIndex;
 		private bool stopAtNextBoundary;
 		private bool stopAtStartBoundary;
@@ -99,6 +103,61 @@ namespace PATween.Internal
 		{
 			get => delayType;
 			set => delayType = value;
+		}
+
+		public SnapMode SnapMode
+		{
+			get => snapMode;
+			set => snapMode = value;
+		}
+
+		public T FromValue
+		{
+			get => fromValue;
+			set => fromValue = value;
+		}
+
+		public bool SnapPending
+		{
+			get => snapPending;
+			set => snapPending = value;
+		}
+
+		public override void ResolveStartValues()
+		{
+			if (!snapPending)
+			{
+				return;
+			}
+			snapPending = false;
+
+			// fromValue holds the pristine user-supplied value (the relative delta
+			// for None, the 'from' argument otherwise) so re-resolving after a
+			// Restart re-arm cannot compound mutated state.
+			switch (snapMode)
+			{
+				case SnapMode.None:
+					startValue = getter != null ? getter() : default;
+					if (relative)
+					{
+						endValue = interpolator.Add(startValue, fromValue);
+					}
+					break;
+				case SnapMode.From:
+					startValue = fromValue;
+					endValue = getter != null ? getter() : default;
+					setter?.Invoke(startValue);
+					break;
+				case SnapMode.FromTo:
+					startValue = fromValue;
+					setter?.Invoke(startValue);
+					break;
+			}
+		}
+
+		public override void RearmStartValues()
+		{
+			snapPending = true;
 		}
 
 		public override void SetRemainingCyclesAbsolute(int cycles)
@@ -330,6 +389,9 @@ namespace PATween.Internal
 			loopType = LoopType.Restart;
 			delay = 0f;
 			delayType = DelayType.FirstLoop;
+			snapMode = SnapMode.None;
+			fromValue = default;
+			snapPending = false;
 			lastCycleIndex = 0;
 			stopAtNextBoundary = false;
 			stopAtStartBoundary = false;

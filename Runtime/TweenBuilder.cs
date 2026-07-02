@@ -124,77 +124,8 @@ namespace PATween
 		{
 			ValidateOrThrow();
 
-			var data = new TweenData<T>();
-			data.Phase = buffer.Phase;
-			data.AutoKill = buffer.AutoKill;
-			data.IgnoreTimeScale = buffer.IgnoreTimeScale;
-			data.Target = buffer.Target;
-			data.Getter = buffer.Getter;
-			data.Setter = buffer.Setter;
-			data.EndValue = buffer.EndValue;
-			data.Duration = buffer.Duration;
-			data.Relative = buffer.Relative;
-			data.Ease = buffer.Ease;
-			data.LoopCount = buffer.LoopCount;
-			data.LoopType = buffer.LoopType;
-			data.Delay = buffer.Delay;
-			data.DelayType = buffer.DelayType;
-			data.Direction = 1;
-			data.Interpolator = Interpolators.Get<T>();
-
-			var snapValue = default(T);
-			var snap = false;
-			switch (buffer.SnapMode)
-			{
-				case SnapMode.None:
-					data.StartValue = data.Getter != null ? data.Getter() : default;
-					if (data.Relative)
-					{
-						data.EndValue = data.Interpolator.Add(data.StartValue, data.EndValue);
-					}
-					break;
-				case SnapMode.From:
-					data.StartValue = data.EndValue;
-					data.EndValue = data.Getter != null ? data.Getter() : default;
-					snapValue = data.StartValue;
-					snap = true;
-					break;
-				case SnapMode.FromTo:
-					data.StartValue = buffer.FromValue;
-					snapValue = data.StartValue;
-					snap = true;
-					break;
-			}
-
-			if (snap && data.Setter != null)
-			{
-				data.Setter(snapValue);
-			}
-
-			if (buffer.OnComplete != null)
-			{
-				for (var i = 0; i < buffer.OnComplete.Count; i++)
-				{
-					data.AddOnComplete(buffer.OnComplete[i]);
-				}
-			}
-			if (buffer.OnKill != null)
-			{
-				for (var i = 0; i < buffer.OnKill.Count; i++)
-				{
-					data.AddOnKill(buffer.OnKill[i]);
-				}
-			}
-			if (buffer.OnRewind != null)
-			{
-				for (var i = 0; i < buffer.OnRewind.Count; i++)
-				{
-					data.AddOnRewind(buffer.OnRewind[i]);
-				}
-			}
-			data.Status = buffer.Delay > 0f && buffer.DelayType == DelayType.FirstLoop
-				? TweenStatus.Delayed
-				: TweenStatus.Playing;
+			var data = buffer.Build();
+			data.ResolveStartValues();
 
 			var (id, gen) = TweenStore.Allocate();
 			TweenStore.SetData(id, data);

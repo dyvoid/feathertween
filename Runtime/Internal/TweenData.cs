@@ -12,6 +12,7 @@ namespace PATween.Internal
 		private object target;
 		private bool isUnityObject;
 		private int direction = 1;
+		private int selfId = -1;
 		private List<Action> onComplete;
 		private List<Action> onKill;
 		private List<Action> onRewind;
@@ -22,11 +23,28 @@ namespace PATween.Internal
 			set => direction = value == 0 ? 1 : (value > 0 ? 1 : -1);
 		}
 
+		// Store slot index, set by TweenStore.SetData/SetDataDetached. Lets data
+		// free itself (e.g. a sequence cancelling from inside its own Step).
+		public int SelfId
+		{
+			get => selfId;
+			set => selfId = value;
+		}
+
 		public virtual void SetRemainingCyclesAbsolute(int cycles) { }
 		public virtual void SetStopAtNextBoundary(bool stopAtEndValue) { }
 		public virtual void ResetPlayhead() { }
 		public virtual void ForceComplete() { }
 		public virtual bool StartsDelayed() => false;
+
+		// Deferred start-value capture: root tweens resolve at Start(), sequenced
+		// children resolve when the parent playhead first crosses their window.
+		public virtual void ResolveStartValues() { }
+		public virtual void RearmStartValues() { }
+
+		// Called by TweenStore.Free after the slot is released; sequences use it
+		// to cascade-free their child slots.
+		public virtual void OnFree() { }
 
 		public TweenStatus Status
 		{
@@ -143,6 +161,7 @@ namespace PATween.Internal
 			target = null;
 			isUnityObject = false;
 			direction = 1;
+			selfId = -1;
 			onComplete?.Clear();
 			onKill?.Clear();
 			onRewind?.Clear();

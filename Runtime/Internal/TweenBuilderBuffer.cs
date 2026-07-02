@@ -29,13 +29,31 @@ namespace PATween.Internal
 		private List<Action> onKill;
 		private List<Action> onRewind;
 
+		// Explicit-set flags: SetDefaults on a SequenceBuilder only cascades into
+		// values the user did not set on the child builder.
+		private bool phaseExplicit;
+		private bool easeExplicit;
+		private bool loopsExplicit;
+		private bool delayExplicit;
+		private bool durationExplicit;
+
 		public uint Generation => generation;
 		public bool Released => released;
+
+		public bool PhaseExplicit => phaseExplicit;
+		public bool EaseExplicit => easeExplicit;
+		public bool LoopsExplicit => loopsExplicit;
+		public bool DelayExplicit => delayExplicit;
+		public bool DurationExplicit => durationExplicit;
 
 		public UpdatePhase Phase
 		{
 			get => phase;
-			set => phase = value;
+			set
+			{
+				phase = value;
+				phaseExplicit = true;
+			}
 		}
 
 		public bool IgnoreTimeScale
@@ -83,13 +101,21 @@ namespace PATween.Internal
 		public float Duration
 		{
 			get => duration;
-			set => duration = value;
+			set
+			{
+				duration = value;
+				durationExplicit = true;
+			}
 		}
 
 		public EaseRef Ease
 		{
 			get => ease;
-			set => ease = value;
+			set
+			{
+				ease = value;
+				easeExplicit = true;
+			}
 		}
 
 		public T FromValue
@@ -107,7 +133,11 @@ namespace PATween.Internal
 		public int LoopCount
 		{
 			get => loopCount;
-			set => loopCount = value;
+			set
+			{
+				loopCount = value;
+				loopsExplicit = true;
+			}
 		}
 
 		public LoopType LoopType
@@ -119,7 +149,11 @@ namespace PATween.Internal
 		public float Delay
 		{
 			get => delay;
-			set => delay = value;
+			set
+			{
+				delay = value;
+				delayExplicit = true;
+			}
 		}
 
 		public DelayType DelayType
@@ -177,6 +211,80 @@ namespace PATween.Internal
 			onRewind.Add(cb);
 		}
 
+		// Cascade writes from SequenceBuilder.SetDefaults; bypass the explicit flags.
+		public void ApplyDefaultEase(EaseRef value) => ease = value;
+
+		public void ApplyDefaultLoops(int count, LoopType type)
+		{
+			loopCount = count;
+			loopType = type;
+		}
+
+		public void ApplyDefaultDelay(float value) => delay = value;
+		public void ApplyDefaultDuration(float value) => duration = value;
+		public void ApplyInheritedPhase(UpdatePhase value, bool inheritedIgnoreTimeScale)
+		{
+			phase = value;
+			ignoreTimeScale = inheritedIgnoreTimeScale;
+		}
+
+		// Constructs the runtime data record without resolving start values.
+		// Root tweens resolve immediately in TweenBuilder.Start(); sequenced
+		// children resolve on parent-window entry.
+		public TweenData<T> Build()
+		{
+			var data = new TweenData<T>();
+			data.Phase = phase;
+			data.AutoKill = autoKill;
+			data.IgnoreTimeScale = ignoreTimeScale;
+			data.Target = target;
+			data.Getter = getter;
+			data.Setter = setter;
+			data.EndValue = endValue;
+			data.Duration = duration;
+			data.Relative = relative;
+			data.Ease = ease;
+			data.LoopCount = loopCount;
+			data.LoopType = loopType;
+			data.Delay = delay;
+			data.DelayType = delayType;
+			data.Direction = 1;
+			data.Interpolator = Interpolators.Get<T>();
+			data.SnapMode = snapMode;
+			// Pristine value for (re-)resolution: FromTo carries the explicit
+			// 'from'; From and relative-None carry the user-supplied end/delta.
+			data.FromValue = snapMode == SnapMode.FromTo ? fromValue : endValue;
+			data.SnapPending = true;
+
+			if (onComplete != null)
+			{
+				for (var i = 0; i < onComplete.Count; i++)
+				{
+					data.AddOnComplete(onComplete[i]);
+				}
+			}
+			if (onKill != null)
+			{
+				for (var i = 0; i < onKill.Count; i++)
+				{
+					data.AddOnKill(onKill[i]);
+				}
+			}
+			if (onRewind != null)
+			{
+				for (var i = 0; i < onRewind.Count; i++)
+				{
+					data.AddOnRewind(onRewind[i]);
+				}
+			}
+
+			data.Status = delay > 0f && delayType == DelayType.FirstLoop
+				? TweenStatus.Delayed
+				: TweenStatus.Playing;
+
+			return data;
+		}
+
 		public void Rent()
 		{
 			released = false;
@@ -214,6 +322,11 @@ namespace PATween.Internal
 			loopType = LoopType.Restart;
 			delay = 0f;
 			delayType = DelayType.FirstLoop;
+			phaseExplicit = false;
+			easeExplicit = false;
+			loopsExplicit = false;
+			delayExplicit = false;
+			durationExplicit = false;
 			onComplete?.Clear();
 			onKill?.Clear();
 			onRewind?.Clear();

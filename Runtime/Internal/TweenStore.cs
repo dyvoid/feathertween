@@ -93,8 +93,22 @@ namespace PATween.Internal
 			{
 				return;
 			}
+			newData.SelfId = id;
 			data[id] = newData;
 			AddToActiveList(id, newData.Phase);
+		}
+
+		// Sequence children occupy store slots but are ticked by their parent,
+		// never by the runner's active lists.
+		public static void SetDataDetached(int id, TweenData newData)
+		{
+			AssertMainThread();
+			if (id < 0 || id >= data.Length)
+			{
+				return;
+			}
+			newData.SelfId = id;
+			data[id] = newData;
 		}
 
 		public static void Free(int id)
@@ -107,9 +121,10 @@ namespace PATween.Internal
 				return;
 			}
 
-			if (data[id] != null)
+			var freed = data[id];
+			if (freed != null)
 			{
-				RemoveFromActiveList(id, data[id].Phase);
+				RemoveFromActiveList(id, freed.Phase);
 				data[id] = null;
 			}
 			generations[id] = unchecked(generations[id] + 1);
@@ -118,6 +133,10 @@ namespace PATween.Internal
 				generations[id] = 1;
 			}
 			freeList.Push(id);
+
+			// After bookkeeping so a cascade (sequence freeing children) sees a
+			// consistent store and cannot double-free this slot.
+			freed?.OnFree();
 		}
 
 		private static void AddToActiveList(int id, UpdatePhase phase)
