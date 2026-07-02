@@ -7,8 +7,9 @@ Last updated: 2026-07-02
 
 ## Current position
 
-- **Milestone**: M1 (Core), 16 phases. See `docs/implementation.md` §10.
+- **Milestone**: M1 (Core), production cut. See `docs/implementation.md` §10.
 - **Done through**: Phase 1.8 (Sequence builder), verified green in Unity (Editor + Runtime + Performance) and visually via the SequenceDemo sample.
+- **Remaining M1 order**: 1.9 (callbacks) → 1.10 (seek/control) → 1.11 (typed shortcuts) → 1.13 (filters/bulk ops) → 1.14 (safe mode) → 1.16 (slim acceptance, v0.1 tag). Phases 1.12 and 1.15 deferred to M2 (2026-07-02 production-cut reshuffle).
 - **Next phase**: 1.9 — Callbacks (full set + multicast + reentrancy).
 - **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
 
