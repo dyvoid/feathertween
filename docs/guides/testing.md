@@ -1,6 +1,6 @@
 # Testing
 
-How to run, structure, and set up PATween's tests. For the design rationale behind the test categories, see `architecture.md` and `docs/implementation.md` §8.
+How to run, structure, and set up PATween's tests. For the design rationale behind the test categories, see `../architecture/overview.md` and `docs/implementation.md` §8.
 
 ## Structure
 

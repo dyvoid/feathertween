@@ -1,7 +1,7 @@
-# PATween — Progress
+# PICKUP
 
-Living status file. Read this first at session start. Update it at session end.
-Git history is the archive; keep this file short and current, prune stale detail.
+Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
+Keep this file short and current, prune stale detail. Git history is the archive.
 
 Last updated: 2026-06-01
 
@@ -21,7 +21,7 @@ Last updated: 2026-06-01
 - **Edit-mode fix**: `PATweenRunner.EnsureInitialized()` captures main thread id for editor ticking.
 - **Sample**: `Samples~/BasicUsage/PATweenDemo.cs` (move/scale/rotate/color/bounce), registered in `package.json`.
 - **Performance suite**: `Tests/Performance` EditMode asmdef. Hard-fail zero-alloc guards + report-only throughput benchmarks.
-- **Docs/process infra**: `PROGRESS.md` (this file) + AGENTS.md session-state pointer; AGENTS.md Documentation Discipline section; extracted `docs/testing.md`; extracted `docs/conventions.md`; lean-AGENTS.md audit (gist + pointers, no info living only in AGENTS.md).
+- **Docs/process infra**: `PICKUP.md` (this file) + AGENTS.md session-state pointer; AGENTS.md Documentation Discipline section; extracted `docs/guides/testing.md`; extracted `docs/guides/conventions.md`; lean-AGENTS.md audit (gist + pointers, no info living only in AGENTS.md).
 
 ## In flight
 
@@ -47,4 +47,4 @@ Last updated: 2026-06-01
 
 ## Consumer setup reminders
 
-- Tests require consumer-project setup (`testables` + `com.unity.test-framework.performance`). Full steps: `docs/testing.md`.
+- Tests require consumer-project setup (`testables` + `com.unity.test-framework.performance`). Full steps: `docs/guides/testing.md`.

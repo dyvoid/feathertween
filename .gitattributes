@@ -1,0 +1,21 @@
+# Normalize line endings: let git handle conversion, store LF in the repo.
+* text=auto eol=lf
+
+# Unity YAML assets — treat as text so diffs/merges work; enable UnityYAMLMerge if configured.
+*.unity merge=unityyamlmerge eol=lf
+*.prefab merge=unityyamlmerge eol=lf
+*.asset merge=unityyamlmerge eol=lf
+*.mat merge=unityyamlmerge eol=lf
+
+# Common binary asset types — never normalize, never diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.fbx binary
+*.psd binary
+*.wav binary

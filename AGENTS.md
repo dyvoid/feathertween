@@ -2,7 +2,7 @@
 
 Single source of truth for AI agents working on this codebase.
 
-> **Session state lives in `PROGRESS.md`** (repo root). Read it at the start of every session for current position, what's done, and what's next. Update it at the end of every session. This `AGENTS.md` holds stable conventions; `PROGRESS.md` holds volatile state.
+> **Session state lives in `PICKUP.md`** (repo root). Read it at the start of every session for current position, what's done, and what's next. Update it at the end of every session. This `AGENTS.md` holds stable conventions; `PICKUP.md` holds volatile state.
 
 ## Stack
 
@@ -38,7 +38,7 @@ When writing Unity C# for this project, apply the **unity dev skill**.
 - **Ease as value type**: `EaseRef` produced by `Easing.X(...)` factories. Parameters travel with the ease; tween stores one `EaseRef`.
 - **SoA-friendly internal layout**: keeps a future Burst/Jobs path cheap. Not a public concern.
 
-Full design and locked anchors: `docs/design.md` §2 and `docs/architecture.md`.
+Full design and locked anchors: `docs/architecture/design.md` §2 and `docs/architecture/overview.md`.
 
 ## Invariants (Do Not Break)
 
@@ -49,9 +49,30 @@ Full design and locked anchors: `docs/design.md` §2 and `docs/architecture.md`.
 5. Pooled backing classes must have a finalizer that enqueues a leak-detection id; runner drains on main thread.
 6. Safe mode (try/catch around step and callbacks) stays in core, default `true` in Editor, `false` in release.
 
+## AI Instructions
+
+### You can do these freely
+- Write, edit, and refactor code that follows the patterns already in the codebase
+- Create new files consistent with existing conventions
+- Update documentation to match code changes
+- Add tests for new or existing functionality
+
+### These need human review before they land
+- `.gitignore` and `.gitattributes`
+- Authentication, authorization, or anything touching secrets
+- Dependency changes (`package.json`, lockfiles, package manifests)
+- Refactors that cut across multiple modules
+
+### Do not do these
+- Commit directly to `main`
+- Delete or rename files without being asked
+- Change architecture without recording an ADR in `docs/adr/`
+- Add third-party dependencies without explicit instruction
+- Break any invariant listed in the section below
+
 ## Code Style
 
-Apply the unity dev skill (see above). Canonical written conventions: `docs/conventions.md`.
+Apply the unity dev skill (see above). Canonical written conventions: `docs/guides/conventions.md`.
 
 ## Adding New Features
 
@@ -66,39 +87,42 @@ Three asmdefs: `Tests/Editor` (EditMode correctness), `Tests/Runtime` (PlayMode)
 
 Principle: **allocation guards hard-fail** (zero managed bytes in steady-state ticking, CI-safe), **throughput benchmarks are report-only** (noisy, never gate a build).
 
-Full run instructions, consumer-project setup (`testables` + perf package), and Test Runner troubleshooting: see `docs/testing.md`.
+Full run instructions, consumer-project setup (`testables` + perf package), and Test Runner troubleshooting: see `docs/guides/testing.md`.
 
 ## Documentation Discipline
 
 Keep state and design docs in sync with the code. Update as part of the same change, not later.
 
-- **Every session**: update `PROGRESS.md` (current position, done, next up, test status) as the closing step.
-- **Finishing a phase or milestone**: update `PROGRESS.md` and reconcile the affected docs (`docs/implementation.md` phase status, `docs/api.md` if the public surface changed, `docs/architecture.md` if internals changed). Move the milestone tag only on explicit user go-ahead.
-- **Any architectural decision or deviation from a doc**: add or update an ADR in `docs/adrs/` and its `README.md` index. Do not let code silently contradict a doc.
+- **Every session**: update `PICKUP.md` (current position, done, next up, test status) as the closing step.
+- **Finishing a phase or milestone**: update `PICKUP.md` and reconcile the affected docs (`docs/implementation.md` phase status, `docs/api.md` if the public surface changed, `docs/architecture/overview.md` or `docs/architecture/sequence.md` if internals changed). Move the milestone tag only on explicit user go-ahead.
+- **Any architectural decision or deviation from a doc**: add or update an ADR in `docs/adr/` and its `README.md` index. Do not let code silently contradict a doc.
 - **New public API**: document it in `docs/api.md` in the same change that adds it.
-- **New test category or required dependency**: document it in `docs/testing.md` and in `PROGRESS.md` consumer reminders.
+- **New test category or required dependency**: document it in `docs/guides/testing.md` and in `PICKUP.md` consumer reminders.
 
 If a change touches behavior described in a doc and the doc is not updated, the change is incomplete.
 
 ## Git Workflow
 
-- **Branching**: feature branches from `develop`; name `feature/1.x-phase-name`.
-- **Commits**: frequent, natural developer commits. Do not squash.
-- **Feature → develop**: merge with `--no-ff`.
-- **Develop → main**: fast-forward (user handles).
-- **Tags**: milestone releases only.
-- **Authority**: merge to `develop` only on explicit user go-ahead.
+See [`docs/git-strategy.md`](docs/git-strategy.md) for full branching, merging, and commit rules. In brief:
+
+- Feature branches from `develop`; name `feature/1.x-phase-name`.
+- Merge to `develop` with `--no-ff`; fast-forward to `main` is user-handled.
+- No squashing — atomic commits are the audit trail.
 
 ## Key Documents
 
 | Document | Purpose |
 | -------- | ------- |
-| `docs/design.md` | Goals, non-goals, locked anchors |
+| `docs/architecture/design.md` | Goals, non-goals, locked anchors |
 | `docs/api.md` | Public API reference |
-| `docs/architecture.md` | Internal design |
+| `docs/architecture/overview.md` | Internal design |
+| `docs/architecture/sequence.md` | Sequence internals |
 | `docs/implementation.md` | Milestone/phase plan, performance plan |
-| `docs/conventions.md` | Code style conventions |
-| `docs/testing.md` | Test structure, running, consumer setup |
-| `docs/editor.md` | Editor & integration |
+| `docs/guides/conventions.md` | Code style conventions |
+| `docs/guides/testing.md` | Test structure, running, consumer setup |
+| `docs/guides/editor.md` | Editor & integration |
 | `docs/reference.md` | Reference & engine comparison |
-| `docs/adrs/` | Architectural decision records |
+| `docs/git-strategy.md` | Branching, merging, commit rules |
+| `docs/ROADMAP.md` | Feature candidates, planned work, and status |
+| `PICKUP.md` | Where the last session left off — active work only, not the backlog |
+| `docs/adr/` | Architectural decision records |

@@ -30,6 +30,26 @@
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs / temp
+*.log
+tmp/
+temp/
+
+# AI tool artifacts
+.aider*
+.claude/
+.cursor/
+
+# Unity-specific tooling
+.vsconfig
 
 # External reference material kept out of package
 reference/
