@@ -87,12 +87,30 @@ High-blast-radius files always get manual review:
 
 ---
 
+## CI
+
+CI is load-bearing for trunk-based development — slow or weak pipelines break the entire strategy.
+
+`.github/workflows/ci.yml` runs on every push to `main` and every PR: it compiles Runtime + Samples
+and runs the EditMode suite via the .NET stub harness (`tools/compile-check/`, no Unity license
+needed). Tests tagged `RequiresUnity` plus the PlayMode and Performance suites still require a
+manual Unity Test Runner pass before merge.
+
+Before anything merges to `main`:
+
+- CI green (stub harness suite passes)
+- Unity Test Runner green (Editor + Runtime + Performance) for changes touching Runtime code
+- New code must be covered by tests — AI optimizes for code that *looks* correct, not code that *is* correct
+
+---
+
 ## Branch Protection
 
 Enforce the strategy at the repo level on GitHub:
 
 - No direct push to `main`
 - Require fast-forward / rebase-based merges
+- Require CI to pass before merge
 
 ---
 
