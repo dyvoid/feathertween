@@ -83,6 +83,32 @@ namespace PATween.Tests.Performance
 		}
 
 		[Test]
+		public void Tick_SteadyStateCallbackDispatch_ZeroManagedAlloc()
+		{
+			var sink = 0f;
+			for (var i = 0; i < 100; i++)
+			{
+				global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 1f)
+					.SetUpdate(UpdatePhase.Manual)
+					.SetLoops(-1, LoopType.Restart)
+					.OnUpdate(t => sink = t)
+					.OnStepComplete(() => sink += 1f)
+					.Start();
+			}
+			Warmup(120);
+
+			var before = GC.GetAllocatedBytesForCurrentThread();
+			for (var i = 0; i < 600; i++)
+			{
+				PATweenRunner.ManualTick(0.016);
+			}
+			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
+
+			Assert.That(delta, Is.Zero,
+				$"Callback dispatch allocated {delta} bytes over 600 ticks; must be zero (§8.1).");
+		}
+
+		[Test]
 		public void Tick_SteadyState100Sequences_ZeroManagedAlloc()
 		{
 			for (var i = 0; i < 100; i++)
