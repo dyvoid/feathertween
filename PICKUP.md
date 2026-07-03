@@ -8,14 +8,15 @@ Last updated: 2026-07-03
 ## Current position
 
 - **Milestone**: M1 (Core), production cut. See `docs/implementation.md` §10.
-- **Done through**: Phase 1.8 (Sequence builder), verified green in Unity (Editor + Runtime + Performance) and visually via the SequenceDemo sample.
+- **Done through**: Phase 1.9 (Callbacks), verified green in Unity (Editor + Runtime + Performance).
 - **Remaining M1 phases** (renumbered 2026-07-02, production cut; M1 is now 14 linear phases): 1.9 (callbacks) → 1.10 (seek/control) → 1.11 (typed shortcuts) → 1.12 (filters/bulk ops) → 1.13 (safe mode) → 1.14 (acceptance, v0.1 tag). Fast paths, TweenSettings, and the cross-engine benchmark moved to M2.
-- **Next phase**: 1.9 — Callbacks (full set + multicast + reentrancy).
+- **Next phase**: 1.10 — Seek and control surface (bidirectional AdvanceTo rework, sequence SetLoops, global/per-phase time scale).
 - **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
 
 ## Done
 
-- **Phases 1.1–1.8** (merged to `main`): storage/handle scaffold, PlayerLoop runner, builder/handle split, generic tween core, full ease system, From/FromTo, loops/delays/direction/reverse, sequence builder.
+- **Phases 1.1–1.9** (merged to `main`): storage/handle scaffold, PlayerLoop runner, builder/handle split, generic tween core, full ease system, From/FromTo, loops/delays/direction/reverse, sequence builder, callbacks.
+- **Phase 1.9 highlights**: full callback set on both builders, target-capture OnComplete/OnKill (CallbackEntry + cached per-type invoker, zero-alloc dispatch), handle-side OnStepComplete, TweenCommandQueue deferred-mutation buffer (Kill/Complete/Restart/Reverse from inside callbacks defer to end of tick), TweenOps dedupe of handle logic, firing-matrix compliance fix (no OnKill on completion paths, §3.14). 21 tests in `Tests/Editor/CallbackTests.cs` + callback-dispatch zero-alloc perf guard.
 - **Phase 1.8 highlights**: `SequenceBuilder` (Append/Insert/Join/Prepend*/AppendInterval/AppendCallback/AddLabel/AddPause/Clear), `Position` type, `SequenceCancelBehavior`, `SetDefaults` cascade frozen at append, label resolution at `Start()`, typed child storage (ids only, no boxing), sequenced-From snap deferred to parent-window entry, nested sequences, `Sequence` handle control surface. 23 tests in `Tests/Editor/SequenceTests.cs` + zero-alloc sequence tick guard in the perf suite.
 - **Deferred-snap refactor**: start-value capture moved to `TweenData<T>.ResolveStartValues()`; `FromValue` holds the pristine user value so Restart re-arm is safe.
 - **SequenceDemo sample** (`Samples~/SequenceDemo`): choreographed loop covering all 1.8 features, registered in `package.json`.
@@ -24,12 +25,11 @@ Last updated: 2026-07-03
 
 ## In flight
 
-- **Phase 1.9 — Callbacks** (on `task/1.9-callbacks`): implemented, 119/119 green in the stub harness; needs an in-Unity test run before merge. Full callback set on both builders (OnStart/OnPlay/OnPause/OnUpdate/OnStepComplete/OnComplete/OnKill/OnRewind), target-capture OnComplete/OnKill overloads (CallbackEntry + cached per-type invoker, no boxing), handle-side OnStepComplete, deferred-mutation command queue (TweenCommandQueue: defers Kill/Complete/Restart/Reverse issued inside callbacks; drains end-of-tick, or when the outermost callback returns outside a tick), Tween/Sequence handle ops deduplicated into TweenOps.
-- **Spec-compliance fix**: natural completion / Complete() / Kill(true) no longer fire OnKill (firing matrix §3.14); two old tests updated. Sequence children completed naturally are disposed without OnKill; children cut short by parent Kill(false) are cancelled with OnKill.
+- Nothing half-built. All suites green in Unity (2026-07-03).
 
 ## Next up
 
-1. Begin Phase 1.9 — Callbacks: builder-side `OnStart`/`OnPlay`/`OnPause`/`OnUpdate`/`OnStepComplete`/`OnComplete`/`OnKill`/`OnRewind`, zero-alloc target-capture overloads on `OnComplete`/`OnKill`, handle-side multicast, deferred-mutation command buffer drained at end of tick. See `docs/implementation.md` §10 phase 1.9 — note the design constraint there: no forward-only assumptions (1.10 reworks sequence stepping into a bidirectional `AdvanceTo` boundary walk).
+1. Begin Phase 1.10 — Seek and control surface: rework `SequenceData.Step` into a shared bidirectional `AdvanceTo(from, to, fireCallbacks)` boundary walk; `Seek(seconds, fireCallbacks)` per §3.15; sequence `SetLoops`; `PATween.SetGlobalTimeScale` + per-phase scale; sequence `Reverse`; mid-play `Sequence.Insert`. See `docs/implementation.md` §10 phase 1.10.
 
 ## Infra (2026-07-02)
 
@@ -51,7 +51,7 @@ Last updated: 2026-07-03
 
 ## Test status
 
-- All suites green in Unity (Editor + Runtime + Performance), verified 2026-07-02. SequenceDemo sample verified visually.
+- All suites green in Unity (Editor + Runtime + Performance), verified 2026-07-03 (phase 1.9 included).
 
 ## Consumer setup reminders
 

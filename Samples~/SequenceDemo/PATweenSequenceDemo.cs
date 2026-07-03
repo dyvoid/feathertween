@@ -47,6 +47,7 @@ namespace PATween.Samples.SequenceDemo
 		private Renderer runnerRenderer;
 		private Sequence show;
 		private string phaseLabel = "starting";
+		private float progress;
 
 		private void Start()
 		{
@@ -75,6 +76,8 @@ namespace PATween.Samples.SequenceDemo
 			var sb = Sequence()
 				.SetDefaults(ease: Easing.InOutSine())
 				.SetAutoKill(false)
+				.OnStart(() => phaseLabel = "show started (OnStart)")
+				.OnUpdate(t => progress = t)
 				.OnComplete(OnShowComplete);
 
 			// 1. Append: two sequential moves. The ease comes from SetDefaults.
@@ -142,7 +145,7 @@ namespace PATween.Samples.SequenceDemo
 		{
 			GUI.Label(new Rect(10f, 10f, 600f, 22f), $"PATween SequenceDemo - {phaseLabel}");
 			GUI.Label(new Rect(10f, 32f, 600f, 22f),
-				$"duration {show.Duration:0.0}s | status {show.Status}");
+				$"duration {show.Duration:0.0}s | status {show.Status} | progress {progress:P0} (OnUpdate)");
 		}
 
 		private GameObject Spawn(PrimitiveType type, Vector3 position, Color color, string label)
