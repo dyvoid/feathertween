@@ -16,7 +16,7 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | From / FromTo with deferred snap | Done | `From()` / `FromTo()` builder methods, snap semantics | 0007 |
 | Loops, delays, direction, reverse | Done | `SetLoops`, `SetDelay`, `Reverse()`, yoyo/incremental/rewind | 0009 |
 | Sequence builder | Done | `SequenceBuilder`, Append/Insert/Join, labels, Position values | 0006 |
-| Callbacks (full set + multicast + reentrancy) | Planned | Builder-side callbacks, handle-side multicast, deferred mutation | — |
+| Callbacks (full set + multicast + reentrancy) | In flight | Builder-side callbacks, handle-side multicast, deferred mutation | — |
 | Seek and remaining control surface | Planned | `Seek`, `Restart`, `Complete`, `Kill(complete)`, mid-play `Insert`, sequence `SetLoops`, global/per-phase time scale | — |
 | Typed shortcuts (lambda) | Planned | `Move`, `Rotate`, `Scale`, `Fade`, `Color` — lambda baseline | — |
 | Filters and bulk ops | Planned | Target-indexed multimap, `Kill(target)`, `IsTweening`, `KillAll` | — |

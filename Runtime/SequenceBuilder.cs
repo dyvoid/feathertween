@@ -66,6 +66,49 @@ namespace PATween
 			return this;
 		}
 
+		public SequenceBuilder OnStart(Action cb)
+		{
+			ValidateOrThrow();
+			buffer.AddOnStart(cb);
+			return this;
+		}
+
+		public SequenceBuilder OnPlay(Action cb)
+		{
+			ValidateOrThrow();
+			buffer.AddOnPlay(cb);
+			return this;
+		}
+
+		public SequenceBuilder OnPause(Action cb)
+		{
+			ValidateOrThrow();
+			buffer.AddOnPause(cb);
+			return this;
+		}
+
+		// Receives the normalized playhead (playhead / duration, 0..1).
+		public SequenceBuilder OnUpdate(Action<float> cb)
+		{
+			ValidateOrThrow();
+			buffer.AddOnUpdate(cb);
+			return this;
+		}
+
+		public SequenceBuilder OnStepComplete(Action cb)
+		{
+			ValidateOrThrow();
+			buffer.AddOnStepComplete(cb);
+			return this;
+		}
+
+		public SequenceBuilder OnRewind(Action cb)
+		{
+			ValidateOrThrow();
+			buffer.AddOnRewind(cb);
+			return this;
+		}
+
 		public SequenceBuilder OnComplete(Action cb)
 		{
 			ValidateOrThrow();
@@ -73,10 +116,34 @@ namespace PATween
 			return this;
 		}
 
+		// Zero-alloc target-capture overload (anchor 15): pass state explicitly
+		// and use a static lambda so the compiler emits no closure.
+		public SequenceBuilder OnComplete<TTarget>(TTarget state, Action<TTarget> cb)
+			where TTarget : class
+		{
+			ValidateOrThrow();
+			if (state != null && cb != null)
+			{
+				buffer.AddOnComplete(CallbackEntry.FromTargetCapture(state, cb));
+			}
+			return this;
+		}
+
 		public SequenceBuilder OnKill(Action cb)
 		{
 			ValidateOrThrow();
 			buffer.AddOnKill(cb);
+			return this;
+		}
+
+		public SequenceBuilder OnKill<TTarget>(TTarget state, Action<TTarget> cb)
+			where TTarget : class
+		{
+			ValidateOrThrow();
+			if (state != null && cb != null)
+			{
+				buffer.AddOnKill(CallbackEntry.FromTargetCapture(state, cb));
+			}
 			return this;
 		}
 

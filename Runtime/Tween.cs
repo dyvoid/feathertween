@@ -28,75 +28,19 @@ namespace PATween
 			this.generation = generation;
 		}
 
-		public void Play()
-		{
-			var data = TweenStore.Get(id, generation);
-			if (data == null)
-			{
-				return;
-			}
-			if (data.Status == TweenStatus.Paused)
-			{
-				data.Status = TweenStatus.Playing;
-				return;
-			}
-			if (data.Status == TweenStatus.Completed)
-			{
-				data.ResetPlayhead();
-				data.Status = data.StartsDelayed() ? TweenStatus.Delayed : TweenStatus.Playing;
-			}
-		}
+		public void Play() => TweenOps.Play(id, generation);
 
-		public void Pause()
-		{
-			var data = TweenStore.Get(id, generation);
-			if (data == null)
-			{
-				return;
-			}
-			if (data.Status == TweenStatus.Playing || data.Status == TweenStatus.Delayed)
-			{
-				data.Status = TweenStatus.Paused;
-			}
-		}
+		public void Pause() => TweenOps.Pause(id, generation);
 
-		public void Resume()
-		{
-			var data = TweenStore.Get(id, generation);
-			if (data == null)
-			{
-				return;
-			}
-			if (data.Status == TweenStatus.Paused)
-			{
-				data.Status = TweenStatus.Playing;
-			}
-		}
+		public void Resume() => TweenOps.Resume(id, generation);
 
-		public void Restart()
-		{
-			var data = TweenStore.Get(id, generation);
-			if (data == null)
-			{
-				return;
-			}
-			if (data.Status == TweenStatus.Disposed)
-			{
-				return;
-			}
-			data.ResetPlayhead();
-			data.Status = data.StartsDelayed() ? TweenStatus.Delayed : TweenStatus.Playing;
-		}
+		public void Restart() => TweenOps.Restart(id, generation);
 
-		public void Reverse()
-		{
-			var data = TweenStore.Get(id, generation);
-			if (data == null)
-			{
-				return;
-			}
-			data.Direction = -data.Direction;
-		}
+		public void Reverse() => TweenOps.Reverse(id, generation);
+
+		public void Complete() => TweenOps.Complete(id, generation);
+
+		public void Kill(bool complete = false) => TweenOps.Kill(id, generation, complete);
 
 		public void SetRemainingCycles(int cycles)
 		{
@@ -108,55 +52,6 @@ namespace PATween
 		{
 			var data = TweenStore.Get(id, generation);
 			data?.SetStopAtNextBoundary(stopAtEndValue);
-		}
-
-		public void Complete()
-		{
-			var data = TweenStore.Get(id, generation);
-			if (data == null)
-			{
-				return;
-			}
-			if (data.Status == TweenStatus.Disposed || data.Status == TweenStatus.Cancelled)
-			{
-				return;
-			}
-			var alreadyCompleted = data.Status == TweenStatus.Completed;
-			if (!alreadyCompleted)
-			{
-				data.ForceComplete();
-			}
-			data.Status = TweenStatus.Completed;
-			if (!alreadyCompleted)
-			{
-				data.InvokeOnComplete();
-			}
-			if (data.AutoKill)
-			{
-				data.InvokeOnKill();
-				TweenStore.Free(id);
-			}
-		}
-
-		public void Kill(bool complete = false)
-		{
-			var data = TweenStore.Get(id, generation);
-			if (data == null)
-			{
-				return;
-			}
-			if (complete && data.Status != TweenStatus.Completed && data.Status != TweenStatus.Cancelled)
-			{
-				data.ForceComplete();
-				data.Status = TweenStatus.Completed;
-				data.InvokeOnComplete();
-			}
-			else if (!complete && data.Status != TweenStatus.Completed)
-			{
-				data.Status = TweenStatus.Cancelled;
-			}
-			data.InvokeOnKill();
-			TweenStore.Free(id);
 		}
 
 		public Tween OnComplete(Action cb)
@@ -180,6 +75,13 @@ namespace PATween
 				return this;
 			}
 			data.AddOnKill(cb);
+			return this;
+		}
+
+		public Tween OnStepComplete(Action cb)
+		{
+			var data = TweenStore.Get(id, generation);
+			data?.AddOnStepComplete(cb);
 			return this;
 		}
 

@@ -36,8 +36,14 @@ namespace PATween.Internal
 		private readonly List<Action> callbacks = new List<Action>();
 		private readonly Dictionary<string, double> labels = new Dictionary<string, double>();
 		private readonly List<PendingLabelRef> pendingLabels = new List<PendingLabelRef>();
-		private List<Action> onComplete;
-		private List<Action> onKill;
+		private List<CallbackEntry> onStart;
+		private List<CallbackEntry> onPlay;
+		private List<CallbackEntry> onPause;
+		private List<Action<float>> onUpdate;
+		private List<CallbackEntry> onStepComplete;
+		private List<CallbackEntry> onComplete;
+		private List<CallbackEntry> onKill;
+		private List<CallbackEntry> onRewind;
 
 		private double cursor;
 		private double maxEnd;
@@ -283,24 +289,44 @@ namespace PATween.Internal
 			orderCounter = 0;
 		}
 
-		public void AddOnComplete(Action cb)
+		public void AddOnStart(Action cb) => Add(ref onStart, cb);
+		public void AddOnPlay(Action cb) => Add(ref onPlay, cb);
+		public void AddOnPause(Action cb) => Add(ref onPause, cb);
+		public void AddOnStepComplete(Action cb) => Add(ref onStepComplete, cb);
+		public void AddOnComplete(Action cb) => Add(ref onComplete, cb);
+		public void AddOnKill(Action cb) => Add(ref onKill, cb);
+		public void AddOnRewind(Action cb) => Add(ref onRewind, cb);
+
+		public void AddOnComplete(CallbackEntry entry)
 		{
-			if (cb == null)
-			{
-				return;
-			}
-			onComplete ??= new List<Action>();
-			onComplete.Add(cb);
+			onComplete ??= new List<CallbackEntry>();
+			onComplete.Add(entry);
 		}
 
-		public void AddOnKill(Action cb)
+		public void AddOnKill(CallbackEntry entry)
+		{
+			onKill ??= new List<CallbackEntry>();
+			onKill.Add(entry);
+		}
+
+		public void AddOnUpdate(Action<float> cb)
 		{
 			if (cb == null)
 			{
 				return;
 			}
-			onKill ??= new List<Action>();
-			onKill.Add(cb);
+			onUpdate ??= new List<Action<float>>();
+			onUpdate.Add(cb);
+		}
+
+		private static void Add(ref List<CallbackEntry> list, Action cb)
+		{
+			if (cb == null)
+			{
+				return;
+			}
+			list ??= new List<CallbackEntry>();
+			list.Add(CallbackEntry.FromAction(cb));
 		}
 
 		public SequenceData Build()
@@ -339,6 +365,17 @@ namespace PATween.Internal
 			data.IgnoreTimeScale = ignoreTimeScale;
 			data.AutoKill = autoKill;
 			data.Target = target;
+			TransferCallbacks(data);
+			data.Status = delay > 0f ? TweenStatus.Delayed : TweenStatus.Playing;
+			return data;
+		}
+
+		private void TransferCallbacks(TweenData data)
+		{
+			Transfer(onStart, data.AddOnStart);
+			Transfer(onPlay, data.AddOnPlay);
+			Transfer(onPause, data.AddOnPause);
+			Transfer(onStepComplete, data.AddOnStepComplete);
 			if (onComplete != null)
 			{
 				for (var i = 0; i < onComplete.Count; i++)
@@ -353,8 +390,26 @@ namespace PATween.Internal
 					data.AddOnKill(onKill[i]);
 				}
 			}
-			data.Status = delay > 0f ? TweenStatus.Delayed : TweenStatus.Playing;
-			return data;
+			Transfer(onRewind, data.AddOnRewind);
+			if (onUpdate != null)
+			{
+				for (var i = 0; i < onUpdate.Count; i++)
+				{
+					data.AddOnUpdate(onUpdate[i]);
+				}
+			}
+		}
+
+		private static void Transfer(List<CallbackEntry> list, Action<Action> plainAdd)
+		{
+			if (list == null)
+			{
+				return;
+			}
+			for (var i = 0; i < list.Count; i++)
+			{
+				plainAdd(list[i].Plain);
+			}
 		}
 
 		public void TrackAdded(double start, double end)
@@ -385,8 +440,19 @@ namespace PATween.Internal
 			callbacks.Clear();
 			labels.Clear();
 			pendingLabels.Clear();
+			ClearCallbackSlots();
+		}
+
+		private void ClearCallbackSlots()
+		{
+			onStart?.Clear();
+			onPlay?.Clear();
+			onPause?.Clear();
+			onUpdate?.Clear();
+			onStepComplete?.Clear();
 			onComplete?.Clear();
 			onKill?.Clear();
+			onRewind?.Clear();
 		}
 
 		private static int CompareEntries(SequenceChildEntry a, SequenceChildEntry b)
@@ -411,8 +477,7 @@ namespace PATween.Internal
 			callbacks.Clear();
 			labels.Clear();
 			pendingLabels.Clear();
-			onComplete?.Clear();
-			onKill?.Clear();
+			ClearCallbackSlots();
 			cursor = 0d;
 			maxEnd = 0d;
 			joinAnchor = 0d;

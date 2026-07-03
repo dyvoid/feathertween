@@ -13,9 +13,16 @@ namespace PATween.Internal
 		private bool isUnityObject;
 		private int direction = 1;
 		private int selfId = -1;
-		private List<Action> onComplete;
-		private List<Action> onKill;
-		private List<Action> onRewind;
+		private bool startFired;
+
+		private List<CallbackEntry> onStart;
+		private List<CallbackEntry> onPlay;
+		private List<CallbackEntry> onPause;
+		private List<Action<float>> onUpdate;
+		private List<CallbackEntry> onStepComplete;
+		private List<CallbackEntry> onComplete;
+		private List<CallbackEntry> onKill;
+		private List<CallbackEntry> onRewind;
 
 		public int Direction
 		{
@@ -31,9 +38,22 @@ namespace PATween.Internal
 			set => selfId = value;
 		}
 
+		// True once OnStart/OnPlay fired for the current playhead lifecycle;
+		// ResetPlayhead re-arms.
+		protected bool StartFired
+		{
+			get => startFired;
+			set => startFired = value;
+		}
+
 		public virtual void SetRemainingCyclesAbsolute(int cycles) { }
 		public virtual void SetStopAtNextBoundary(bool stopAtEndValue) { }
-		public virtual void ResetPlayhead() { }
+
+		public virtual void ResetPlayhead()
+		{
+			startFired = false;
+		}
+
 		public virtual void ForceComplete() { }
 		public virtual bool StartsDelayed() => false;
 
@@ -86,69 +106,96 @@ namespace PATween.Internal
 		{
 		}
 
-		public void AddOnComplete(Action cb)
+		public void AddOnStart(Action cb) => Add(ref onStart, CallbackEntry.FromAction(cb), cb != null);
+		public void AddOnPlay(Action cb) => Add(ref onPlay, CallbackEntry.FromAction(cb), cb != null);
+		public void AddOnPause(Action cb) => Add(ref onPause, CallbackEntry.FromAction(cb), cb != null);
+		public void AddOnStepComplete(Action cb) => Add(ref onStepComplete, CallbackEntry.FromAction(cb), cb != null);
+		public void AddOnComplete(Action cb) => Add(ref onComplete, CallbackEntry.FromAction(cb), cb != null);
+		public void AddOnKill(Action cb) => Add(ref onKill, CallbackEntry.FromAction(cb), cb != null);
+		public void AddOnRewind(Action cb) => Add(ref onRewind, CallbackEntry.FromAction(cb), cb != null);
+
+		public void AddOnComplete(CallbackEntry entry) => Add(ref onComplete, entry, true);
+		public void AddOnKill(CallbackEntry entry) => Add(ref onKill, entry, true);
+
+		public void AddOnUpdate(Action<float> cb)
 		{
 			if (cb == null)
 			{
 				return;
 			}
-			onComplete ??= new List<Action>();
-			onComplete.Add(cb);
+			onUpdate ??= new List<Action<float>>();
+			onUpdate.Add(cb);
 		}
 
-		public void AddOnKill(Action cb)
+		public void InvokeOnStart() => InvokeList(onStart);
+		public void InvokeOnPlay() => InvokeList(onPlay);
+		public void InvokeOnPause() => InvokeList(onPause);
+		public void InvokeOnStepComplete() => InvokeList(onStepComplete);
+		public void InvokeOnComplete() => InvokeList(onComplete);
+		public void InvokeOnKill() => InvokeList(onKill);
+		public void InvokeOnRewind() => InvokeList(onRewind);
+
+		public void InvokeOnUpdate(float easedT)
 		{
-			if (cb == null)
+			if (onUpdate == null)
 			{
 				return;
 			}
-			onKill ??= new List<Action>();
-			onKill.Add(cb);
-		}
-
-		public void AddOnRewind(Action cb)
-		{
-			if (cb == null)
+			TweenCommandQueue.EnterCallback();
+			try
 			{
-				return;
+				for (var i = 0; i < onUpdate.Count; i++)
+				{
+					onUpdate[i]?.Invoke(easedT);
+				}
 			}
-			onRewind ??= new List<Action>();
-			onRewind.Add(cb);
-		}
-
-		public void InvokeOnRewind()
-		{
-			if (onRewind == null)
+			finally
 			{
-				return;
-			}
-			for (var i = 0; i < onRewind.Count; i++)
-			{
-				onRewind[i]?.Invoke();
+				TweenCommandQueue.ExitCallback();
 			}
 		}
 
-		public void InvokeOnComplete()
+		// Fires OnStart + the initial OnPlay exactly once per playhead lifecycle,
+		// on the first tick that actually renders (matches the no-first-frame-pop
+		// snap timing). Subsequent Resume/Play fire OnPlay via TweenOps.
+		public void FireStartIfPending()
 		{
-			if (onComplete == null)
+			if (startFired)
 			{
 				return;
 			}
-			for (var i = 0; i < onComplete.Count; i++)
-			{
-				onComplete[i]?.Invoke();
-			}
+			startFired = true;
+			InvokeOnStart();
+			InvokeOnPlay();
 		}
 
-		public void InvokeOnKill()
+		private static void Add(ref List<CallbackEntry> list, CallbackEntry entry, bool valid)
 		{
-			if (onKill == null)
+			if (!valid)
 			{
 				return;
 			}
-			for (var i = 0; i < onKill.Count; i++)
+			list ??= new List<CallbackEntry>();
+			list.Add(entry);
+		}
+
+		private static void InvokeList(List<CallbackEntry> list)
+		{
+			if (list == null)
 			{
-				onKill[i]?.Invoke();
+				return;
+			}
+			TweenCommandQueue.EnterCallback();
+			try
+			{
+				for (var i = 0; i < list.Count; i++)
+				{
+					list[i].Invoke();
+				}
+			}
+			finally
+			{
+				TweenCommandQueue.ExitCallback();
 			}
 		}
 
@@ -162,6 +209,12 @@ namespace PATween.Internal
 			isUnityObject = false;
 			direction = 1;
 			selfId = -1;
+			startFired = false;
+			onStart?.Clear();
+			onPlay?.Clear();
+			onPause?.Clear();
+			onUpdate?.Clear();
+			onStepComplete?.Clear();
 			onComplete?.Clear();
 			onKill?.Clear();
 			onRewind?.Clear();

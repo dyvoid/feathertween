@@ -110,8 +110,10 @@ namespace PATween.Tests
 			Assert.That(t.Status, Is.EqualTo(TweenStatus.Disposed));
 		}
 
+		// Firing matrix (api.md §3.14): Kill(true) is a completion path — OnKill
+		// fires only on Kill(false), auto-kill, or error.
 		[Test]
-		public void Kill_True_FiresOnCompleteAndOnKill_AndDisposes()
+		public void Kill_True_FiresOnCompleteOnly_AndDisposes()
 		{
 			var completes = 0;
 			var kills = 0;
@@ -123,12 +125,12 @@ namespace PATween.Tests
 			t.Kill(true);
 
 			Assert.That(completes, Is.EqualTo(1));
-			Assert.That(kills, Is.EqualTo(1));
+			Assert.That(kills, Is.Zero, "Kill(true) completes; OnKill must not fire (§3.14)");
 			Assert.That(t.IsAlive, Is.False);
 		}
 
 		[Test]
-		public void Complete_WithAutoKill_FiresOnCompleteThenOnKill_AndDisposes()
+		public void Complete_WithAutoKill_FiresOnCompleteOnly_AndDisposes()
 		{
 			var order = new System.Collections.Generic.List<string>();
 			var t = TweenBuilderFactory.Create<float>()
@@ -138,7 +140,8 @@ namespace PATween.Tests
 
 			t.Complete();
 
-			Assert.That(order, Is.EqualTo(new[] { "complete", "kill" }));
+			Assert.That(order, Is.EqualTo(new[] { "complete" }),
+				"Complete() must not fire OnKill even with autoKill (§3.14)");
 			Assert.That(t.IsAlive, Is.False);
 		}
 

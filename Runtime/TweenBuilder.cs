@@ -99,6 +99,43 @@ namespace PATween
 			return this;
 		}
 
+		public TweenBuilder<T> OnStart(Action cb)
+		{
+			ValidateOrThrow();
+			buffer.AddOnStart(cb);
+			return this;
+		}
+
+		public TweenBuilder<T> OnPlay(Action cb)
+		{
+			ValidateOrThrow();
+			buffer.AddOnPlay(cb);
+			return this;
+		}
+
+		public TweenBuilder<T> OnPause(Action cb)
+		{
+			ValidateOrThrow();
+			buffer.AddOnPause(cb);
+			return this;
+		}
+
+		// Receives the eased in-cycle progress used for the value write (1f at
+		// a cycle end regardless of ease shape).
+		public TweenBuilder<T> OnUpdate(Action<float> cb)
+		{
+			ValidateOrThrow();
+			buffer.AddOnUpdate(cb);
+			return this;
+		}
+
+		public TweenBuilder<T> OnStepComplete(Action cb)
+		{
+			ValidateOrThrow();
+			buffer.AddOnStepComplete(cb);
+			return this;
+		}
+
 		public TweenBuilder<T> OnRewind(Action cb)
 		{
 			ValidateOrThrow();
@@ -113,10 +150,34 @@ namespace PATween
 			return this;
 		}
 
+		// Zero-alloc target-capture overload (anchor 15): pass state explicitly
+		// and use a static lambda so the compiler emits no closure.
+		public TweenBuilder<T> OnComplete<TTarget>(TTarget state, Action<TTarget> cb)
+			where TTarget : class
+		{
+			ValidateOrThrow();
+			if (state != null && cb != null)
+			{
+				buffer.AddOnComplete(CallbackEntry.FromTargetCapture(state, cb));
+			}
+			return this;
+		}
+
 		public TweenBuilder<T> OnKill(Action cb)
 		{
 			ValidateOrThrow();
 			buffer.AddOnKill(cb);
+			return this;
+		}
+
+		public TweenBuilder<T> OnKill<TTarget>(TTarget state, Action<TTarget> cb)
+			where TTarget : class
+		{
+			ValidateOrThrow();
+			if (state != null && cb != null)
+			{
+				buffer.AddOnKill(CallbackEntry.FromTargetCapture(state, cb));
+			}
 			return this;
 		}
 

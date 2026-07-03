@@ -166,7 +166,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 - Firing matrix in §3.14 verified end-to-end for tween and sequence
 - Multicast: 3 subscribers fire in registration order
 - `Kill` from inside `OnComplete` deferred to end-of-tick (no list-mutation crash)
-- Sequence `Insert` from a child's `OnComplete` schedules for the next tick
+- Sequence `Insert` from a child's `OnComplete` schedules for the next tick *(deferred to 1.10 with mid-play `Insert` itself; the equivalent deferral path is covered in 1.9 by kill-from-child-callback)*
 
 **Exit**: callbacks safe to use for arbitrary mutation.
 

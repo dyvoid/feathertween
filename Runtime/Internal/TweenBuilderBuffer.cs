@@ -25,9 +25,14 @@ namespace PATween.Internal
 		private LoopType loopType;
 		private float delay;
 		private DelayType delayType;
-		private List<Action> onComplete;
-		private List<Action> onKill;
-		private List<Action> onRewind;
+		private List<CallbackEntry> onStart;
+		private List<CallbackEntry> onPlay;
+		private List<CallbackEntry> onPause;
+		private List<Action<float>> onUpdate;
+		private List<CallbackEntry> onStepComplete;
+		private List<CallbackEntry> onComplete;
+		private List<CallbackEntry> onKill;
+		private List<CallbackEntry> onRewind;
 
 		// Explicit-set flags: SetDefaults on a SequenceBuilder only cascades into
 		// values the user did not set on the child builder.
@@ -156,9 +161,6 @@ namespace PATween.Internal
 			set => delayType = value;
 		}
 
-		public List<Action> OnComplete => onComplete;
-		public List<Action> OnKill => onKill;
-		public List<Action> OnRewind => onRewind;
 
 		public TweenBuilderBuffer()
 		{
@@ -175,34 +177,44 @@ namespace PATween.Internal
 			}
 		}
 
-		public void AddOnComplete(Action cb)
+		public void AddOnStart(Action cb) => Add(ref onStart, cb);
+		public void AddOnPlay(Action cb) => Add(ref onPlay, cb);
+		public void AddOnPause(Action cb) => Add(ref onPause, cb);
+		public void AddOnStepComplete(Action cb) => Add(ref onStepComplete, cb);
+		public void AddOnComplete(Action cb) => Add(ref onComplete, cb);
+		public void AddOnKill(Action cb) => Add(ref onKill, cb);
+		public void AddOnRewind(Action cb) => Add(ref onRewind, cb);
+
+		public void AddOnComplete(CallbackEntry entry)
 		{
-			if (cb == null)
-			{
-				return;
-			}
-			onComplete ??= new List<Action>();
-			onComplete.Add(cb);
+			onComplete ??= new List<CallbackEntry>();
+			onComplete.Add(entry);
 		}
 
-		public void AddOnKill(Action cb)
+		public void AddOnKill(CallbackEntry entry)
 		{
-			if (cb == null)
-			{
-				return;
-			}
-			onKill ??= new List<Action>();
-			onKill.Add(cb);
+			onKill ??= new List<CallbackEntry>();
+			onKill.Add(entry);
 		}
 
-		public void AddOnRewind(Action cb)
+		public void AddOnUpdate(Action<float> cb)
 		{
 			if (cb == null)
 			{
 				return;
 			}
-			onRewind ??= new List<Action>();
-			onRewind.Add(cb);
+			onUpdate ??= new List<Action<float>>();
+			onUpdate.Add(cb);
+		}
+
+		private static void Add(ref List<CallbackEntry> list, Action cb)
+		{
+			if (cb == null)
+			{
+				return;
+			}
+			list ??= new List<CallbackEntry>();
+			list.Add(CallbackEntry.FromAction(cb));
 		}
 
 		// Cascade writes from SequenceBuilder.SetDefaults; bypass the explicit flags.
@@ -249,6 +261,21 @@ namespace PATween.Internal
 			data.FromValue = snapMode == SnapMode.FromTo ? fromValue : endValue;
 			data.SnapPending = true;
 
+			TransferCallbacks(data);
+
+			data.Status = delay > 0f && delayType == DelayType.FirstLoop
+				? TweenStatus.Delayed
+				: TweenStatus.Playing;
+
+			return data;
+		}
+
+		private void TransferCallbacks(TweenData data)
+		{
+			Transfer(onStart, data.AddOnStart);
+			Transfer(onPlay, data.AddOnPlay);
+			Transfer(onPause, data.AddOnPause);
+			Transfer(onStepComplete, data.AddOnStepComplete);
 			if (onComplete != null)
 			{
 				for (var i = 0; i < onComplete.Count; i++)
@@ -263,19 +290,28 @@ namespace PATween.Internal
 					data.AddOnKill(onKill[i]);
 				}
 			}
-			if (onRewind != null)
+			Transfer(onRewind, data.AddOnRewind);
+			if (onUpdate != null)
 			{
-				for (var i = 0; i < onRewind.Count; i++)
+				for (var i = 0; i < onUpdate.Count; i++)
 				{
-					data.AddOnRewind(onRewind[i]);
+					data.AddOnUpdate(onUpdate[i]);
 				}
 			}
+		}
 
-			data.Status = delay > 0f && delayType == DelayType.FirstLoop
-				? TweenStatus.Delayed
-				: TweenStatus.Playing;
-
-			return data;
+		private static void Transfer(List<CallbackEntry> list, Action<Action> plainAdd)
+		{
+			// Entries in these slots are always plain (target-capture is
+			// OnComplete/OnKill only), so re-adding the plain action suffices.
+			if (list == null)
+			{
+				return;
+			}
+			for (var i = 0; i < list.Count; i++)
+			{
+				plainAdd(list[i].Plain);
+			}
 		}
 
 		public void Rent()
@@ -292,6 +328,16 @@ namespace PATween.Internal
 			{
 				generation = 1;
 			}
+			ClearCallbacks();
+		}
+
+		private void ClearCallbacks()
+		{
+			onStart?.Clear();
+			onPlay?.Clear();
+			onPause?.Clear();
+			onUpdate?.Clear();
+			onStepComplete?.Clear();
 			onComplete?.Clear();
 			onKill?.Clear();
 			onRewind?.Clear();
@@ -319,9 +365,7 @@ namespace PATween.Internal
 			easeExplicit = false;
 			loopsExplicit = false;
 			delayExplicit = false;
-			onComplete?.Clear();
-			onKill?.Clear();
-			onRewind?.Clear();
+			ClearCallbacks();
 		}
 	}
 }

@@ -49,6 +49,7 @@ namespace PATween.Internal
 			rootFixed = new RootSequenceData(UpdatePhase.Fixed);
 			rootManual = new RootSequenceData(UpdatePhase.Manual);
 			pendingKills.Clear();
+			TweenCommandQueue.Reset();
 		}
 
 		public static void Install()
@@ -128,6 +129,20 @@ namespace PATween.Internal
 		}
 
 		private static void TickActive(List<int> active, double scaledDt, double unscaledDt)
+		{
+			TweenCommandQueue.BeginTick();
+			try
+			{
+				TickActiveCore(active, scaledDt, unscaledDt);
+			}
+			finally
+			{
+				// Drains callbacks' deferred Kill/Complete/Restart/Reverse commands.
+				TweenCommandQueue.EndTick();
+			}
+		}
+
+		private static void TickActiveCore(List<int> active, double scaledDt, double unscaledDt)
 		{
 			tickSnapshotIds.Clear();
 			tickSnapshotGens.Clear();

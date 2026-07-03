@@ -48,6 +48,7 @@ namespace PATween.Internal
 				return;
 			}
 			Status = TweenStatus.Playing;
+			FireStartIfPending();
 
 			var prev = playhead;
 			var next = localTime - delay;
@@ -109,9 +110,12 @@ namespace PATween.Internal
 			playhead = next;
 			localTime = next + delay;
 
+			InvokeOnUpdate(duration > 0d ? (float)(next / duration > 1d ? 1d : next / duration) : 1f);
+
 			if (pauseIndex >= 0)
 			{
 				Status = TweenStatus.Paused;
+				InvokeOnPause();
 				return;
 			}
 
@@ -120,10 +124,7 @@ namespace PATween.Internal
 				ForceComplete();
 				Status = TweenStatus.Completed;
 				InvokeOnComplete();
-				if (AutoKill)
-				{
-					InvokeOnKill();
-				}
+				// No OnKill: natural completion never fires OnKill (§3.14).
 			}
 		}
 
@@ -247,6 +248,7 @@ namespace PATween.Internal
 
 		public override void ResetPlayhead()
 		{
+			base.ResetPlayhead();
 			localTime = 0d;
 			playhead = 0d;
 			for (var i = 0; i < entries.Length; i++)
@@ -284,7 +286,14 @@ namespace PATween.Internal
 				{
 					continue;
 				}
-				child.InvokeOnKill();
+				// Completed children are at their terminal value; freeing them is
+				// disposal, not a kill — no OnKill (§3.14). Children cut short by
+				// a parent Kill(false) are cancelled and get OnKill.
+				if (child.Status != TweenStatus.Completed)
+				{
+					child.Status = TweenStatus.Cancelled;
+					child.InvokeOnKill();
+				}
 				TweenStore.Free(e.Id);
 			}
 		}

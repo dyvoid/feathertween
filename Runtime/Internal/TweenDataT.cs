@@ -180,6 +180,7 @@ namespace PATween.Internal
 
 		public override void ResetPlayhead()
 		{
+			base.ResetPlayhead();
 			localTime = 0d;
 			lastCycleIndex = 0;
 			stopAtNextBoundary = false;
@@ -194,13 +195,28 @@ namespace PATween.Internal
 
 		public override void ForceComplete()
 		{
-			if (setter == null)
-			{
-				return;
-			}
 			var finalIndex = loopCount > 0 ? loopCount - 1 : lastCycleIndex;
-			GetCycleEnds(finalIndex, out _, out var cycleTo);
-			setter(cycleTo);
+			if (setter != null)
+			{
+				GetCycleEnds(finalIndex, out _, out var cycleTo);
+				setter(cycleTo);
+			}
+
+			// Complete()/Kill(true) fire OnStepComplete for the remaining loop
+			// boundaries; an infinite loop completes its current iteration (§3.14).
+			var remaining = loopCount < 0 ? 1 : loopCount - lastCycleIndex;
+			for (var i = 0; i < remaining; i++)
+			{
+				InvokeOnStepComplete();
+			}
+			if (loopCount > 0)
+			{
+				lastCycleIndex = loopCount;
+			}
+			else if (loopCount < 0)
+			{
+				lastCycleIndex++;
+			}
 		}
 
 		public override void Step(double scaledDelta, double unscaledDelta)
@@ -277,19 +293,24 @@ namespace PATween.Internal
 				}
 			}
 
+			var entryCycleIndex = lastCycleIndex;
 			var completed = false;
+			var completedByExhaustion = false;
 			if (dir > 0 && loopCount > 0 && cycleIndex >= loopCount)
 			{
 				completed = true;
+				completedByExhaustion = true;
 				cycleIndex = loopCount - 1;
 				tInCycle = 1f;
 			}
 
+			var stoppedAtBoundary = false;
 			if (dir > 0 && cycleIndex > lastCycleIndex)
 			{
 				if (stopAtNextBoundary)
 				{
 					completed = true;
+					stoppedAtBoundary = true;
 					tInCycle = 1f;
 					cycleIndex = lastCycleIndex;
 				}
@@ -321,20 +342,46 @@ namespace PATween.Internal
 			}
 			else
 			{
+				FireStartIfPending();
 				GetCycleEnds(cycleIndex, out var cycleFrom, out var cycleTo);
 				var easedT = ease.Evaluate(tInCycle);
 				var value = interpolator.Lerp(cycleFrom, cycleTo, easedT);
 				setter(value);
+				InvokeOnUpdate(easedT);
+			}
+
+			// Forward boundary crossings, including the final one on natural
+			// completion (§3.14: "per loop end").
+			if (dir > 0)
+			{
+				var boundaries = 0;
+				if (completedByExhaustion)
+				{
+					boundaries = loopCount - entryCycleIndex;
+				}
+				else if (stoppedAtBoundary)
+				{
+					boundaries = 1;
+				}
+				else if (cycleIndex > entryCycleIndex)
+				{
+					boundaries = cycleIndex - entryCycleIndex;
+				}
+				for (var i = 0; i < boundaries; i++)
+				{
+					InvokeOnStepComplete();
+				}
 			}
 
 			if (completed)
 			{
+				if (completedByExhaustion)
+				{
+					lastCycleIndex = loopCount; // ForceComplete must not refire boundaries
+				}
 				Status = TweenStatus.Completed;
 				InvokeOnComplete();
-				if (AutoKill)
-				{
-					InvokeOnKill();
-				}
+				// No OnKill here: natural completion never fires OnKill (§3.14).
 			}
 		}
 

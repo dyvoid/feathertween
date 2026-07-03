@@ -24,7 +24,8 @@ Last updated: 2026-07-03
 
 ## In flight
 
-- Nothing half-built. All suites green in Unity (2026-07-02).
+- **Phase 1.9 — Callbacks** (on `task/1.9-callbacks`): implemented, 119/119 green in the stub harness; needs an in-Unity test run before merge. Full callback set on both builders (OnStart/OnPlay/OnPause/OnUpdate/OnStepComplete/OnComplete/OnKill/OnRewind), target-capture OnComplete/OnKill overloads (CallbackEntry + cached per-type invoker, no boxing), handle-side OnStepComplete, deferred-mutation command queue (TweenCommandQueue: defers Kill/Complete/Restart/Reverse issued inside callbacks; drains end-of-tick, or when the outermost callback returns outside a tick), Tween/Sequence handle ops deduplicated into TweenOps.
+- **Spec-compliance fix**: natural completion / Complete() / Kill(true) no longer fire OnKill (firing matrix §3.14); two old tests updated. Sequence children completed naturally are disposed without OnKill; children cut short by parent Kill(false) are cancelled with OnKill.
 
 ## Next up
 
