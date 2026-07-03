@@ -17,6 +17,7 @@ All signatures accept builders, never started handles.
 - `AddLabel(string, float)` / `AddLabel(string, Position)`
 - `AddPause(Position, Action? onPause = null)` — zero-duration child with `isPause` flag, halts playhead when reached
 - `Clear(bool labels = false)`
+- `SetLoops(int count, LoopType type)` — sequence-level looping (ships in phase 1.10 with the `AdvanceTo` boundary walk; loop wrap is a boundary crossing)
 
 ### 5.2 Sequence invariants
 

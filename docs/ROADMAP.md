@@ -17,11 +17,11 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Loops, delays, direction, reverse | Done | `SetLoops`, `SetDelay`, `Reverse()`, yoyo/incremental/rewind | 0009 |
 | Sequence builder | Done | `SequenceBuilder`, Append/Insert/Join, labels, Position values | 0006 |
 | Callbacks (full set + multicast + reentrancy) | Planned | Builder-side callbacks, handle-side multicast, deferred mutation | — |
-| Seek and remaining control surface | Planned | `Seek`, `Restart`, `Complete`, `Kill(complete)`, mid-play `Insert` | — |
+| Seek and remaining control surface | Planned | `Seek`, `Restart`, `Complete`, `Kill(complete)`, mid-play `Insert`, sequence `SetLoops`, global/per-phase time scale | — |
 | Typed shortcuts (lambda) | Planned | `Move`, `Rotate`, `Scale`, `Fade`, `Color` — lambda baseline | — |
 | Filters and bulk ops | Planned | Target-indexed multimap, `Kill(target)`, `IsTweening`, `KillAll` | — |
 | Safe mode and assertions | Planned | Try/catch wrapper, off-thread assertions, release-build skip | — |
-| M1 acceptance (production cut) | Planned | Composed demo, all suites green, zero-alloc verified; v0.1 tag | — |
+| M1 acceptance (production cut) | Planned | Composed demo, all suites green, zero-alloc verified; LICENSE, CHANGELOG, XML docs; v0.1 tag | — |
 
 Production-cut reshuffle (2026-07-02): hand-written zero-alloc fast paths, TweenSettings serialization, and the cross-engine comparative benchmark moved to M2; M1 renumbered to stay linear (now 14 phases, acceptance is 1.14). See `implementation.md` §10.
 
@@ -33,22 +33,23 @@ Production-cut reshuffle (2026-07-02): hand-written zero-alloc fast paths, Tween
 | TweenSettings serialization | Planned | Moved from M1: `[Serializable] TweenSettings<T>`, PropertyDrawer, `WithDirection` |
 | Cross-engine comparative benchmark | Planned | Moved from M1 acceptance: DOTween/PrimeTween recordings, cost vs LitMotion managed path |
 | Zero-alloc target-capture overloads for all callbacks | Candidate | Extend beyond `OnComplete` / `OnKill` |
-| `SetLink(GameObject, LinkBehavior)` | Candidate | KillOn/PauseOn/RestartOn variants |
+| `SetLink(GameObject, LinkBehavior)` | Planned | KillOn/PauseOn/RestartOn variants; covers the pooled-object footgun `SetTarget` auto-kill misses |
 | Typed shortcuts expansion | Candidate | `RectTransform`, `Material`, `SpriteRenderer`, `Camera`, `Light`, `AudioSource` |
 | Shake / Punch shortcuts | Candidate | `ShakePosition`, `ShakeRotation`, `ShakeScale`, `PunchPosition` |
 | Extension method asmdef | Candidate | Optional `transform.PAMove(...)` wrappers |
-| Awaitables | Candidate | `TweenAwaiter`, `WaitForCompletion`, `WaitForKill`, `WaitForPosition` |
+| Awaitables | Planned | `TweenAwaiter` on Unity 6 native `Awaitable`, `WaitForCompletion`, `WaitForKill`, `WaitForPosition` |
 | Improved safe-mode reporting | Candidate | Collected per-frame diagnostics |
 
 ## M3 — Power features
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| UniTask integration | Candidate | Dedicated asmdef for UniTask support |
+| Editor preview window | Candidate | Promoted from M4: scrubber = 1.10 `Seek` + existing editor ticking |
+| UniTask integration | Candidate | Weakened case (M2 awaitables use native `Awaitable`); only if a consumer needs it |
 | Stagger helpers | Candidate | `PATween.Stagger(targets, ...)` |
 | Speed-based tweens | Candidate | `PATween.PositionAtSpeed`, etc. |
-| Path tweens | Candidate | Linear / CatmullRom paths, `LookAt` modes |
-| Blendable tweens | Candidate | Additive composition |
+| Path tweens | Candidate | Linear / CatmullRom paths, `LookAt` modes; separate `PATween.Paths` asmdef |
+| Blendable tweens | Candidate | Additive composition; **needs ADR first** (multiple writers per property vs storage model) |
 | `TweenAssetSO` | Candidate | Shared preset ScriptableObjects |
 
 ## M4 — GSAP parity sugar
@@ -58,8 +59,7 @@ Production-cut reshuffle (2026-07-02): hand-written zero-alloc fast paths, Tween
 | `Position.Parse` DSL | Candidate | `"+=0.3"`, `"<"`, `">"`, label references |
 | `tweenTo` / `tweenFromTo` | Candidate | GSAP-style timeline navigation |
 | `invalidate` / `repeatRefresh` | Candidate | Runtime re-evaluation of start values |
-| Cross-timeline coordinates | Candidate | `globalTime` conversion |
-| Editor preview window | Candidate | Visual scrubber in Editor |
+| Cross-timeline coordinates | Candidate | `globalTime` conversion — weakest roadmap item; drop unless a concrete need appears |
 
 ## M5 — Optional optimization pass
 

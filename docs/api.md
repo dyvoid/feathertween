@@ -95,9 +95,10 @@ public readonly struct Sequence : IEquatable<Sequence>
 
 public struct SequenceBuilder
 {
-    public SequenceBuilder SetDefaults(/* ... */);
+    public SequenceBuilder SetDefaults(/* ease, loops, delay — no duration, ADR 0010 */);
     public SequenceBuilder SetTarget(object target);   // bulk-kill scope: PATween.Kill(target) reaches the sequence
     public SequenceBuilder SetCancelBehavior(SequenceCancelBehavior b);
+    public SequenceBuilder SetLoops(int count, LoopType type);  // 1.10: sequence-level looping
     // Append / Insert / Join / AddLabel / AddPause / Prepend* / Clear ...
     public Sequence Start();
 }
@@ -245,6 +246,15 @@ t.SetTimeScale(float);
 t.SetRemainingCycles(int cycles);             // gracefully stop infinite loops
 t.SetRemainingCycles(bool stopAtEndValue);    // stop at next forward/backward boundary
 ```
+
+Engine-wide time control (1.10) lives on the static class, applied at the hidden root sequences so it composes with per-tween `SetTimeScale`:
+
+```csharp
+PATween.SetGlobalTimeScale(float scale);              // all phases
+PATween.SetTimeScale(UpdatePhase phase, float scale); // one phase (e.g. slow gameplay, keep UI)
+```
+
+Root scale is engine-side and distinct from Unity `Time.timeScale`; `ignoreTimeScale` opts a tween out of Unity's scale only (exact interaction finalized in 1.10).
 
 ### 3.10 Callbacks
 

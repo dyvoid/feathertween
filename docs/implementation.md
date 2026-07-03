@@ -172,7 +172,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 #### Phase 1.10 — Seek and remaining control surface
 
-**Deliverable**: `Seek(seconds, fireCallbacks)` per §3.15. `Pause` / `Resume` / `Restart` / `Play` / `Complete` / `Kill(complete)`. `SetTimeScale` (negative rejected). `SetCancelOnError`. Mid-play `Sequence.Insert` (the data plumbing is part of M1; the API was originally tagged M2 but ships here).
+**Deliverable**: `Seek(seconds, fireCallbacks)` per §3.15. `Pause` / `Resume` / `Restart` / `Play` / `Complete` / `Kill(complete)`. `SetTimeScale` (negative rejected). `SetCancelOnError`. Mid-play `Sequence.Insert` (the data plumbing is part of M1; the API was originally tagged M2 but ships here). **`SequenceBuilder.SetLoops(count, LoopType)`** — sequence-level looping via the same `AdvanceTo` boundary walk (loop wrap is a boundary crossing; Restart and Yoyo at minimum, Incremental if it falls out naturally). **Global and per-phase time scale** — `PATween.SetGlobalTimeScale(float)` and `PATween.SetTimeScale(UpdatePhase, float)` applied at the hidden root sequences (goal 1: timeScale composes recursively; the roots already exist, this exposes the knob).
 
 **Tests**:
 
@@ -181,8 +181,12 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 - Backward seek across `child._start` re-arms the snap; forward replay snaps again
 - Negative `SetTimeScale` throws in safe mode, clamps to 0 in release
 - `Kill(true)` on a sequence walks playhead to end with callbacks; `Kill(false)` disposes immediately
+- Sequence with `SetLoops(2, Restart)`: children replay with re-armed snaps; callbacks fire per loop; `Duration` reports a single cycle, `TotalProgress` spans all loops
+- Sequence with `SetLoops(2, Yoyo)`: second cycle traverses children in reverse window order
+- `SetGlobalTimeScale(0.5)` halves observed progress in all phases; per-phase scale composes multiplicatively with per-tween `SetTimeScale`
+- Interaction with `ignoreTimeScale` decided and documented (root scale is engine-side, distinct from Unity `Time.timeScale`; proposal: root scale applies to all tweens, `ignoreTimeScale` only opts out of Unity's)
 
-**Exit**: full handle control surface.
+**Exit**: full handle control surface; sequences loop; time is globally controllable.
 
 #### Phase 1.11 — Typed shortcuts (lambda)
 
@@ -223,13 +227,14 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 #### Phase 1.14 — M1 acceptance
 
-**Deliverable**: composed demo (intro + sequenced multi-tween + overlap + callback + From + label). Performance benchmark suite: 10k float tweens; 1k 10-child sequences. The cross-engine comparative benchmark (DOTween / PrimeTween recordings, LitMotion cost comparison) lives in M2 — it is a competitive claim, not a production-readiness gate.
+**Deliverable**: composed demo (intro + sequenced multi-tween + overlap + callback + From + label). Performance benchmark suite: 10k float tweens; 1k 10-child sequences. The cross-engine comparative benchmark (DOTween / PrimeTween recordings, LitMotion cost comparison) lives in M2 — it is a competitive claim, not a production-readiness gate. **Release hygiene**: `LICENSE` file (license choice is the user's), `CHANGELOG.md` per UPM convention (Package Manager displays it; keep-a-changelog format), and XML doc comments (`///`) on every public type and member.
 
 **Tests**:
 
 - All unit tests green across all phases (Editor + Runtime + Performance, in Unity and in the `tools~/compile-check` harness)
 - 0 per-frame managed alloc verified across the benchmark
 - Composed demo verified visually
+- No CS1591 (missing XML doc) warnings on the public surface; LICENSE and CHANGELOG.md present and referenced from package.json where applicable
 
 **Exit**: M1 release tag (v0.1); dogfood in a real project before declaring the API stable.
 
@@ -255,35 +260,39 @@ Composed demo reproducible against DOTween / PrimeTween reference recordings. Pe
 
 #### Remaining M2 items
 
+**Planned — production stickiness (do these first in M2)**:
+
+- `SetLink(GameObject, LinkBehavior)` with KillOn/PauseOn/RestartOn variants. `SetTarget` auto-kill only covers *destroyed* objects; pooled objects are disabled and reused, and `PauseOnDisable`/`KillOnDisable` is what prevents that footgun class.
+- Awaitables: `TweenAwaiter` for `await tween` (zero-alloc, main-thread resume), built on Unity 6's native `Awaitable` since the package targets 6000.3. Pooled `CustomYieldInstruction` for coroutine `yield return tween.WaitForCompletion()`. Plus `Tween.WaitForKill`, `WaitForPosition`, `WaitForElapsedLoops`.
+
+**Candidates**:
+
 - Zero-alloc target-capture overloads for all callbacks (`OnStart`, `OnPlay`, `OnPause`, `OnUpdate`, `OnStepComplete`, `OnRewind`)
-- `SetLink(GameObject, LinkBehavior)` with KillOn/PauseOn/Restart variants
 - Typed shortcuts: `RectTransform`, `Material` (color/float/vector by property name), `SpriteRenderer`, `Camera`, `Light`, `AudioSource`
 - Shake/Punch shortcuts: `ShakePosition`, `ShakeRotation`, `ShakeScale`, `PunchPosition`, `ShakeCamera`
 - `PATween.Extensions` asmdef: optional `transform.PAMove(...)` style extension wrappers around the static shortcuts
 - 2-state target-capture overloads (`OnComplete<T0,T1>(s0, s1, (s0,s1) => ...)`)
 - `AddPause` and sequence `PlayLabel(string)`
 - More filter overloads (string id if profiler justifies)
-- `TweenAwaiter` for `await tween` (zero-alloc, main-thread resume). Pooled `CustomYieldInstruction` for coroutine `yield return tween.WaitForCompletion()`
-- `Tween.WaitForKill`, `WaitForPosition`, `WaitForElapsedLoops` (yield + awaitable)
 - Improve safe mode reporting (collected per-frame diagnostics)
 
 ### M3 — Power features
 
-- UniTask asmdef
+- Editor preview window (promoted from M4: a scrubber is 1.10's `Seek` + the existing editor-mode ticking; the highest-leverage designer feature on the roadmap)
 - Stagger helpers (`PATween.Stagger(targets, ...)`)
 - Speed-based tweens (`PATween.PositionAtSpeed`, etc.)
-- Path tweens (Linear, CatmullRom) and `LookAt` modes
-- Blendable tweens (additive)
+- Path tweens (Linear, CatmullRom) and `LookAt` modes — ship as a separate asmdef (`PATween.Paths`) to protect the minimal-core goal
+- Blendable tweens (additive) — **requires an ADR before commitment**: additive composition means multiple writers per property, which cuts against the one-setter-per-tween storage model; this is the only roadmap item that could force an architectural rework
 - All parametric eases live (`Easing.OutBack(overshoot)`, `Easing.BounceExact(amp)`, `Easing.Elastic(s, p)`)
 - `TweenAssetSO` for shared presets
+- UniTask asmdef (weakened case: M2 awaitables target Unity 6 native `Awaitable`; only ship if a consumer actually needs UniTask interop)
 
 ### M4 — GSAP parity sugar
 
 - `Position.Parse` for GSAP string DSL (`"+=0.3"`, `"<"`, `">"`, labels)
 - `tweenTo(label)` / `tweenFromTo`
 - `invalidate()` and `repeatRefresh`
-- `globalTime` / cross-timeline coordinate conversion
-- Editor preview window
+- `globalTime` / cross-timeline coordinate conversion — weakest item on the roadmap (GSAP-ism with no obvious Unity user); drop unless a concrete need appears
 
 ### M5 — Optional optimization pass
 
