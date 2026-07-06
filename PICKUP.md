@@ -3,7 +3,7 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-07-03
+Last updated: 2026-07-06
 
 ## Current position
 
@@ -48,6 +48,23 @@ Last updated: 2026-07-03
 - `Kill(target)` is an O(n) linear scan of the active list (acceptable for now; the target-indexed multimap lands in phase 1.12). See `docs/implementation.md` §8.1.
 - Performance tests require the consuming project to install `com.unity.test-framework.performance` (test-only dependency).
 - An abandoned (never-started) `SequenceBuilder` leaks its already-allocated child store slots until the next `TweenStore.Reset()`; the LeakDetector warns via finalizer.
+
+### From code review (2026-07-06)
+
+**High**
+
+- **`TweenData<T>` not pooled**: `TweenBuilderBuffer.Build()` does `new TweenData<T>()` every time. Builder buffers are pooled, but the runtime data they produce is not. Every `Start()` allocates. The zero-alloc guarantee covers the tick loop, not creation — clarify docs or pool the data records.
+- **Incremental loop `GetCycleEnds` is O(cycleIndex)**: The `Add` loop in `TweenDataT.cs:404-414` recomputes the offset from scratch every frame. At high cycle counts (infinite incremental loops) this becomes a per-frame linear cost. Needs `IInterpolator<T>.Scale(T, int)` or cached cycle base — public interface change, needs ADR.
+- **Elastic ease ignores `amplitude`/`period` parameters**: `EaseEval` receives `paramA`/`paramB` but the elastic formulas use hardcoded constants. `Easing.InElastic(amplitude, period)` is cosmetic-only. Same for `BounceExact` amplitude.
+
+**Medium**
+
+- **`RemoveFromActiveList` is O(n) per `Free()`**: Applies to all kills, not just `Kill(target)`. Batch kills on scene transition → O(n²). Broader than the existing bullet above.
+- **Safe mode not implemented**: Invariant 6 specifies try/catch around step and callbacks; currently absent. A throwing getter/setter will corrupt tick iteration. Scheduled for phase 1.13, just confirming it's a real gap.
+- **Builder buffer callback duplication**: `TweenBuilderBuffer` and `SequenceBuilderBuffer` duplicate ~120 lines of identical callback list infrastructure (`Add`/`Transfer`/`Clear`). Maintenance hazard — any callback change needs two edits.
+- **`Interpolators.Get<T>()` dictionary lookup per `Build()`**: Could use a generic static class pattern (`InterpolatorCache<T>.Value`) for O(1) JIT-inlined access instead of `Dictionary<Type, object>` + unbox.
+- **`Easing` parameterless factories allocate a new struct per call**: `Easing.Linear()` etc. could be `static readonly` fields for the parameterless variants. Called on every tween creation via `ResetConfig()`.
+- **8 callback list fields on every `TweenData`**: Most tweens use 0-2 callbacks but carry 8 `List<>` reference slots (64 bytes). Since `TweenData` isn't pooled, this is pure per-instance waste.
 
 ## Test status
 
