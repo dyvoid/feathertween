@@ -132,7 +132,15 @@ Snap timing matches the design anchor:
 
 ### Safe mode
 
-A `[Conditional]`-style wrapper around `setter(...)` and each callback invocation. On exception: log, mark tween as dead, continue. Costs one try/catch per tween per frame when enabled. Default on in Editor, off in release. Toggleable per tween via `.SetSafeMode(bool)`.
+A try/catch wrapper around `setter(...)` and each callback invocation, compiled out entirely under the `PATWEEN_RELEASE` define (`#if`-style; verified by the release CI leg). Costs one try/catch per tween per frame when enabled. Default on in Editor, off in player builds. Toggleable per tween via `.SetSafeMode(bool)`; `SetCancelOnError(bool)` refines what happens on error.
+
+Semantics (phase 1.13):
+
+- **Setter exception** — the value write failed mid-step, so the animation contract is broken: the tween is killed and its slot freed. With `CancelOnError(true)` the kill is silent and fires `OnKill`; without it the exception is logged and the tween is disposed without `OnKill` (see the firing matrix in `docs/api/handles.md`). Other tweens in the same tick are unaffected. A `From`/`FromTo` snap that throws inside `.Start()` returns a dead handle.
+- **Callback exception** — a user-code side effect: always logged, remaining callbacks in the same list still run. With `CancelOnError(true)` the tween is additionally cancelled (deferred — the error surfaces inside a callback scope) and `OnKill` fires. A sequence entry callback (`AppendCallback`/`AddPause`) with `CancelOnError(true)` kills the sequence mid-walk using the same unwind path as child auto-kill.
+- **Off-thread assertions** (`TweenStore` access, runner ticks, `.Start()`) are part of the same debug layer and are compiled out under `PATWEEN_RELEASE`.
+
+A sequence's flags cover its own callbacks and entry callbacks; children carry their own flags (set on the child builder before appending).
 
 ### Reverse and Yoyo
 

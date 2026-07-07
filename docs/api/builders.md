@@ -62,8 +62,8 @@ All of these return the builder so they can be chained.
 .SetTarget(object)                          // kill-filter tag; not the animation target for generic tweens
 .SetId(int)                                 // small filter id
 .SetLink(GameObject, LinkBehavior)          // M2: KillOnDestroy etc.
-.SetSafeMode(bool)
-.SetCancelOnError(bool)                     // kill silently on setter exception
+.SetSafeMode(bool)                          // try/catch around setter + callbacks; default on in Editor
+.SetCancelOnError(bool)                     // setter exception: kill silently + OnKill; callback exception: log + cancel
 ```
 
 `SequenceBuilder.SetDefaults` cascades `ease`, `loops`, and `delay` into **subsequently** appended child builders that have not explicitly overridden them. Duration is not cascaded because every creation method requires an explicit duration.

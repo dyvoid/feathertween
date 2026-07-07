@@ -140,6 +140,7 @@ A zero-duration tween completes on the first tick after `.Start()`. `OnStart`, `
 | `Kill(false)`                          | no             | no         | yes    |
 | Auto-kill (`UnityEngine.Object` dies)  | no             | no         | yes    |
 | Setter exception + `CancelOnError`     | no             | no         | yes    |
+| Setter exception, safe mode, no `CancelOnError` (logged) | no | no    | no     |
 
 ### Reentrancy
 

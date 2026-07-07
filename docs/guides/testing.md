@@ -34,6 +34,13 @@ and excluded there. The harness is a fast pre-check, not a replacement: the
 in-Unity Editor + Runtime + Performance run remains the merge gate. See
 `tools~/compile-check/README.md` for stub rules.
 
+CI also runs a second harness leg with `-p:DefineConstants=PATWEEN_RELEASE`,
+which compiles the safe-mode wrapper and off-thread assertions out. Tests that
+depend on that debug layer are tagged `[Category("RequiresSafeMode")]` and
+excluded from that leg; `ReleaseModeTests` (compiled only under the define)
+proves the wrapper is gone by asserting a throwing setter propagates despite
+`SetSafeMode(true)`.
+
 ## Performance & allocation testing
 
 Two distinct concerns, deliberately separated by intent:

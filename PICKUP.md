@@ -3,15 +3,14 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-07-07 (sample static-import fix)
+Last updated: 2026-07-07 (phase 1.13 safe mode implemented, pending Unity verification)
 
 ## Current position
 
 - **Milestone**: M1 (Core), production cut. See `docs/planning/phases.md`.
-- **Done through**: Phase 1.12 (filters/bulk ops + storage surgery) done-done. Compile-check harness green (173 tests); Editor + Runtime + Performance suites verified in Unity 2026-07-07.
-- **Remaining M1 phases**: 1.13 (safe mode) → 1.14 (acceptance, v0.1 tag).
-- **Next phase**: 1.13 — Safe mode and assertions (try/catch around setter and callback invocations, `SetSafeMode`, `SetCancelOnError`, off-thread assertion).
-- **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
+- **Done through**: Phase 1.12 merged to `main`. Phase 1.13 (safe mode) implemented on `task/1.13-safe-mode`, harness green (184 tests + 172 in the PATWEEN_RELEASE leg) — **needs in-Unity verification (Editor + Runtime + Performance) before merge**.
+- **Remaining M1 phases**: 1.13 (verify + merge) → 1.14 (acceptance, v0.1 tag).
+- **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge. Active: `task/1.13-safe-mode`.
 
 ## Done
 
@@ -23,11 +22,13 @@ Last updated: 2026-07-07 (sample static-import fix)
 
 ## In flight
 
-- Nothing half-built; 1.10–1.12 verified in Unity and merged to `main`. Ready to start 1.13.
+- **Phase 1.13 — Safe mode and assertions** (`task/1.13-safe-mode`, this session): try/catch wrapper around setter (`TweenData<T>.ApplySetter`) and callback invocations (`TweenData.InvokeList`/`InvokeOnUpdate`, `SequenceData.InvokeEntryCallback`); `SetSafeMode`/`SetCancelOnError` on both builders; compile-time default via `SafeModeDefault` (on in Editor, off in player); everything compiled out under `PATWEEN_RELEASE`, including the off-thread asserts. Semantics: setter exception kills the tween (CancelOnError: silent + OnKill; else logged, no OnKill — see handles.md matrix); callback exception logs and continues (CancelOnError: also cancels, deferred). From-snap throw at `Start()` returns a dead handle. Sequence entry-callback error unwinds via the child-auto-kill path. CI gained a `PATWEEN_RELEASE` leg (`RequiresSafeMode` category excluded; `ReleaseModeTests` proves the wrapper is gone).
+- **Awaiting**: in-Unity run (Editor + Runtime + Performance) — the harness cannot cover LogAssert behavior and real PlayerLoop. Then ff-merge to `main`.
 
 ## Next up
 
-1. Begin Phase 1.13 — Safe mode and assertions: try/catch wrapper around setter and callback invocations, `SetSafeMode` per tween, `SetCancelOnError`, off-thread assertion, `PATWEEN_RELEASE` define. See `docs/planning/phases.md` phase 1.13.
+1. Verify 1.13 in Unity, merge `task/1.13-safe-mode`.
+2. Phase 1.14 — M1 acceptance: composed demo, 10k-float/1k-sequence benchmarks, LICENSE, CHANGELOG.md, XML docs on the public surface, v0.1 tag. Fold the "release build skips wrapper" alloc-benchmark verification into the 1.14 perf run.
 
 ## Infra (2026-07-02)
 
@@ -58,14 +59,14 @@ Resolved in phase 1.12 (2026-07-07): `TweenData<T>` pooling, swap-remove active 
 
 Remaining tracked debt:
 
-- **Safe mode absent** — scheduled 1.13, confirmed real gap (a throwing setter corrupts tick iteration until then).
+- ~~Safe mode absent~~ — implemented in 1.13 (this branch).
 - **Builder buffer callback duplication** (`TransferCallbacks` + callback lists duplicated between `TweenBuilderBuffer`/`SequenceBuilderBuffer`) — both copies were touched in 1.12 (method-group alloc fix) but the extraction is still pending; do it next time either changes.
 - **`Interpolators.Get<T>()` dictionary lookup per `Build()`** — valid micro-opt (generic static cache), but the cache must handle `Interpolators.Reset()` re-registration (version stamp) or interpolator-swapping tests break. Low urgency; fold into M2 fast paths.
 
 ## Test status
 
-- Compile-check harness: 173 tests green (2026-07-07, includes phases 1.10–1.12 + review fixes).
-- Unity (Editor + Runtime + Performance): verified 2026-07-07 through phase 1.12.
+- Compile-check harness: 184 tests green + 172 in the PATWEEN_RELEASE leg (2026-07-07, includes phase 1.13).
+- Unity (Editor + Runtime + Performance): verified 2026-07-07 through phase 1.12; **1.13 not yet run in Unity**.
 
 ## Consumer setup reminders
 
