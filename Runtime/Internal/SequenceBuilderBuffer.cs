@@ -23,6 +23,8 @@ namespace PATween.Internal
 		private object target;
 		private float delay;
 		private SequenceCancelBehavior cancelBehavior;
+		private int loops;
+		private LoopType loopType;
 
 		private EaseRef defaultEase;
 		private bool hasDefaultEase;
@@ -104,6 +106,12 @@ namespace PATween.Internal
 		{
 			get => cancelBehavior;
 			set => cancelBehavior = value;
+		}
+
+		public void SetLoops(int count, LoopType type)
+		{
+			loops = count < 0 ? -1 : (count == 0 ? 1 : count);
+			loopType = type;
 		}
 
 		public double Cursor => cursor;
@@ -360,7 +368,9 @@ namespace PATween.Internal
 				new List<Action>(callbacks),
 				Duration,
 				delay,
-				cancelBehavior);
+				cancelBehavior,
+				loops,
+				loopType);
 			data.Phase = phase;
 			data.IgnoreTimeScale = ignoreTimeScale;
 			data.AutoKill = autoKill;
@@ -470,6 +480,8 @@ namespace PATween.Internal
 			target = null;
 			delay = 0f;
 			cancelBehavior = SequenceCancelBehavior.ContinueOnChildAutoKill;
+			loops = 1;
+			loopType = LoopType.Restart;
 			hasDefaultEase = false;
 			hasDefaultLoops = false;
 			hasDefaultDelay = false;

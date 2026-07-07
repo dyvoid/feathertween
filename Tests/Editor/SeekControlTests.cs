@@ -1,0 +1,429 @@
+using System;
+using System.Collections.Generic;
+using NUnit.Framework;
+using PATween;
+using PATween.Internal;
+
+namespace PATween.Tests
+{
+	// Phase 1.10: Seek traversal (§3.15), sequence SetLoops/Reverse, mid-play
+	// Insert, and global / per-phase / per-tween time scale.
+	[TestFixture]
+	public class SeekControlTests
+	{
+		[SetUp]
+		public void SetUp()
+		{
+			TweenStore.Reset();
+			PATweenRunner.Reset();
+			Interpolators.Reset();
+		}
+
+		private static TweenBuilder<float> FloatTween(Func<float> getter, Action<float> setter, float end, float duration)
+		{
+			return global::PATween.PATween.To(getter, setter, end, duration);
+		}
+
+		private static SequenceBuilder ManualSequence()
+		{
+			return global::PATween.PATween.Sequence().SetUpdate(UpdatePhase.Manual);
+		}
+
+		// --- Tween Seek ---
+
+		[Test]
+		public void TweenSeek_Silent_RendersSingleSample()
+		{
+			var v = 0f;
+			var steps = 0;
+			var t = FloatTween(() => v, x => v = x, 10f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(3, LoopType.Restart)
+				.OnStepComplete(() => steps++)
+				.Start();
+
+			PATweenRunner.ManualTick(0.1);
+			t.Seek(2.5f);
+			Assert.That(v, Is.EqualTo(5f).Within(1e-3f), "sample at cycle 2 mid");
+			Assert.That(steps, Is.Zero, "silent seek fires no boundaries");
+		}
+
+		[Test]
+		public void TweenSeek_WithCallbacks_WalksBoundaries()
+		{
+			var v = 0f;
+			var steps = 0;
+			var rewinds = 0;
+			var t = FloatTween(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(4, LoopType.Restart)
+				.OnStepComplete(() => steps++)
+				.OnRewind(() => rewinds++)
+				.Start();
+
+			PATweenRunner.ManualTick(0.1);
+			t.Seek(2.5f, fireCallbacks: true);
+			Assert.That(steps, Is.EqualTo(2), "crossed 2 boundaries forward");
+
+			t.Seek(0.5f, fireCallbacks: true);
+			Assert.That(rewinds, Is.EqualTo(2), "crossed 2 boundaries backward");
+		}
+
+		[Test]
+		public void TweenSeek_PreservesPauseState()
+		{
+			var v = 0f;
+			var t = FloatTween(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.Start();
+
+			PATweenRunner.ManualTick(0.2);
+			t.Pause();
+			t.Seek(0.75f);
+			Assert.That(v, Is.EqualTo(0.75f).Within(1e-3f));
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Paused), "seek preserves pause");
+
+			PATweenRunner.ManualTick(0.5);
+			Assert.That(v, Is.EqualTo(0.75f).Within(1e-3f), "still paused, no advance");
+		}
+
+		[Test]
+		public void TweenSeek_ClampsToTimeline()
+		{
+			var v = 0f;
+			var t = FloatTween(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetAutoKill(false)
+				.Start();
+
+			PATweenRunner.ManualTick(0.01);
+			t.Seek(99f);
+			Assert.That(v, Is.EqualTo(1f).Within(1e-3f), "clamped to end");
+			t.Seek(-5f);
+			Assert.That(v, Is.EqualTo(0f).Within(1e-3f), "clamped to start");
+		}
+
+		// --- Sequence Seek ---
+
+		[Test]
+		public void SequenceSeek_Silent_SkipsCallbacksAndPauses()
+		{
+			var v = 0f;
+			var log = new List<string>();
+			var sb = ManualSequence();
+			sb.Append(FloatTween(() => v, x => v = x, 1f, 1f));
+			sb.AppendCallback(() => log.Add("cb"));
+			sb.AddPause(1f);
+			sb.Append(FloatTween(() => v, x => v = x, 2f, 1f));
+			var seq = sb.Start();
+
+			PATweenRunner.ManualTick(0.1);
+			seq.Seek(1.5f);
+			Assert.That(log, Is.Empty, "silent seek fires nothing");
+			Assert.That(v, Is.EqualTo(1.5f).Within(1e-3f), "second child sampled mid");
+			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Playing), "not halted by the skipped pause");
+
+			PATweenRunner.ManualTick(0.25);
+			Assert.That(v, Is.EqualTo(1.75f).Within(1e-3f), "play continues from the sought position");
+			Assert.That(log, Is.Empty, "skipped callback stays consumed");
+		}
+
+		[Test]
+		public void SequenceSeek_WithCallbacks_HaltsAtPause()
+		{
+			var v = 0f;
+			var log = new List<string>();
+			var sb = ManualSequence();
+			sb.Append(FloatTween(() => v, x => v = x, 1f, 1f));
+			sb.AppendCallback(() => log.Add("cb"));
+			sb.AddPause(1.5f);
+			sb.Append(FloatTween(() => v, x => v = x, 2f, 1f).SetEase(Easing.Linear()));
+			var seq = sb.Start();
+
+			PATweenRunner.ManualTick(0.1);
+			seq.Seek(2.5f, fireCallbacks: true);
+			Assert.That(log, Is.EqualTo(new[] { "cb" }), "callback crossed in order");
+			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Paused), "halted at the pause");
+			// Pause sits at 1.5; the second child spans [1, 2], so its local 0.5
+			// sample is v = 1.5.
+			Assert.That(v, Is.EqualTo(1.5f).Within(1e-3f), "playhead left at the pause");
+		}
+
+		[Test]
+		public void SequenceSeek_Backward_RearmsFromSnap()
+		{
+			var v = 5f;
+			var sb = ManualSequence();
+			sb.Append(global::PATween.PATween.From(() => v, x => v = x, 0f, 1f));
+			var seq = sb.Start();
+
+			PATweenRunner.ManualTick(0.5);
+			Assert.That(v, Is.EqualTo(2.5f).Within(1e-3f), "From snapped to 0, moving toward 5");
+
+			// Mutate the target mid-flight, then seek backward across the child
+			// start: the snap must re-arm and capture fresh values on replay.
+			seq.Seek(0f, fireCallbacks: true);
+			v = 8f;
+			PATweenRunner.ManualTick(0.5);
+			Assert.That(v, Is.EqualTo(4f).Within(1e-3f), "re-snap: 0 -> 8, mid = 4");
+		}
+
+		// --- Sequence loops ---
+
+		[Test]
+		public void SequenceSetLoops_Restart_ChildrenReplayWithRearmedSnaps()
+		{
+			var v = 0f;
+			var steps = 0;
+			var completed = false;
+			// FromTo: fixed endpoints replay exactly per cycle. (A To child
+			// re-snaps from its current value on loop wrap by deferred-snap
+			// design, which would make cycle 1 a constant hold at the end value.)
+			var sb = ManualSequence().SetLoops(2, LoopType.Restart);
+			sb.Append(global::PATween.PATween.FromTo(() => v, x => v = x, 0f, 1f, 1f));
+			var seq = sb.Start().OnStepComplete(() => steps++);
+			seq.OnComplete(() => completed = true);
+
+			Assert.That(seq.Duration, Is.EqualTo(1f).Within(1e-4f), "Duration reports a single cycle");
+
+			PATweenRunner.ManualTick(1.5);
+			Assert.That(seq.TotalProgress, Is.EqualTo(0.75f).Within(1e-3f), "TotalProgress spans all loops");
+			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f), "cycle 1 replays the pattern (re-snapped from 0)");
+			Assert.That(steps, Is.EqualTo(1), "one boundary crossed");
+
+			PATweenRunner.ManualTick(0.5);
+			Assert.That(completed, Is.True);
+			Assert.That(steps, Is.EqualTo(2), "final loop end fires OnStepComplete too");
+		}
+
+		[Test]
+		public void SequenceSetLoops_CallbacksFirePerLoop()
+		{
+			var v = 0f;
+			var calls = 0;
+			var sb = ManualSequence().SetLoops(3, LoopType.Restart);
+			sb.Append(FloatTween(() => v, x => v = x, 1f, 0.5f));
+			sb.AppendCallback(() => calls++);
+			sb.Start();
+
+			PATweenRunner.ManualTick(2.0);
+			Assert.That(calls, Is.EqualTo(3), "AppendCallback re-arms per cycle");
+		}
+
+		[Test]
+		public void SequenceSetLoops_Yoyo_SecondCycleReversesChildren()
+		{
+			var a = 0f;
+			var b = 0f;
+			var sb = ManualSequence().SetLoops(2, LoopType.Yoyo);
+			sb.Append(FloatTween(() => a, x => a = x, 1f, 1f));
+			sb.Append(FloatTween(() => b, x => b = x, 1f, 1f));
+			var seq = sb.Start();
+
+			PATweenRunner.ManualTick(2.0);
+			Assert.That(a, Is.EqualTo(1f).Within(1e-3f));
+			Assert.That(b, Is.EqualTo(1f).Within(1e-3f), "cycle 0 complete");
+
+			PATweenRunner.ManualTick(0.5);
+			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "yoyo: b rewinds first");
+			Assert.That(a, Is.EqualTo(1f).Within(1e-3f), "a untouched so far");
+
+			PATweenRunner.ManualTick(1.0);
+			Assert.That(b, Is.EqualTo(0f).Within(1e-3f), "b fully rewound");
+			Assert.That(a, Is.EqualTo(0.5f).Within(1e-3f), "a rewinding");
+
+			PATweenRunner.ManualTick(0.5);
+			Assert.That(a, Is.EqualTo(0f).Within(1e-3f), "yoyo ends at start values");
+			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Completed).Or.EqualTo(TweenStatus.Disposed));
+		}
+
+		[Test]
+		public void SequenceSetLoops_Infinite_KeepsCycling()
+		{
+			var v = 0f;
+			var steps = 0;
+			var sb = ManualSequence().SetLoops(-1, LoopType.Restart);
+			sb.Append(global::PATween.PATween.FromTo(() => v, x => v = x, 0f, 1f, 1f));
+			var seq = sb.Start().OnStepComplete(() => steps++);
+
+			PATweenRunner.ManualTick(5.5);
+			Assert.That(steps, Is.EqualTo(5));
+			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f));
+			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Playing));
+		}
+
+		// --- Sequence Reverse ---
+
+		[Test]
+		public void SequenceReverse_RewindsChildrenInWindowOrder()
+		{
+			var a = 0f;
+			var b = 0f;
+			var sb = ManualSequence();
+			sb.Append(FloatTween(() => a, x => a = x, 1f, 1f));
+			sb.Append(FloatTween(() => b, x => b = x, 1f, 1f));
+			var seq = sb.Start();
+
+			PATweenRunner.ManualTick(1.5);
+			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f));
+
+			seq.Reverse();
+			PATweenRunner.ManualTick(1.0);
+			Assert.That(b, Is.EqualTo(0f).Within(1e-3f), "b rewound");
+			Assert.That(a, Is.EqualTo(0.5f).Within(1e-3f), "a rewinding");
+
+			PATweenRunner.ManualTick(1.0);
+			Assert.That(a, Is.EqualTo(0f).Within(1e-3f), "clamped at sequence start");
+		}
+
+		// --- Kill / Complete walks ---
+
+		[Test]
+		public void SequenceKillComplete_WalksToEndWithCallbacks()
+		{
+			var v = 0f;
+			var log = new List<string>();
+			var sb = ManualSequence();
+			sb.Append(FloatTween(() => v, x => v = x, 1f, 1f));
+			sb.AppendCallback(() => log.Add("mid"));
+			sb.AddPause(1f);
+			sb.Append(FloatTween(() => v, x => v = x, 2f, 1f).OnComplete(() => log.Add("child2")));
+			var seq = sb.Start();
+
+			PATweenRunner.ManualTick(0.25);
+			seq.Kill(complete: true);
+			Assert.That(v, Is.EqualTo(2f).Within(1e-3f), "walked to end value");
+			Assert.That(log, Does.Contain("mid"), "callback crossed");
+			Assert.That(log, Does.Contain("child2"), "child completion fired");
+			Assert.That(seq.IsAlive, Is.False);
+		}
+
+		[Test]
+		public void SequenceKill_DisposesImmediately()
+		{
+			var v = 0f;
+			var killed = false;
+			var sb = ManualSequence();
+			sb.Append(FloatTween(() => v, x => v = x, 1f, 1f));
+			var seq = sb.Start().OnKill(() => killed = true);
+
+			PATweenRunner.ManualTick(0.25);
+			seq.Kill();
+			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f), "value left where it was");
+			Assert.That(killed, Is.True);
+			Assert.That(seq.IsAlive, Is.False);
+		}
+
+		// --- Mid-play Insert ---
+
+		[Test]
+		public void SequenceInsert_MidPlay_NewChildPlaysInWindow()
+		{
+			var a = 0f;
+			var b = 0f;
+			var sb = ManualSequence();
+			sb.Append(FloatTween(() => a, x => a = x, 1f, 2f));
+			var seq = sb.Start();
+
+			PATweenRunner.ManualTick(0.5);
+			seq.Insert(1f, FloatTween(() => b, x => b = x, 1f, 1f).SetUpdate(UpdatePhase.Manual));
+
+			PATweenRunner.ManualTick(1.0);
+			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "inserted child mid-window");
+
+			PATweenRunner.ManualTick(0.5);
+			Assert.That(b, Is.EqualTo(1f).Within(1e-3f));
+			Assert.That(a, Is.EqualTo(1f).Within(1e-3f));
+		}
+
+		[Test]
+		public void SequenceInsert_FromChildCallback_DefersToEndOfTick()
+		{
+			var a = 0f;
+			var b = 0f;
+			Sequence seq = default;
+			var sb = ManualSequence();
+			sb.Append(FloatTween(() => a, x => a = x, 1f, 1f)
+				.OnComplete(() => seq.Insert(1.5f, FloatTween(() => b, x => b = x, 1f, 1f).SetUpdate(UpdatePhase.Manual))));
+			sb.AppendInterval(2f);
+			seq = sb.Start();
+
+			PATweenRunner.ManualTick(1.0); // completes child; insert deferred, no crash
+			PATweenRunner.ManualTick(1.0);
+			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "inserted child playing on later ticks");
+		}
+
+		// --- Time scale ---
+
+		[Test]
+		public void GlobalTimeScale_HalvesObservedProgress()
+		{
+			var v = 0f;
+			FloatTween(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.Start();
+
+			global::PATween.PATween.SetGlobalTimeScale(0.5f);
+			PATweenRunner.ManualTick(1.0);
+			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f));
+		}
+
+		[Test]
+		public void PhaseAndTweenScales_ComposeMultiplicatively()
+		{
+			var v = 0f;
+			var t = FloatTween(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.Start();
+
+			global::PATween.PATween.SetGlobalTimeScale(0.5f);
+			global::PATween.PATween.SetTimeScale(UpdatePhase.Manual, 0.5f);
+			t.SetTimeScale(2f);
+
+			PATweenRunner.ManualTick(1.0);
+			// 1.0 * 0.5 (global) * 0.5 (phase) * 2 (tween) = 0.5
+			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f));
+		}
+
+		[Test]
+		public void SequenceTimeScale_AppliesToChildren()
+		{
+			var v = 0f;
+			var sb = ManualSequence();
+			sb.Append(FloatTween(() => v, x => v = x, 1f, 1f));
+			var seq = sb.Start();
+			seq.SetTimeScale(0.5f);
+
+			PATweenRunner.ManualTick(1.0);
+			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f), "sequence scale slows its children");
+		}
+
+		[Test]
+		public void NegativeTimeScale_Throws()
+		{
+			var v = 0f;
+			var t = FloatTween(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.Start();
+
+			Assert.Throws<ArgumentOutOfRangeException>(() => t.SetTimeScale(-1f));
+			Assert.Throws<ArgumentOutOfRangeException>(() => global::PATween.PATween.SetGlobalTimeScale(-1f));
+			Assert.Throws<ArgumentOutOfRangeException>(() => global::PATween.PATween.SetTimeScale(UpdatePhase.Manual, -0.5f));
+		}
+
+		[Test]
+		public void GlobalTimeScale_GovernsIgnoreTimeScaleTweens()
+		{
+			// Root scale is engine-side, distinct from Unity's Time.timeScale:
+			// ignoreTimeScale only opts out of Unity's, not ours.
+			var v = 0f;
+			FloatTween(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual, ignoreTimeScale: true)
+				.Start();
+
+			global::PATween.PATween.SetGlobalTimeScale(0.25f);
+			PATweenRunner.ManualTick(1.0);
+			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f));
+		}
+	}
+}

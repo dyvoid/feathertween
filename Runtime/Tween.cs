@@ -40,6 +40,12 @@ namespace PATween
 
 		public void Complete() => TweenOps.Complete(id, generation);
 
+		public void SetTimeScale(float scale) => TweenOps.SetTimeScale(id, generation, scale);
+
+		/// Repositions the playhead on the tween's local timeline (the initial
+		/// delay occupies [0, delay)). Preserves play/pause state (§3.15).
+		public void Seek(float seconds, bool fireCallbacks = false) => TweenOps.Seek(id, generation, seconds, fireCallbacks);
+
 		public void Kill(bool complete = false) => TweenOps.Kill(id, generation, complete);
 
 		public void SetRemainingCycles(int cycles)

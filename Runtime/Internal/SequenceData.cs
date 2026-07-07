@@ -5,29 +5,68 @@ namespace PATween.Internal
 {
 	internal sealed class SequenceData : TweenData
 	{
-		private readonly SequenceChildEntry[] entries;
+		private SequenceChildEntry[] entries;
 		private readonly List<Action> callbacks;
-		private readonly double duration;
+		private double duration;
 		private readonly float delay;
 		private readonly SequenceCancelBehavior cancelBehavior;
+		private readonly int loopCount;
+		private readonly LoopType loopType;
 
-		private double localTime;
-		private double playhead;
+		// Post-delay position spanning all cycles: [0, duration * loopCount].
+		private double playheadTotal;
+		private double delayRemaining;
+		private int orderCounter;
 
 		public double Duration => duration;
+
+		// Progress across all loops [0,1]; an infinite loop reports progress
+		// within its current cycle.
+		public float TotalProgress
+		{
+			get
+			{
+				var total = loopCount < 0 ? duration : TotalDuration;
+				if (total <= 0d)
+				{
+					return 1f;
+				}
+				var p = loopCount < 0
+					? (playheadTotal % duration) / duration
+					: playheadTotal / total;
+				return (float)(p > 1d ? 1d : (p < 0d ? 0d : p));
+			}
+		}
+
+		private double TotalDuration => loopCount < 0 ? double.PositiveInfinity : duration * loopCount;
 
 		public SequenceData(
 			SequenceChildEntry[] entries,
 			List<Action> callbacks,
 			double duration,
 			float delay,
-			SequenceCancelBehavior cancelBehavior)
+			SequenceCancelBehavior cancelBehavior,
+			int loopCount = 1,
+			LoopType loopType = LoopType.Restart)
 		{
 			this.entries = entries;
 			this.callbacks = callbacks;
 			this.duration = duration;
 			this.delay = delay;
 			this.cancelBehavior = cancelBehavior;
+			this.loopCount = loopCount == 0 ? 1 : loopCount;
+			// Incremental has no sequence-level meaning (children re-snap from
+			// current values on each cycle, so relative children shift naturally);
+			// treat it as Restart.
+			this.loopType = loopType == LoopType.Yoyo ? LoopType.Yoyo : LoopType.Restart;
+			delayRemaining = delay;
+			for (var i = 0; i < entries.Length; i++)
+			{
+				if (entries[i].Order >= orderCounter)
+				{
+					orderCounter = entries[i].Order + 1;
+				}
+			}
 		}
 
 		public override bool StartsDelayed() => delay > 0f;
@@ -39,35 +78,252 @@ namespace PATween.Internal
 				return;
 			}
 
-			var dt = IgnoreTimeScale ? unscaledDelta : scaledDelta;
-			localTime += dt;
+			var dt = (IgnoreTimeScale ? unscaledDelta : scaledDelta) * TimeScale * Direction;
 
-			if (localTime < delay)
+			if (delayRemaining > 0d)
 			{
-				Status = TweenStatus.Delayed;
-				return;
+				if (dt <= delayRemaining)
+				{
+					if (dt > 0d)
+					{
+						delayRemaining -= dt;
+					}
+					Status = TweenStatus.Delayed;
+					return;
+				}
+				dt -= delayRemaining;
+				delayRemaining = 0d;
 			}
+
 			Status = TweenStatus.Playing;
 			FireStartIfPending();
 
-			var prev = playhead;
-			var next = localTime - delay;
-			if (next < prev)
+			var target = playheadTotal + dt;
+			if (!AdvanceTo(target, fire: true, haltOnPause: true, out var paused))
 			{
-				next = prev;
+				return; // sequence killed itself mid-walk
 			}
 
-			// An unfired pause clamps the playhead; entries are sorted, so the
-			// first match is the earliest.
-			var pauseIndex = -1;
-			for (var i = 0; i < entries.Length; i++)
+			InvokeOnUpdate(CycleProgress());
+
+			if (paused)
 			{
-				ref var e = ref entries[i];
-				if (e.Kind == SequenceChildKind.Pause && !e.Finished && e.Start <= next)
+				Status = TweenStatus.Paused;
+				InvokeOnPause();
+				return;
+			}
+
+			if (Direction > 0 && loopCount > 0 && playheadTotal >= TotalDuration)
+			{
+				// The final cycle boundary is a loop end like any other (§3.14).
+				InvokeOnStepComplete();
+				Status = TweenStatus.Completed;
+				InvokeOnComplete();
+				// No OnKill: natural completion never fires OnKill (§3.14).
+			}
+		}
+
+		// Repositions the playhead in post-delay total time. Preserves Status,
+		// except a pause entry crossed while firing halts and pauses (§3.15).
+		public override void SeekTo(double seconds, bool fireCallbacks)
+		{
+			delayRemaining = 0d;
+			if (!AdvanceTo(seconds, fireCallbacks, haltOnPause: fireCallbacks, out var paused))
+			{
+				return;
+			}
+			if (fireCallbacks)
+			{
+				InvokeOnUpdate(CycleProgress());
+			}
+			if (paused && Status != TweenStatus.Paused)
+			{
+				Status = TweenStatus.Paused;
+				InvokeOnPause();
+			}
+		}
+
+		private float CycleProgress()
+		{
+			if (duration <= 0d)
+			{
+				return 1f;
+			}
+			var local = playheadTotal - CurrentCycle(forward: true) * duration;
+			var p = local / duration;
+			return (float)(p > 1d ? 1d : (p < 0d ? 0d : p));
+		}
+
+		// Boundary-aware cycle index for the current playhead. At an exact cycle
+		// boundary the forward walker treats it as the start of the next cycle,
+		// the backward walker as the end of the previous one.
+		private int CurrentCycle(bool forward)
+		{
+			if (duration <= 0d)
+			{
+				return 0;
+			}
+			var c = (int)Math.Floor(playheadTotal / duration);
+			if (!forward && playheadTotal == c * duration)
+			{
+				c--;
+			}
+			if (c < 0)
+			{
+				c = 0;
+			}
+			if (loopCount > 0 && c >= loopCount)
+			{
+				c = loopCount - 1;
+			}
+			return c;
+		}
+
+		// Walks the playhead to target, cycle by cycle. Yoyo cycles map to
+		// backward local walks, so one local walker serves all four
+		// direction/loop combinations. Returns false when the sequence killed
+		// itself mid-walk; sets paused when a pause entry halted the walk.
+		private bool AdvanceTo(double target, bool fire, bool haltOnPause, out bool paused)
+		{
+			paused = false;
+			var total = TotalDuration;
+			var requested = target;
+			if (target < 0d)
+			{
+				target = 0d;
+			}
+			if (target > total)
+			{
+				target = total;
+			}
+
+			if (duration <= 0d)
+			{
+				playheadTotal = target;
+				return true;
+			}
+
+			if (playheadTotal == target && requested > target)
+			{
+				// Forward push against the end: entries sitting exactly at the
+				// playhead (e.g. a callback right after a pause at the sequence
+				// end) still need a zero-length firing pass.
+				var c = CurrentCycle(forward: true);
+				if (loopType != LoopType.Yoyo || (c & 1) == 0)
 				{
-					next = e.Start;
-					pauseIndex = i;
+					var local = playheadTotal - c * duration;
+					var haltedFlat = double.NaN;
+					if (!AdvanceLocalForward(local, local, fire, haltOnPause, ref haltedFlat))
+					{
+						return false;
+					}
+					paused = !double.IsNaN(haltedFlat);
+				}
+				return true;
+			}
+
+			var guard = 0;
+			while (playheadTotal != target)
+			{
+				if (++guard > 1_000_000)
+				{
+					UnityEngine.Debug.LogError("[PATween] Sequence advance walk failed to converge; aborting.");
 					break;
+				}
+
+				var forward = target > playheadTotal;
+				var c = CurrentCycle(forward);
+				var cycleStart = c * duration;
+				var cycleEnd = cycleStart + duration;
+				var segTarget = forward ? Math.Min(target, cycleEnd) : Math.Max(target, cycleStart);
+
+				var reversedCycle = loopType == LoopType.Yoyo && (c & 1) == 1;
+				var localFrom = reversedCycle ? cycleEnd - playheadTotal : playheadTotal - cycleStart;
+				var localTo = reversedCycle ? cycleEnd - segTarget : segTarget - cycleStart;
+
+				if (!AdvanceLocal(localFrom, localTo, fire, haltOnPause, out var haltedAt))
+				{
+					return false;
+				}
+				if (!double.IsNaN(haltedAt))
+				{
+					playheadTotal = reversedCycle ? cycleEnd - haltedAt : cycleStart + haltedAt;
+					paused = true;
+					return true;
+				}
+
+				playheadTotal = segTarget;
+				if (playheadTotal == target)
+				{
+					break;
+				}
+
+				if (forward)
+				{
+					if (fire)
+					{
+						InvokeOnStepComplete();
+					}
+					// Entering the next cycle: Restart replays from armed entries;
+					// a Yoyo odd cycle starts from the end state the even cycle
+					// just left, and its backward local walk re-arms as it goes.
+					if (!(loopType == LoopType.Yoyo))
+					{
+						RearmEntries();
+					}
+				}
+				else
+				{
+					if (fire)
+					{
+						InvokeOnRewind();
+					}
+					// Entering the previous cycle at its local end. Restart cycles
+					// need entries repositioned to their end state; a Yoyo even→odd
+					// backward crossing lands at local 0 with entries already
+					// re-armed by the walk that got here.
+					if (loopType != LoopType.Yoyo)
+					{
+						SetEntriesToEndState();
+					}
+				}
+			}
+			return true;
+		}
+
+		// Advances the cycle-local playhead from 'from' to 'to' (either
+		// direction). haltedAt is NaN unless a pause entry halted a forward walk.
+		// Returns false when a child auto-kill cancelled the whole sequence.
+		private bool AdvanceLocal(double from, double to, bool fire, bool haltOnPause, out double haltedAt)
+		{
+			haltedAt = double.NaN;
+			if (to > from)
+			{
+				return AdvanceLocalForward(from, to, fire, haltOnPause, ref haltedAt);
+			}
+			if (to < from)
+			{
+				AdvanceLocalBackward(from, to, fire);
+			}
+			return true;
+		}
+
+		private bool AdvanceLocalForward(double prev, double next, bool fire, bool haltOnPause, ref double haltedAt)
+		{
+			// An unfired pause clamps the walk; entries are sorted, so the first
+			// match is the earliest.
+			var pauseIndex = -1;
+			if (haltOnPause)
+			{
+				for (var i = 0; i < entries.Length; i++)
+				{
+					ref var e = ref entries[i];
+					if (e.Kind == SequenceChildKind.Pause && !e.Finished && e.Start <= next)
+					{
+						next = e.Start;
+						pauseIndex = i;
+						break;
+					}
 				}
 			}
 
@@ -88,48 +344,49 @@ namespace PATween.Internal
 						if (e.Start <= next)
 						{
 							e.Finished = true;
-							InvokeEntryCallback(e.CallbackIndex);
+							if (fire)
+							{
+								InvokeEntryCallback(e.CallbackIndex);
+							}
 						}
 						break;
 					case SequenceChildKind.Pause:
 						if (i == pauseIndex)
 						{
 							e.Finished = true;
-							InvokeEntryCallback(e.CallbackIndex);
+							if (fire)
+							{
+								InvokeEntryCallback(e.CallbackIndex);
+							}
+						}
+						else if (!haltOnPause && e.Start <= next)
+						{
+							// Force-complete / silent walks blow through pauses.
+							e.Finished = true;
+							if (fire)
+							{
+								InvokeEntryCallback(e.CallbackIndex);
+							}
 						}
 						break;
 					case SequenceChildKind.Tween:
-						if (!StepChild(ref e, prev, next))
+						if (!StepChildForward(ref e, prev, next, fire))
 						{
-							return; // sequence killed itself mid-step
+							return false;
 						}
 						break;
 				}
 			}
 
-			playhead = next;
-			localTime = next + delay;
-
-			InvokeOnUpdate(duration > 0d ? (float)(next / duration > 1d ? 1d : next / duration) : 1f);
-
 			if (pauseIndex >= 0)
 			{
-				Status = TweenStatus.Paused;
-				InvokeOnPause();
-				return;
+				haltedAt = next;
 			}
-
-			if (next >= duration)
-			{
-				ForceComplete();
-				Status = TweenStatus.Completed;
-				InvokeOnComplete();
-				// No OnKill: natural completion never fires OnKill (§3.14).
-			}
+			return true;
 		}
 
 		// Returns false when a child auto-kill cancelled the whole sequence.
-		private bool StepChild(ref SequenceChildEntry e, double prev, double next)
+		private bool StepChildForward(ref SequenceChildEntry e, double prev, double next, bool fire)
 		{
 			if (next <= e.Start)
 			{
@@ -173,10 +430,21 @@ namespace PATween.Internal
 				return true;
 			}
 
-			var status = child.Status;
-			if (status == TweenStatus.Playing || status == TweenStatus.Delayed)
+			if (fire)
 			{
-				child.Step(childDelta, childDelta);
+				var status = child.Status;
+				if (status == TweenStatus.Playing || status == TweenStatus.Delayed)
+				{
+					child.Step(childDelta, childDelta);
+				}
+			}
+			else
+			{
+				child.SeekTo(next - e.Start, fireCallbacks: false);
+				if (!e.Infinite && next >= e.End)
+				{
+					child.Status = TweenStatus.Completed;
+				}
 			}
 			if (child.Status == TweenStatus.Completed)
 			{
@@ -185,72 +453,76 @@ namespace PATween.Internal
 			return true;
 		}
 
-		private void InvokeEntryCallback(int index)
+		private void AdvanceLocalBackward(double from, double to, bool fire)
 		{
-			if (index < 0 || callbacks == null || index >= callbacks.Count)
-			{
-				return;
-			}
-			callbacks[index]?.Invoke();
-		}
-
-		public override void ForceComplete()
-		{
-			for (var i = 0; i < entries.Length; i++)
+			for (var i = entries.Length - 1; i >= 0; i--)
 			{
 				ref var e = ref entries[i];
-				if (e.Finished)
-				{
-					continue;
-				}
-
 				switch (e.Kind)
 				{
 					case SequenceChildKind.Callback:
-						e.Finished = true;
-						InvokeEntryCallback(e.CallbackIndex);
-						break;
 					case SequenceChildKind.Pause:
-						e.Finished = true;
+						// Crossed backward: re-arm so a forward replay fires again.
+						// Nothing is invoked on the way back.
+						if (e.Start > to && e.Finished)
+						{
+							e.Finished = false;
+						}
 						break;
 					case SequenceChildKind.Tween:
-					{
-						e.Finished = true;
-						if (e.Infinite)
-						{
-							break; // no meaningful end value to snap to
-						}
-						var child = TweenStore.Get(e.Id, e.Gen);
-						if (child == null)
-						{
-							break;
-						}
-						if (!e.Entered)
-						{
-							e.Entered = true;
-							child.ResolveStartValues();
-						}
-						if (child.Status != TweenStatus.Completed
-							&& child.Status != TweenStatus.Cancelled)
-						{
-							child.ForceComplete();
-							child.Status = TweenStatus.Completed;
-							child.InvokeOnComplete();
-						}
+						StepChildBackward(ref e, to, fire);
 						break;
-					}
 				}
 			}
-
-			playhead = duration;
-			localTime = duration + delay;
 		}
 
-		public override void ResetPlayhead()
+		private void StepChildBackward(ref SequenceChildEntry e, double to, bool fire)
 		{
-			base.ResetPlayhead();
-			localTime = 0d;
-			playhead = 0d;
+			var child = TweenStore.Get(e.Id, e.Gen);
+			if (child == null)
+			{
+				return;
+			}
+
+			if (to <= e.Start)
+			{
+				// Crossed the child's start: render it at its start value (the
+				// walk passes through local 0), then re-arm the snap so a forward
+				// replay snaps again (§3.15).
+				if (e.Entered || e.Finished)
+				{
+					child.SeekTo(0d, fire);
+					e.Entered = false;
+					e.Finished = false;
+					child.ResetPlayhead();
+					child.RearmStartValues();
+					child.Status = child.StartsDelayed() ? TweenStatus.Delayed : TweenStatus.Playing;
+				}
+				return;
+			}
+
+			if (!e.Infinite && to >= e.End)
+			{
+				return; // window entirely before the target; untouched
+			}
+
+			// Target lands inside the child's window: reposition it there.
+			if (!e.Entered)
+			{
+				e.Entered = true;
+				child.ResolveStartValues();
+			}
+			e.Finished = false;
+			if (child.Status == TweenStatus.Completed)
+			{
+				child.Status = TweenStatus.Playing;
+			}
+			child.SeekTo(to - e.Start, fire);
+		}
+
+		// Re-arms every entry for a fresh forward pass (loop wrap, Restart).
+		private void RearmEntries()
+		{
 			for (var i = 0; i < entries.Length; i++)
 			{
 				ref var e = ref entries[i];
@@ -270,6 +542,119 @@ namespace PATween.Internal
 				child.RearmStartValues();
 				child.Status = child.StartsDelayed() ? TweenStatus.Delayed : TweenStatus.Playing;
 			}
+		}
+
+		// Positions every entry at its end state (backward crossing into a
+		// completed Restart cycle). Silent: boundary callbacks belong to the
+		// walker, not to this repositioning.
+		private void SetEntriesToEndState()
+		{
+			for (var i = 0; i < entries.Length; i++)
+			{
+				ref var e = ref entries[i];
+				if (e.Kind != SequenceChildKind.Tween)
+				{
+					e.Finished = true;
+					continue;
+				}
+				var child = TweenStore.Get(e.Id, e.Gen);
+				if (child == null)
+				{
+					e.Finished = true;
+					continue;
+				}
+				if (!e.Entered)
+				{
+					e.Entered = true;
+					child.ResolveStartValues();
+				}
+				if (!e.Infinite)
+				{
+					child.SeekTo(e.Length, fireCallbacks: false);
+					child.Status = TweenStatus.Completed;
+					e.Finished = true;
+				}
+			}
+		}
+
+		private void InvokeEntryCallback(int index)
+		{
+			if (index < 0 || callbacks == null || index >= callbacks.Count)
+			{
+				return;
+			}
+			callbacks[index]?.Invoke();
+		}
+
+		// Walks the playhead to the end with callbacks (Complete / Kill(true)
+		// semantics); pauses are crossed, not halted at. An infinite loop
+		// completes its current cycle (§3.14).
+		public override void ForceComplete()
+		{
+			delayRemaining = 0d;
+			double target;
+			if (loopCount > 0)
+			{
+				target = TotalDuration;
+			}
+			else
+			{
+				var c = CurrentCycle(forward: true);
+				target = (c + 1) * duration;
+			}
+			AdvanceTo(target, fire: true, haltOnPause: false, out _);
+			// The final cycle boundary is a loop end like any other (§3.14);
+			// intermediate boundaries fired inside the walk.
+			InvokeOnStepComplete();
+		}
+
+		public override void ResetPlayhead()
+		{
+			base.ResetPlayhead();
+			playheadTotal = 0d;
+			delayRemaining = delay;
+			RearmEntries();
+		}
+
+		// Mid-play insertion (phase 1.10): rebuilds the sorted entry array.
+		// Allocates; mid-play Insert is a structural edit, not a hot-path op.
+		public void InsertChild(int id, uint gen, double start, double length, bool infinite)
+		{
+			var entry = new SequenceChildEntry
+			{
+				Id = id,
+				Gen = gen,
+				Start = start,
+				Length = infinite ? 0d : length,
+				Infinite = infinite,
+				Kind = SequenceChildKind.Tween,
+				CallbackIndex = -1,
+				Order = orderCounter++,
+			};
+
+			var newEntries = new SequenceChildEntry[entries.Length + 1];
+			var insertAt = entries.Length;
+			for (var i = 0; i < entries.Length; i++)
+			{
+				if (entries[i].Start > start)
+				{
+					insertAt = i;
+					break;
+				}
+			}
+			Array.Copy(entries, 0, newEntries, 0, insertAt);
+			newEntries[insertAt] = entry;
+			Array.Copy(entries, insertAt, newEntries, insertAt + 1, entries.Length - insertAt);
+			entries = newEntries;
+
+			var end = entry.Infinite ? start : entry.End;
+			if (end > duration)
+			{
+				duration = end;
+			}
+
+			// If it lands behind the playhead in the current cycle, it plays on
+			// the next loop (or on a backward pass); crossing logic handles both.
 		}
 
 		public override void OnFree()

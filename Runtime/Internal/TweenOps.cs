@@ -111,6 +111,36 @@ namespace PATween.Internal
 			}
 		}
 
+		// Seek repositions the playhead without changing Status (§3.15); it is a
+		// value write, not a structural mutation, so it runs synchronously even
+		// from inside callbacks.
+		public static void Seek(int id, uint gen, double seconds, bool fireCallbacks)
+		{
+			var data = TweenStore.Get(id, gen);
+			if (data == null || data.Status == TweenStatus.Disposed)
+			{
+				return;
+			}
+			data.SeekTo(seconds, fireCallbacks);
+		}
+
+		// Negative scale rejected: direction is owned exclusively by Reverse()
+		// (§3.14). Throws today; the throw-in-safe-mode / clamp-in-release split
+		// lands with safe mode in phase 1.13.
+		public static void SetTimeScale(int id, uint gen, float scale)
+		{
+			if (scale < 0f)
+			{
+				throw new System.ArgumentOutOfRangeException(
+					nameof(scale), "[PATween] SetTimeScale rejects negative values; use Reverse().");
+			}
+			var data = TweenStore.Get(id, gen);
+			if (data != null)
+			{
+				data.TimeScale = scale;
+			}
+		}
+
 		public static void Kill(int id, uint gen, bool complete, bool allowDefer = true)
 		{
 			if (allowDefer && TweenCommandQueue.TryDefer(

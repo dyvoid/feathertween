@@ -20,6 +20,7 @@ namespace PATween.Internal
 			Complete = 2,
 			Restart = 3,
 			Reverse = 4,
+			SequenceInsert = 5,
 		}
 
 		private struct Command
@@ -27,6 +28,12 @@ namespace PATween.Internal
 			public Op Op;
 			public int Id;
 			public uint Gen;
+			// SequenceInsert payload: the pre-built detached child and its window.
+			public int ChildId;
+			public uint ChildGen;
+			public double Time;
+			public double Length;
+			public bool Infinite;
 		}
 
 		private const int DrainCap = 65536;
@@ -72,6 +79,28 @@ namespace PATween.Internal
 				return false;
 			}
 			queue.Add(new Command { Op = op, Id = id, Gen = gen });
+			return true;
+		}
+
+		// Mid-play Sequence.Insert from inside a callback: the child is already
+		// built and detached in the store; only the entry splice is deferred.
+		public static bool TryDeferInsert(int seqId, uint seqGen, int childId, uint childGen, double time, double length, bool infinite)
+		{
+			if (callbackDepth == 0)
+			{
+				return false;
+			}
+			queue.Add(new Command
+			{
+				Op = Op.SequenceInsert,
+				Id = seqId,
+				Gen = seqGen,
+				ChildId = childId,
+				ChildGen = childGen,
+				Time = time,
+				Length = length,
+				Infinite = infinite,
+			});
 			return true;
 		}
 
@@ -135,6 +164,20 @@ namespace PATween.Internal
 				case Op.Reverse:
 					TweenOps.Reverse(cmd.Id, cmd.Gen, allowDefer: false);
 					break;
+				case Op.SequenceInsert:
+				{
+					var seq = TweenStore.Get(cmd.Id, cmd.Gen) as SequenceData;
+					if (seq != null)
+					{
+						seq.InsertChild(cmd.ChildId, cmd.ChildGen, cmd.Time, cmd.Length, cmd.Infinite);
+					}
+					else if (TweenStore.IsAlive(cmd.ChildId, cmd.ChildGen))
+					{
+						// Sequence died before the drain; don't leak the built child.
+						TweenStore.Free(cmd.ChildId);
+					}
+					break;
+				}
 			}
 		}
 	}

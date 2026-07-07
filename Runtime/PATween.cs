@@ -10,6 +10,43 @@ namespace PATween
 			TweenStore.EnsureCapacity(tweens + sequences);
 		}
 
+		/// Engine-side global playback rate, applied at the hidden root of every
+		/// phase. Composes multiplicatively with per-phase and per-tween scales.
+		/// Distinct from Unity's Time.timeScale: it also governs tweens using
+		/// SetUpdate(..., ignoreTimeScale: true).
+		public static void SetGlobalTimeScale(float scale)
+		{
+			if (scale < 0f)
+			{
+				throw new ArgumentOutOfRangeException(nameof(scale), "[PATween] Global time scale cannot be negative.");
+			}
+			PATweenRunner.EnsureInitialized();
+			PATweenRunner.GlobalTimeScale = scale;
+		}
+
+		public static float GetGlobalTimeScale()
+		{
+			PATweenRunner.EnsureInitialized();
+			return PATweenRunner.GlobalTimeScale;
+		}
+
+		/// Per-phase playback rate; composes with the global scale.
+		public static void SetTimeScale(UpdatePhase phase, float scale)
+		{
+			if (scale < 0f)
+			{
+				throw new ArgumentOutOfRangeException(nameof(scale), "[PATween] Phase time scale cannot be negative.");
+			}
+			PATweenRunner.EnsureInitialized();
+			PATweenRunner.SetPhaseTimeScale(phase, scale);
+		}
+
+		public static float GetTimeScale(UpdatePhase phase)
+		{
+			PATweenRunner.EnsureInitialized();
+			return PATweenRunner.GetPhaseTimeScale(phase);
+		}
+
 		public static SequenceBuilder Sequence()
 		{
 			var buf = SequenceBuilderBufferPool.Rent();

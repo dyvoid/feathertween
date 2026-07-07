@@ -235,7 +235,7 @@ namespace PATween.Internal
 			}
 
 			var dir = Direction;
-			var dt = IgnoreTimeScale ? unscaledDelta : scaledDelta;
+			var dt = (IgnoreTimeScale ? unscaledDelta : scaledDelta) * TimeScale;
 
 			var everyLoop = delayType == DelayType.EveryLoop && delay > 0f;
 			double cycleSlot = everyLoop ? (delay + duration) : Math.Max(duration, 1e-9);
@@ -390,6 +390,86 @@ namespace PATween.Internal
 				Status = TweenStatus.Completed;
 				InvokeOnComplete();
 				// No OnKill here: natural completion never fires OnKill (§3.14).
+			}
+		}
+
+		public override void SeekTo(double seconds, bool fireCallbacks)
+		{
+			var everyLoop = delayType == DelayType.EveryLoop && delay > 0f;
+			double cycleSlot = everyLoop ? (delay + duration) : Math.Max(duration, 1e-9);
+			double firstDelayOffset = everyLoop ? 0d : delay;
+
+			if (seconds < 0d)
+			{
+				seconds = 0d;
+			}
+			if (loopCount > 0)
+			{
+				var total = firstDelayOffset + cycleSlot * loopCount;
+				if (seconds > total)
+				{
+					seconds = total;
+				}
+			}
+
+			// A seek before the first tick still needs start-value capture; the
+			// snapPending guard makes this a no-op when already resolved.
+			ResolveStartValues();
+
+			localTime = seconds;
+
+			var activeLocalTime = seconds - firstDelayOffset;
+			if (activeLocalTime < 0d)
+			{
+				activeLocalTime = 0d;
+			}
+			var cycleIndex = (int)Math.Floor(activeLocalTime / cycleSlot);
+			if (cycleIndex < 0)
+			{
+				cycleIndex = 0;
+			}
+			if (loopCount > 0 && cycleIndex >= loopCount)
+			{
+				cycleIndex = loopCount - 1;
+			}
+			var inSlot = activeLocalTime - cycleIndex * cycleSlot;
+
+			float tInCycle;
+			var cycleStartOffset = everyLoop ? delay : 0d;
+			var cycleElapsed = inSlot - cycleStartOffset;
+			if (duration <= 0f)
+			{
+				tInCycle = 1f;
+			}
+			else
+			{
+				tInCycle = (float)(cycleElapsed / duration);
+				if (tInCycle > 1f) tInCycle = 1f;
+				if (tInCycle < 0f) tInCycle = 0f;
+			}
+
+			if (fireCallbacks)
+			{
+				for (var i = lastCycleIndex; i < cycleIndex; i++)
+				{
+					InvokeOnStepComplete();
+				}
+				for (var i = lastCycleIndex; i > cycleIndex; i--)
+				{
+					InvokeOnRewind();
+				}
+			}
+			lastCycleIndex = cycleIndex;
+
+			if (setter != null)
+			{
+				GetCycleEnds(cycleIndex, out var cycleFrom, out var cycleTo);
+				var easedT = ease.Evaluate(tInCycle);
+				setter(interpolator.Lerp(cycleFrom, cycleTo, easedT));
+				if (fireCallbacks)
+				{
+					InvokeOnUpdate(easedT);
+				}
 			}
 		}
 

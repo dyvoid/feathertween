@@ -46,6 +46,16 @@ namespace PATween
 			return this;
 		}
 
+		// Sequence-level looping. Yoyo traverses children in reverse window order
+		// on odd cycles; Incremental has no sequence-level meaning and is treated
+		// as Restart. count < 0 loops forever.
+		public SequenceBuilder SetLoops(int count, LoopType loopType = LoopType.Restart)
+		{
+			ValidateOrThrow();
+			buffer.SetLoops(count, loopType);
+			return this;
+		}
+
 		public SequenceBuilder SetCancelBehavior(SequenceCancelBehavior behavior)
 		{
 			ValidateOrThrow();

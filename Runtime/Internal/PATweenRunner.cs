@@ -21,6 +21,45 @@ namespace PATween.Internal
 		private static int mainThreadId;
 		private static bool installed;
 
+		// Engine-side rate control, applied at the hidden roots so it composes
+		// recursively with per-tween TimeScale. Distinct from Unity's
+		// Time.timeScale: it scales the unscaled delta too, so IgnoreTimeScale
+		// tweens are still governed by it.
+		private static float globalTimeScale = 1f;
+		private static float scaleUpdate = 1f;
+		private static float scaleLate = 1f;
+		private static float scaleFixed = 1f;
+		private static float scaleManual = 1f;
+
+		public static float GlobalTimeScale
+		{
+			get => globalTimeScale;
+			set => globalTimeScale = value;
+		}
+
+		public static void SetPhaseTimeScale(UpdatePhase phase, float scale)
+		{
+			switch (phase)
+			{
+				case UpdatePhase.Update: scaleUpdate = scale; break;
+				case UpdatePhase.Late: scaleLate = scale; break;
+				case UpdatePhase.Fixed: scaleFixed = scale; break;
+				case UpdatePhase.Manual: scaleManual = scale; break;
+			}
+		}
+
+		public static float GetPhaseTimeScale(UpdatePhase phase)
+		{
+			switch (phase)
+			{
+				case UpdatePhase.Update: return scaleUpdate;
+				case UpdatePhase.Late: return scaleLate;
+				case UpdatePhase.Fixed: return scaleFixed;
+				case UpdatePhase.Manual: return scaleManual;
+				default: return 1f;
+			}
+		}
+
 		public static RootSequenceData RootUpdate => rootUpdate;
 		public static RootSequenceData RootLate => rootLate;
 		public static RootSequenceData RootFixed => rootFixed;
@@ -49,6 +88,11 @@ namespace PATween.Internal
 			rootFixed = new RootSequenceData(UpdatePhase.Fixed);
 			rootManual = new RootSequenceData(UpdatePhase.Manual);
 			pendingKills.Clear();
+			globalTimeScale = 1f;
+			scaleUpdate = 1f;
+			scaleLate = 1f;
+			scaleFixed = 1f;
+			scaleManual = 1f;
 			TweenCommandQueue.Reset();
 		}
 
@@ -85,24 +129,29 @@ namespace PATween.Internal
 		public static void ManualTick(double deltaTime)
 		{
 			AssertMainThread();
-			rootManual.Advance(deltaTime, deltaTime);
-			TickActive(TweenStore.ActiveManual, deltaTime, deltaTime);
+			var root = globalTimeScale * scaleManual;
+			var scaled = deltaTime * root;
+			rootManual.Advance(scaled, scaled);
+			TickActive(TweenStore.ActiveManual, scaled, scaled);
 			LeakDetector.Drain();
 		}
 
 		internal static void TickEditorDelta(double deltaTime)
 		{
 			AssertMainThread();
-			rootUpdate.Advance(deltaTime, deltaTime);
-			TickActive(TweenStore.ActiveUpdate, deltaTime, deltaTime);
+			var root = globalTimeScale * scaleUpdate;
+			var scaled = deltaTime * root;
+			rootUpdate.Advance(scaled, scaled);
+			TickActive(TweenStore.ActiveUpdate, scaled, scaled);
 			LeakDetector.Drain();
 		}
 
 		internal static void TickUpdate()
 		{
 			AssertMainThread();
-			double scaled = Time.deltaTime;
-			double unscaled = Time.unscaledDeltaTime;
+			var root = globalTimeScale * scaleUpdate;
+			double scaled = Time.deltaTime * root;
+			double unscaled = Time.unscaledDeltaTime * root;
 			rootUpdate.Advance(scaled, unscaled);
 			TickActive(TweenStore.ActiveUpdate, scaled, unscaled);
 			LeakDetector.Drain();
@@ -111,8 +160,9 @@ namespace PATween.Internal
 		internal static void TickLate()
 		{
 			AssertMainThread();
-			double scaled = Time.deltaTime;
-			double unscaled = Time.unscaledDeltaTime;
+			var root = globalTimeScale * scaleLate;
+			double scaled = Time.deltaTime * root;
+			double unscaled = Time.unscaledDeltaTime * root;
 			rootLate.Advance(scaled, unscaled);
 			TickActive(TweenStore.ActiveLate, scaled, unscaled);
 			LeakDetector.Drain();
@@ -121,8 +171,9 @@ namespace PATween.Internal
 		internal static void TickFixed()
 		{
 			AssertMainThread();
-			double scaled = Time.fixedDeltaTime;
-			double unscaled = Time.fixedUnscaledDeltaTime;
+			var root = globalTimeScale * scaleFixed;
+			double scaled = Time.fixedDeltaTime * root;
+			double unscaled = Time.fixedUnscaledDeltaTime * root;
 			rootFixed.Advance(scaled, unscaled);
 			TickActive(TweenStore.ActiveFixed, scaled, unscaled);
 			LeakDetector.Drain();

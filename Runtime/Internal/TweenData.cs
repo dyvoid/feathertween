@@ -11,6 +11,7 @@ namespace PATween.Internal
 		private bool ignoreTimeScale;
 		private object target;
 		private bool isUnityObject;
+		private float timeScale = 1f;
 		private int direction = 1;
 		private int selfId = -1;
 		private bool startFired;
@@ -57,6 +58,11 @@ namespace PATween.Internal
 		public virtual void ForceComplete() { }
 		public virtual bool StartsDelayed() => false;
 
+		// Repositions the playhead (§3.15). Silent (fireCallbacks=false) renders a
+		// single sample at the target; firing walks loop boundaries in temporal
+		// order (OnStepComplete forward, OnRewind backward). Never changes Status.
+		public virtual void SeekTo(double seconds, bool fireCallbacks) { }
+
 		// Deferred start-value capture: root tweens resolve at Start(), sequenced
 		// children resolve when the parent playhead first crosses their window.
 		public virtual void ResolveStartValues() { }
@@ -101,6 +107,15 @@ namespace PATween.Internal
 		}
 
 		public bool IsUnityObject => isUnityObject;
+
+		// Per-tween playback rate. Engine-side: applies to scaled and unscaled
+		// time alike (IgnoreTimeScale only opts out of Unity's Time.timeScale).
+		// Negative values are rejected in TweenOps; direction is owned by Reverse.
+		public float TimeScale
+		{
+			get => timeScale;
+			set => timeScale = value;
+		}
 
 		public virtual void Step(double scaledDelta, double unscaledDelta)
 		{
@@ -207,6 +222,7 @@ namespace PATween.Internal
 			ignoreTimeScale = false;
 			target = null;
 			isUnityObject = false;
+			timeScale = 1f;
 			direction = 1;
 			selfId = -1;
 			startFired = false;
