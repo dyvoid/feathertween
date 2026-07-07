@@ -317,10 +317,13 @@ namespace UnityEngine
 		public static void EndArea() { }
 		public static void BeginHorizontal() { }
 		public static void EndHorizontal() { }
-		public static void Label(string text) { }
+		public static void Label(string text, params GUILayoutOption[] options) { }
 		public static bool Button(string text) => false;
 		public static float HorizontalSlider(float value, float min, float max) => value;
+		public static GUILayoutOption Height(float height) => null;
 	}
+
+	public class GUILayoutOption { }
 
 	public class HeaderAttribute : System.Attribute
 	{

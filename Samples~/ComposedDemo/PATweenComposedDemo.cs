@@ -199,8 +199,11 @@ namespace PATween.Samples.ComposedDemo
 		private void OnGUI()
 		{
 			GUILayout.BeginArea(new Rect(10f, 10f, 320f, 400f), GUI.skin.box);
-			GUILayout.Label($"PATween ComposedDemo - {phaseLabel}");
-			GUILayout.Label($"hero status {show.Status} | progress {showProgress:P0}");
+			// Fixed-height header: the phase label wraps to two lines at times,
+			// and without a reserved height that shoves the buttons around
+			// mid-click. Reserve two lines up front so the controls never move.
+			GUILayout.Label($"PATween ComposedDemo - {phaseLabel}", GUILayout.Height(36f));
+			GUILayout.Label($"hero status {show.Status} | progress {showProgress:P0}", GUILayout.Height(20f));
 
 			if (GUILayout.Button(paused ? "Resume all" : "Pause all"))
 			{
