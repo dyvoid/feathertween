@@ -9,7 +9,7 @@ A robust, minimal C# tween engine for Unity. Compositional sequences, static-met
 
 ## Status
 
-Early development — M1 (Core) is in progress. Phases 1.1–1.8 are complete (through the sequence builder); 1.9–1.14 remain (callbacks, seek/control, shortcuts, filters, safe mode, acceptance). Expect breaking changes until M1 ships.
+Early development — M1 (Core) is in progress. Phases 1.1–1.12 are complete (through filters, bulk ops, and storage surgery); 1.13–1.14 remain (safe mode and acceptance). Expect breaking changes until M1 ships.
 
 ## Getting Started
 
@@ -30,7 +30,7 @@ Tests/
   Editor/             EditMode correctness tests
   Runtime/            PlayMode tests
   Performance/        Allocation guards + throughput benchmarks
-Samples~/             Importable package samples (BasicUsage demo)
+Samples~/             Importable package samples (BasicUsage and SequenceDemo)
 docs/                 Architecture, decisions, and guides
 AGENTS.md             AI agent instructions and conventions
 PICKUP.md             Where the last session left off — active work only, not the backlog
