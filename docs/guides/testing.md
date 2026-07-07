@@ -1,6 +1,6 @@
 # Testing
 
-How to run, structure, and set up PATween's tests. For the design rationale behind the test categories, see `../architecture/overview.md` and `docs/implementation.md` §8.
+How to run, structure, and set up PATween's tests. For the design rationale behind the test categories, see `../architecture/overview.md` and `../architecture/performance.md`.
 
 ## Structure
 
@@ -49,7 +49,7 @@ Why EditMode + `ManualTick` instead of PlayMode: `ManualTick` advances the runne
 
 PATween's tests only run inside a Unity project that consumes the package. Two setup steps are required in that **consuming project**.
 
-### 1. Make tests visible in Test Runner
+### Make tests visible in Test Runner
 
 When PATween is consumed as a UPM package (linked via `file:`), Unity hides its tests by default. The test asmdefs use the `UNITY_INCLUDE_TESTS` define constraint, which is only active for packages listed as `testables`. Add the package to the consuming project's `Packages/manifest.json`:
 
@@ -66,7 +66,7 @@ When PATween is consumed as a UPM package (linked via `file:`), Unity hides its 
 
 The name must match `package.json` (`com.patween.patween`). Embedding the source under `Assets/` instead would surface tests automatically, but the `testables` entry is the correct mechanism for the package workflow.
 
-### 2. Install the performance test dependency
+### Install the performance test dependency
 
 The performance asmdef references `Unity.PerformanceTesting`. The consuming project must have the package installed (it is test-only):
 

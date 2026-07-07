@@ -1,6 +1,6 @@
 # Roadmap
 
-Lightweight feature-candidate tracker. For the detailed milestone/phase plan, see [`docs/implementation.md`](implementation.md).
+Lightweight feature-candidate tracker. For the detailed milestone/phase plan, see [`docs/planning/phases.md`](planning/phases.md).
 
 Status values: `Candidate` — idea worth tracking; `Planned` — decision made, not started; `In flight` — actively being worked on; `Done` — shipped.
 
@@ -23,15 +23,13 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Safe mode and assertions | Planned | Try/catch wrapper, off-thread assertions, release-build skip | — |
 | M1 acceptance (production cut) | Planned | Composed demo, all suites green, zero-alloc verified; LICENSE, CHANGELOG, XML docs; v0.1 tag | — |
 
-Production-cut reshuffle (2026-07-02): hand-written zero-alloc fast paths, TweenSettings serialization, and the cross-engine comparative benchmark moved to M2; M1 renumbered to stay linear (now 14 phases, acceptance is 1.14). See `implementation.md` §10.
-
 ## M2 — Polish and ecosystem
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Hand-written zero-alloc fast paths | Planned | Moved from M1: bypass lambda core for common shortcuts, 0 alloc on `Start` |
-| TweenSettings serialization | Planned | Moved from M1: `[Serializable] TweenSettings<T>`, PropertyDrawer, `WithDirection` |
-| Cross-engine comparative benchmark | Planned | Moved from M1 acceptance: DOTween/PrimeTween recordings, cost vs LitMotion managed path |
+| Hand-written zero-alloc fast paths | Planned | Bypass lambda core for common shortcuts, 0 alloc on `Start` |
+| TweenSettings serialization | Planned | `[Serializable] TweenSettings<T>`, PropertyDrawer, `WithDirection` |
+| Cross-engine comparative benchmark | Planned | DOTween/PrimeTween recordings, cost vs LitMotion managed path |
 | Zero-alloc target-capture overloads for all callbacks | Candidate | Extend beyond `OnComplete` / `OnKill` |
 | `SetLink(GameObject, LinkBehavior)` | Planned | KillOn/PauseOn/RestartOn variants; covers the pooled-object footgun `SetTarget` auto-kill misses |
 | Typed shortcuts expansion | Candidate | `RectTransform`, `Material`, `SpriteRenderer`, `Camera`, `Light`, `AudioSource` |
@@ -44,7 +42,7 @@ Production-cut reshuffle (2026-07-02): hand-written zero-alloc fast paths, Tween
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Editor preview window | Candidate | Promoted from M4: scrubber = 1.10 `Seek` + existing editor ticking |
+| Editor preview window | Candidate | Scrubber = 1.10 `Seek` + existing editor ticking |
 | UniTask integration | Candidate | Weakened case (M2 awaitables use native `Awaitable`); only if a consumer needs it |
 | Stagger helpers | Candidate | `PATween.Stagger(targets, ...)` |
 | Speed-based tweens | Candidate | `PATween.PositionAtSpeed`, etc. |

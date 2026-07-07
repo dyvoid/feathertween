@@ -115,16 +115,16 @@ namespace PATween.Internal
 
 			if (Direction > 0 && loopCount > 0 && playheadTotal >= TotalDuration)
 			{
-				// The final cycle boundary is a loop end like any other (§3.14).
+				// The final cycle boundary is a loop end like any other (docs/api/handles.md).
 				InvokeOnStepComplete();
 				Status = TweenStatus.Completed;
 				InvokeOnComplete();
-				// No OnKill: natural completion never fires OnKill (§3.14).
+				// No OnKill: natural completion never fires OnKill (docs/api/handles.md).
 			}
 		}
 
 		// Repositions the playhead in post-delay total time. Preserves Status,
-		// except a pause entry crossed while firing halts and pauses (§3.15).
+		// except a pause entry crossed while firing halts and pauses (docs/api/handles.md).
 		public override void SeekTo(double seconds, bool fireCallbacks)
 		{
 			delayRemaining = 0d;
@@ -488,7 +488,7 @@ namespace PATween.Internal
 			{
 				// Crossed the child's start: render it at its start value (the
 				// walk passes through local 0), then re-arm the snap so a forward
-				// replay snaps again (§3.15).
+				// replay snaps again (docs/api/handles.md).
 				if (e.Entered || e.Finished)
 				{
 					child.SeekTo(0d, fire);
@@ -588,7 +588,7 @@ namespace PATween.Internal
 
 		// Walks the playhead to the end with callbacks (Complete / Kill(true)
 		// semantics); pauses are crossed, not halted at. An infinite loop
-		// completes its current cycle (§3.14).
+		// completes its current cycle (�docs/api/handles.md).
 		public override void ForceComplete()
 		{
 			delayRemaining = 0d;
@@ -603,7 +603,7 @@ namespace PATween.Internal
 				target = (c + 1) * duration;
 			}
 			AdvanceTo(target, fire: true, haltOnPause: false, out _);
-			// The final cycle boundary is a loop end like any other (§3.14);
+			// The final cycle boundary is a loop end like any other (�docs/api/handles.md);
 			// intermediate boundaries fired inside the walk.
 			InvokeOnStepComplete();
 		}
@@ -672,7 +672,7 @@ namespace PATween.Internal
 					continue;
 				}
 				// Completed children are at their terminal value; freeing them is
-				// disposal, not a kill — no OnKill (§3.14). Children cut short by
+				// disposal, not a kill — no OnKill (�docs/api/handles.md). Children cut short by
 				// a parent Kill(false) are cancelled and get OnKill.
 				if (child.Status != TweenStatus.Completed)
 				{

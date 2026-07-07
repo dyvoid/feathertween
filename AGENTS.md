@@ -38,7 +38,7 @@ When writing Unity C# for this project, apply the **unity dev skill**.
 - **Ease as value type**: `EaseRef` produced by `Easing.X(...)` factories. Parameters travel with the ease; tween stores one `EaseRef`.
 - **SoA-friendly internal layout**: keeps a future Burst/Jobs path cheap. Not a public concern.
 
-Full design and locked anchors: `docs/architecture/design.md` §2 and `docs/architecture/overview.md`.
+Full design and locked anchors: `docs/architecture/design.md` and `docs/architecture/overview.md`.
 
 ## Invariants (Do Not Break)
 
@@ -95,9 +95,9 @@ Full run instructions, consumer-project setup (`testables` + perf package), and 
 Keep state and design docs in sync with the code. Update as part of the same change, not later.
 
 - **Every session**: update `PICKUP.md` (current position, done, next up, test status) as the closing step.
-- **Finishing a phase or milestone**: update `PICKUP.md` and reconcile the affected docs (`docs/implementation.md` phase status, `docs/api.md` if the public surface changed, `docs/architecture/overview.md` or `docs/architecture/sequence.md` if internals changed). Move the milestone tag only on explicit user go-ahead.
+- **Finishing a phase or milestone**: update `PICKUP.md` and reconcile the affected docs (`docs/planning/phases.md` phase status, `docs/api/` if the public surface changed, `docs/architecture/overview.md` or `docs/architecture/sequence.md` if internals changed). Move the milestone tag only on explicit user go-ahead.
 - **Any architectural decision or deviation from a doc**: add or update an ADR in `docs/adr/` and its `README.md` index. Do not let code silently contradict a doc.
-- **New public API**: document it in `docs/api.md` in the same change that adds it.
+- **New public API**: document it in `docs/api/` in the same change that adds it.
 - **New test category or required dependency**: document it in `docs/guides/testing.md` and in `PICKUP.md` consumer reminders.
 
 If a change touches behavior described in a doc and the doc is not updated, the change is incomplete.
@@ -115,14 +115,17 @@ See [`docs/git-strategy.md`](docs/git-strategy.md) for full branching, merging, 
 | Document | Purpose |
 | -------- | ------- |
 | `docs/architecture/design.md` | Goals, non-goals, locked anchors |
-| `docs/api.md` | Public API reference |
+| `docs/api/index.md` | Public API quickstart and map |
 | `docs/architecture/overview.md` | Internal design |
 | `docs/architecture/sequence.md` | Sequence internals |
-| `docs/implementation.md` | Milestone/phase plan, performance plan |
+| `docs/architecture/performance.md` | Allocation budget and benchmark methodology |
+| `docs/planning/phases.md` | Milestone/phase plan |
+| `docs/planning/risks.md` | Risks and open questions |
 | `docs/guides/conventions.md` | Code style conventions |
 | `docs/guides/testing.md` | Test structure, running, consumer setup |
 | `docs/guides/editor.md` | Editor & integration |
-| `docs/reference.md` | Reference & engine comparison |
+| `docs/design/comparison.md` | Engine comparison |
+| `docs/design/influences.md` | Design influences |
 | `docs/git-strategy.md` | Branching, merging, commit rules |
 | `docs/ROADMAP.md` | Feature candidates, planned work, and status |
 | `PICKUP.md` | Where the last session left off — active work only, not the backlog |

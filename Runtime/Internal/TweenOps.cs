@@ -2,7 +2,7 @@ namespace PATween.Internal
 {
 	// Shared control-surface cores used by both the Tween and Sequence handles
 	// and by the deferred-command queue. Callback firing follows the matrix in
-	// api.md §3.14: OnKill fires only on Kill(false), auto-kill, or error —
+	// docs/api/handles.md: OnKill fires only on Kill(false), auto-kill, or error —
 	// never on completion (natural, Complete(), or Kill(true)).
 	internal static class TweenOps
 	{
@@ -111,7 +111,7 @@ namespace PATween.Internal
 			}
 		}
 
-		// Seek repositions the playhead without changing Status (§3.15); it is a
+		// Seek repositions the playhead without changing Status (docs/api/handles.md); it is a
 		// value write, not a structural mutation, so it runs synchronously even
 		// from inside callbacks.
 		public static void Seek(int id, uint gen, double seconds, bool fireCallbacks)
@@ -125,7 +125,7 @@ namespace PATween.Internal
 		}
 
 		// Negative scale rejected: direction is owned exclusively by Reverse()
-		// (§3.14). Throws today; the throw-in-safe-mode / clamp-in-release split
+		// (docs/api/handles.md). Throws today; the throw-in-safe-mode / clamp-in-release split
 		// lands with safe mode in phase 1.13.
 		public static void SetTimeScale(int id, uint gen, float scale)
 		{
@@ -155,7 +155,7 @@ namespace PATween.Internal
 			}
 
 			// Kill on an already-Completed tween: transition to Disposed, no
-			// callbacks — the tween is at its terminal value (§3.14).
+			// callbacks — the tween is at its terminal value (docs/api/handles.md).
 			if (data.Status == TweenStatus.Completed)
 			{
 				TweenStore.Free(id);

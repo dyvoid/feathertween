@@ -211,7 +211,7 @@ namespace PATween.Internal
 			}
 
 			// Complete()/Kill(true) fire OnStepComplete for the remaining loop
-			// boundaries; an infinite loop completes its current iteration (§3.14).
+			// boundaries; an infinite loop completes its current iteration (docs/api/handles.md).
 			var remaining = loopCount < 0 ? 1 : loopCount - lastCycleIndex;
 			for (var i = 0; i < remaining; i++)
 			{
@@ -359,7 +359,7 @@ namespace PATween.Internal
 			}
 
 			// Forward boundary crossings, including the final one on natural
-			// completion (§3.14: "per loop end").
+			// completion (docs/api/handles.md: "per loop end").
 			if (dir > 0)
 			{
 				var boundaries = 0;
@@ -389,7 +389,7 @@ namespace PATween.Internal
 				}
 				Status = TweenStatus.Completed;
 				InvokeOnComplete();
-				// No OnKill here: natural completion never fires OnKill (§3.14).
+				// No OnKill here: natural completion never fires OnKill (docs/api/handles.md).
 			}
 		}
 

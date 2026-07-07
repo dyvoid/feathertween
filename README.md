@@ -41,13 +41,16 @@ PICKUP.md             Where the last session left off — active work only, not 
 
 ## Documentation
 
+- [API Guide](docs/api/index.md) — Public API quickstart and reference
 - [Design](docs/architecture/design.md) — Goals, non-goals, and locked anchors
-- [Public API](docs/api.md) — API reference
 - [Architecture](docs/architecture/overview.md) — Internal design
+- [Sequence Design](docs/architecture/sequence.md) — Sequence internals
+- [Performance Plan](docs/architecture/performance.md) — Allocation budget and benchmarks
 - [Editor & integration](docs/guides/editor.md) — Inspector and editor workflows
-- [Implementation plan](docs/implementation.md) — Milestones and performance plan
+- [Testing](docs/guides/testing.md) — Test structure and consumer setup
+- [Milestones](docs/planning/phases.md) — Phase-by-phase implementation plan
 - [Roadmap](docs/ROADMAP.md) — Feature candidates and status
-- [Reference & comparison](docs/reference.md) — Comparison with DOTween, GSAP, LitMotion
+- [Engine Comparison](docs/design/comparison.md) — Comparison with DOTween, GSAP, LitMotion
 - [ADRs](docs/adr/) — Architectural decision records
 
 ## Agent guide

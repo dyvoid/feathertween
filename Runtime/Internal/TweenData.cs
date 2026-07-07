@@ -58,7 +58,7 @@ namespace PATween.Internal
 		public virtual void ForceComplete() { }
 		public virtual bool StartsDelayed() => false;
 
-		// Repositions the playhead (§3.15). Silent (fireCallbacks=false) renders a
+		// Repositions the playhead (docs/api/handles.md). Silent (fireCallbacks=false) renders a
 		// single sample at the target; firing walks loop boundaries in temporal
 		// order (OnStepComplete forward, OnRewind backward). Never changes Status.
 		public virtual void SeekTo(double seconds, bool fireCallbacks) { }

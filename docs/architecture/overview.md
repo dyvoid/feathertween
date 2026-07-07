@@ -10,9 +10,9 @@ See the [design document](design.md) for goals, non-goals, and locked anchors.
 
 ---
 
-## 4. Architecture
+## Architecture
 
-### 4.1 Layers
+### Layers
 
 ```
 ┌────────────────────────────────────────────────────────────┐
@@ -27,7 +27,7 @@ See the [design document](design.md) for goals, non-goals, and locked anchors.
 └────────────────────────────────────────────────────────────┘
 ```
 
-### 4.2 The parent-sequence model
+### The parent-sequence model
 
 Every animation (`Tween` or `Sequence`) has:
 
@@ -41,9 +41,9 @@ The runner owns a hidden `_rootSequence` for each `UpdatePhase`. Top-level tween
 
 Implementation note: the root is iterated by index over a flat list of active child ids for cache locality. Nested `Sequence` children with ordering use sorted child arrays.
 
-### 4.3 Storage and handles
+### Storage and handles
 
-`TweenData` is the abstract base (holds `_parent`, `_start`, `_end`, `_timeScale`, `localTime`, `_paused`, `_reversed`, status, callbacks, target ref). The typed subclass `TweenData<T>` adds `start: T`, `end: T`, `getter`, `setter`, and the `IInterpolator<T>` used to lerp. The runner iterates `List<TweenData>` and calls a virtual `Step(double dt)` per child. This means one vtable dispatch per tween per frame in v1; an acceptable cost (~1-2 ns on modern CPUs). M5 SoA replaces this with per-`(TValue, TInterpolator)` storage and a `[BurstCompile]` job, see §10 M5.
+`TweenData` is the abstract base (holds `_parent`, `_start`, `_end`, `_timeScale`, `localTime`, `_paused`, `_reversed`, status, callbacks, target ref). The typed subclass `TweenData<T>` adds `start: T`, `end: T`, `getter`, `setter`, and the `IInterpolator<T>` used to lerp. The runner iterates `List<TweenData>` and calls a virtual `Step(double dt)` per child. This means one vtable dispatch per tween per frame in v1; an acceptable cost (~1-2 ns on modern CPUs). M5 SoA replaces this with per-`(TValue, TInterpolator)` storage and a `[BurstCompile]` job; see [performance.md](performance.md) and [phases.md](../../planning/phases.md).
 
 ```csharp
 internal static class TweenStore
@@ -61,7 +61,7 @@ internal static class TweenStore
 
 `TweenData<T>` layout groups blittable scalars (`start, end, duration, localTime, timeScale, easeParamA, easeParamB`) at the top of the base class so the M5 SoA split is mechanical.
 
-### 4.4 Runner (PlayerLoop)
+### Runner (PlayerLoop)
 
 ```csharp
 [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -85,7 +85,7 @@ static void InstallRunner()
 - **Domain reload / Fast Enter Play Mode**: `TweenStore.Reset()` runs at `SubsystemRegistration` time. Editor uses `[InitializeOnLoad]` to also reset on assembly reload. Both cases drop all tweens cleanly so generation ids stay coherent.
 - **Debug visibility**: the M4 EditorWindow reads active tweens directly from `TweenStore`. No scene-side proxy needed.
 
-### 4.5 Update step (high level)
+### Update step (high level)
 
 For each active root:
 
@@ -110,77 +110,31 @@ For each active root:
 
 **Burst note (M5)**: Unity's overloaded `==` requires the main thread, so the auto-kill scan stays in the managed sidecar even when M5 moves the math to a Burst job. The Burst job operates on `TweenDataHot<T>` only and writes outputs; the managed pass that runs immediately after handles auto-kill, callback dispatch, and deferred-mutation drain.
 
-### 4.6 Ease system
+### Ease system
 
-```csharp
-public enum EaseType
-{
-    Linear,
-    InSine,    OutSine,    InOutSine,
-    InQuad,    OutQuad,    InOutQuad,
-    InCubic,   OutCubic,   InOutCubic,
-    InQuart,   OutQuart,   InOutQuart,
-    InQuint,   OutQuint,   InOutQuint,
-    InExpo,    OutExpo,    InOutExpo,
-    InCirc,    OutCirc,    InOutCirc,
-    InBack,    OutBack,    InOutBack,
-    InElastic, OutElastic, InOutElastic,
-    InBounce,  OutBounce,  InOutBounce,
-    BounceExact,   // amplitude in user units (meters/degrees)
-    Curve,         // delegates to AnimationCurve slot
-    Custom,        // delegates to EaseFunction slot
-}
+The ease system is documented in the API reference: [api/easings.md](../../api/easings.md). Internally, evaluation uses a static function table indexed by `EaseType`. Standard eases are cached as static `EaseRef` instances; parametric variants construct a struct on the stack. `Curve` and `Custom` read their `AnimationCurve` / delegate slots.
 
-public readonly struct EaseRef
-{
-    public readonly EaseType type;
-    public readonly float    paramA;   // overshoot, strength, amplitude
-    public readonly float    paramB;   // period
-    public readonly AnimationCurve curve;   // only when type == Curve
-    public readonly EaseFunction   func;    // only when type == Custom
-}
+### From and FromTo
 
-public static class Easing
-{
-    public static EaseRef Linear { get; }
-    public static EaseRef OutCubic { get; }
-    // ... all standard eases as cached EaseRef values
-
-    public static EaseRef OutBack(float overshoot);
-    public static EaseRef Bounce(float strength);
-    public static EaseRef BounceExact(float amplitude);
-    public static EaseRef Elastic(float strength, float period = 0.3f);
-    public static EaseRef Curve(AnimationCurve curve);
-    public static EaseRef Custom(EaseFunction func);
-}
-
-internal static readonly Func<float, float, float, float>[] _easeTable;
-// signature: (t01, paramA, paramB) -> eased01
-```
-
-A static function table indexed by enum value. No virtual dispatch. `Curve` and `Custom` look at the `EaseRef.curve` / `EaseRef.func` slots. Standard eases are cached as static `EaseRef` instances; parametric variants allocate a struct on the stack.
-
-### 4.7 From and FromTo
-
-Snap timing matches anchor 13 / §3.5:
+Snap timing matches the design anchor:
 
 - **Root tween**: snap fires synchronously inside `.Start()`. The tween's own `SetDelay(...)` defers interpolation but not the snap.
-- **Sequenced child** with parent-imposed offset `> 0`: snap is deferred. The child carries a `_snapPending` flag set at append time. The flag is consumed on the first parent tick where the playhead crosses `child._start` in the forward direction. Backward seek past `child._start` re-arms the flag (§3.15).
+- **Sequenced child** with parent-imposed offset `> 0`: snap is deferred. The child carries a `_snapPending` flag set at append time. The flag is consumed on the first parent tick where the playhead crosses `child._start` in the forward direction. Backward seek past `child._start` re-arms the flag.
 - `From`: at snap time, read current value via getter; that becomes `end`. The supplied argument is `start`. Invoke `setter(start)`.
 - `FromTo`: arguments are `start` and `end` directly. Invoke `setter(start)` at snap time.
 
 `invalidate()` (M4) re-arms the snap on a live handle.
 
-### 4.8 Auto-kill and SetLink
+### Auto-kill and SetLink
 
 - Per-frame, if `target is UnityEngine.Object o && o == null` → kill silently.
 - `SetLink(GameObject, LinkBehavior)` (M2): `KillOnDestroy`, `KillOnDisable`, `PauseOnDisable`, `PauseOnDisableRestartOnEnable`. Implemented by a tiny component the system adds on demand; users do not see it.
 
-### 4.9 Safe mode
+### Safe mode
 
 A `[Conditional]`-style wrapper around `setter(...)` and each callback invocation. On exception: log, mark tween as dead, continue. Costs one try/catch per tween per frame when enabled. Default on in Editor, off in release. Toggleable per tween via `.SetSafeMode(bool)`.
 
-### 4.10 Reverse and Yoyo
+### Reverse and Yoyo
 
 Every node carries a `_direction` flag. `Reverse()` flips the flag on the node it's called on, nothing else. The runner ticks each node by composing parent direction with own direction at evaluation time:
 

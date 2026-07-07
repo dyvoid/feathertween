@@ -24,7 +24,7 @@ namespace PATween.Internal
 	}
 
 	// Per-type pool for TweenData<T> records so Start() is alloc-free after
-	// warmup (§8.1). Instances are Reset() on return, so Rent hands out a
+	// warmup (docs/architecture/performance.md). Instances are Reset() on return, so Rent hands out a
 	// clean record. Returns are deferred by TweenStore until end of tick, so
 	// an in-flight walk never sees its instance re-rented mid-step.
 	internal static class TweenDataPool<T>

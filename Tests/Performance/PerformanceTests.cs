@@ -47,7 +47,7 @@ namespace PATween.Tests.Performance
 		[Test]
 		public void Create_AfterWarmup_ZeroManagedAlloc()
 		{
-			// §8.1: creation is 1 pooled TweenData<T> + 1 delegate pair. With
+			// docs/architecture/performance.md: creation is 1 pooled TweenData<T> + 1 delegate pair. With
 			// cached static delegates the whole create/kill cycle must be
 			// alloc-free once pools are warm (records, builder buffers, lists).
 			const int batch = 256;
@@ -139,7 +139,7 @@ namespace PATween.Tests.Performance
 			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
 
 			Assert.That(delta, Is.Zero,
-				$"Callback dispatch allocated {delta} bytes over 600 ticks; must be zero (§8.1).");
+				$"Callback dispatch allocated {delta} bytes over 600 ticks; must be zero (docs/architecture/performance.md).");
 		}
 
 		[Test]

@@ -7,8 +7,8 @@ Accepted
 ## Context
 
 `SequenceBuilder.SetDefaults` cascades values into subsequently appended child
-builders that have not explicitly set them (§5.4). The original API sketch
-included `duration` in the cascade. Building the SequenceDemo sample exposed
+builders that have not explicitly set them (see `docs/architecture/sequence.md`).
+The original API sketch included `duration` in the cascade. Building the SequenceDemo sample exposed
 that this is dead code: every tween creation method (`To`, `From`, `FromTo`,
 and the planned typed shortcuts) takes duration as a required argument, so
 every child builder always has an explicitly set duration and the cascade
@@ -31,5 +31,5 @@ parameter can be reintroduced additively without breaking anything.
 - **Positive**: no dead public API surface; no silent duration overrides.
 - **Positive**: the explicit-set flag machinery on `TweenBuilderBuffer` stays
   minimal (phase, ease, loops, delay).
-- **Negative**: divergence from the original api.md sketch; docs updated in
+- **Negative**: divergence from the original API sketch; docs updated in
   the same change.

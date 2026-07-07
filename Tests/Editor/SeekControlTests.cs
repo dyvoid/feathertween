@@ -6,7 +6,7 @@ using PATween.Internal;
 
 namespace PATween.Tests
 {
-	// Phase 1.10: Seek traversal (§3.15), sequence SetLoops/Reverse, mid-play
+	// Phase 1.10: Seek traversal (docs/api/handles.md), sequence SetLoops/Reverse, mid-play
 	// Insert, and global / per-phase / per-tween time scale.
 	[TestFixture]
 	public class SeekControlTests

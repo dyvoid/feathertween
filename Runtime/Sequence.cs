@@ -61,14 +61,14 @@ namespace PATween
 
 		/// Repositions the playhead in post-delay sequence time, spanning all
 		/// loops. Preserves play/pause state; with fireCallbacks a crossed
-		/// AddPause halts the seek there (§3.15).
+		/// AddPause halts the seek there (docs/api/handles.md).
 		public void Seek(float seconds, bool fireCallbacks = false) => TweenOps.Seek(id, generation, seconds, fireCallbacks);
 
 		public void Reverse() => TweenOps.Reverse(id, generation);
 
 		/// Mid-play insertion of a tween at an absolute sequence time. The
 		/// builder is consumed. Structural mutation: deferred to end of tick when
-		/// called from inside a callback (§3.14).
+		/// called from inside a callback (docs/api/handles.md).
 		public void Insert<T>(float atTime, TweenBuilder<T> tween)
 		{
 			if (atTime < 0f)

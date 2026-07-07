@@ -46,7 +46,7 @@ namespace PATween.Tests
 
 			PATweenRunner.ManualTick(1.0);
 			Assert.That(log, Is.EqualTo(new[] { "step", "step", "complete" }),
-				"final boundary + complete; no kill on natural completion (§3.14)");
+				"final boundary + complete; no kill on natural completion (docs/api/handles.md)");
 		}
 
 		[Test]
@@ -96,7 +96,7 @@ namespace PATween.Tests
 
 			t.Kill(true);
 			Assert.That(log, Is.EqualTo(new[] { "complete" }),
-				"Kill on Completed disposes without callbacks (§3.14)");
+				"Kill on Completed disposes without callbacks (docs/api/handles.md)");
 			Assert.That(t.IsAlive, Is.False);
 		}
 
@@ -289,7 +289,7 @@ namespace PATween.Tests
 			Assert.That(completes, Is.EqualTo(1));
 			Assert.That(t.IsAlive, Is.False);
 			// The deferred Kill(false) lands on a Completed tween: disposal
-			// without callbacks (§3.14).
+			// without callbacks (docs/api/handles.md).
 			Assert.That(kills, Is.Zero);
 		}
 

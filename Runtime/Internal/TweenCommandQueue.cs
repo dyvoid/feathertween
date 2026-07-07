@@ -6,7 +6,7 @@ namespace PATween.Internal
 	// Reentrancy guard: structural mutation (Kill / Complete / Restart /
 	// Reverse) issued from inside a callback is deferred and executed either
 	// at end of tick (when the runner is ticking) or when the outermost
-	// callback returns (handle ops invoked outside a tick). See api.md §3.14.
+	// callback returns (handle ops invoked outside a tick). See docs/api/handles.md.
 	//
 	// Boundary-walk note (phase 1.10): commands carry no notion of playback
 	// direction or tick phase; they replay handle ops verbatim, so a

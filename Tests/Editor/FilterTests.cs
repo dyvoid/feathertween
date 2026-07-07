@@ -223,7 +223,7 @@ namespace PATween.Tests
 		[Test]
 		public void CreateKillCycle_AfterWarmup_ZeroManagedAlloc()
 		{
-			// §8.1: with cached delegates, a create/kill cycle is alloc-free once
+			// docs/architecture/performance.md: with cached delegates, a create/kill cycle is alloc-free once
 			// pools are warm (TweenData records, builder buffers, store lists).
 			for (var round = 0; round < 3; round++)
 			{
