@@ -3,14 +3,15 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-07-07 (phase 1.13 safe mode implemented, pending Unity verification)
+Last updated: 2026-07-07 (1.13 merged; 1.14 dev acceptance implemented, pending Unity verification)
 
 ## Current position
 
 - **Milestone**: M1 (Core), production cut. See `docs/planning/phases.md`.
-- **Done through**: Phase 1.12 merged to `main`. Phase 1.13 (safe mode) implemented on `task/1.13-safe-mode`, harness green (184 tests + 172 in the PATWEEN_RELEASE leg) — **needs in-Unity verification (Editor + Runtime + Performance) before merge**.
-- **Remaining M1 phases**: 1.13 (verify + merge) → 1.14 (acceptance, v0.1 tag).
-- **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge. Active: `task/1.13-safe-mode`.
+- **Done through**: Phase 1.13 (safe mode) Unity-verified and merged to `main`.
+- **Phase restructure (user decision, 2026-07-07)**: release hygiene (LICENSE, CHANGELOG, XML docs) split out of 1.14 into a new **1.15**, which now carries the v0.1 tag. 1.14 is dev acceptance only (composed demo + benchmarks); between 1.14 and 1.15 sits a hardening pass (full test sweep + code review) — everything must be flawless before 1.15 documents it.
+- **Remaining M1**: 1.14 (verify in Unity) → hardening pass → 1.15 (hygiene + docs, v0.1 tag).
+- **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge. Active: `task/1.14-acceptance`.
 
 ## Done
 
@@ -22,20 +23,24 @@ Last updated: 2026-07-07 (phase 1.13 safe mode implemented, pending Unity verifi
 
 ## In flight
 
-- **Phase 1.13 — Safe mode and assertions** (`task/1.13-safe-mode`, this session): try/catch wrapper around setter (`TweenData<T>.ApplySetter`) and callback invocations (`TweenData.InvokeList`/`InvokeOnUpdate`, `SequenceData.InvokeEntryCallback`); `SetSafeMode`/`SetCancelOnError` on both builders; compile-time default via `SafeModeDefault` (on in Editor, off in player); everything compiled out under `PATWEEN_RELEASE`, including the off-thread asserts. Semantics: setter exception kills the tween (CancelOnError: silent + OnKill; else logged, no OnKill — see handles.md matrix); callback exception logs and continues (CancelOnError: also cancels, deferred). From-snap throw at `Start()` returns a dead handle. Sequence entry-callback error unwinds via the child-auto-kill path. CI gained a `PATWEEN_RELEASE` leg (`RequiresSafeMode` category excluded; `ReleaseModeTests` proves the wrapper is gone).
-- **Awaiting**: in-Unity run (Editor + Runtime + Performance) — the harness cannot cover LogAssert behavior and real PlayerLoop. Then ff-merge to `main`.
+- **Phase 1.14 — M1 dev acceptance** (`task/1.14-acceptance`, this session):
+  - Benchmarks added to `Tests/Performance/PerformanceTests.cs`: `Tick_SteadyState10kTweens_ZeroManagedAlloc`, `Tick_SteadyState1kSequencesOf10_ZeroManagedAlloc` (5 appended + 5 joined children each), and `Throughput_Tick1kSequencesOf10` (report-only). Also serves as the "release build skips wrapper" alloc verification.
+  - Composed demo added: `Samples~/ComposedDemo/` (registered in package.json samples). Orbiters (infinite Incremental + Yoyo loops via shortcuts), a wave of generic tweens (EveryLoop stagger, parametric OutElastic, shared SetTarget tag), a master sequence (Append/Join, nested sub-sequence, label Insert + deferred From, callbacks, restart loop), and an OnGUI control panel (PauseAll/ResumeAll, Reverse, Seek, global time scale slider, target-filtered Kill).
+  - Harness green: 184 + 172 (release leg); stubs extended (GUILayout/GUISkin/Mathf.Approximately/Color.white).
+- **Awaiting**: in-Unity run — Performance suite (the two new alloc guards must pass with real Unity GC) and visual verification of the composed demo. Then ff-merge.
 
 ## Next up
 
-1. Verify 1.13 in Unity, merge `task/1.13-safe-mode`.
-2. Phase 1.14 — M1 acceptance: composed demo, 10k-float/1k-sequence benchmarks, LICENSE, CHANGELOG.md, XML docs on the public surface, v0.1 tag. Fold the "release build skips wrapper" alloc-benchmark verification into the 1.14 perf run.
+1. Verify 1.14 in Unity (Performance suite + composed demo visually), merge `task/1.14-acceptance`.
+2. Hardening pass: full test sweep + deep code review of the whole M1 surface; fix everything found.
+3. Phase 1.15 — Release hygiene and documentation: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs, v0.1 tag.
 
 ## Infra (2026-07-02)
 
 - **.NET stub harness** (`tools~/compile-check/`): compiles Runtime + Samples + EditMode tests against UnityEngine stubs, runs the suite via NUnitLite in <1s. Unity-only tests carry `[Category("RequiresUnity")]`.
 - **CI**: `.github/workflows/ci.yml` runs the harness on push to `main` and PRs. Branch protection (require CI, no direct push) still to be enabled on GitHub by the user.
 - **ADR 0010**: `SetDefaults` duration parameter removed (dead code — creation methods require explicit duration).
-- **Roadmap refinement (2026-07-03)**: sequence `SetLoops` + global/per-phase time scale added to 1.10; LICENSE/CHANGELOG/XML-docs added to the 1.14 gate; `SetLink` and Awaitables (Unity 6 native `Awaitable`) promoted to Planned in M2; Editor preview window promoted M4→M3; blendable tweens flagged needs-ADR; cross-timeline `globalTime` marked drop-unless-needed.
+- **Roadmap refinement (2026-07-03)**: sequence `SetLoops` + global/per-phase time scale added to 1.10; LICENSE/CHANGELOG/XML-docs added to the 1.14 gate (since moved to 1.15, 2026-07-07); `SetLink` and Awaitables (Unity 6 native `Awaitable`) promoted to Planned in M2; Editor preview window promoted M4→M3; blendable tweens flagged needs-ADR; cross-timeline `globalTime` marked drop-unless-needed.
 
 ## Open questions / decisions pending
 

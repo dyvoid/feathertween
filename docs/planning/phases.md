@@ -179,15 +179,24 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 **Exit**: safe mode and assertion path verified.
 
-### Phase 1.14 — M1 acceptance
+### Phase 1.14 — M1 dev acceptance
 
-**Deliverable**: composed demo. Performance benchmark suite: 10k float tweens; 1k 10-child sequences. Release hygiene: `LICENSE` file, `CHANGELOG.md` per UPM convention, and XML doc comments on every public type and member.
+**Deliverable**: composed demo. Performance benchmark suite: 10k float tweens; 1k 10-child sequences. This closes the *development* part of M1; it is followed by a hardening pass (full test sweep + code review) before 1.15.
 
 **Tests**:
 
 - All unit tests green across all phases (Editor + Runtime + Performance, in Unity and in the `tools~/compile-check` harness)
 - 0 per-frame managed alloc verified across the benchmark
 - Composed demo verified visually
+
+**Exit**: dev-complete; hardening pass (testing + code review) finds nothing blocking.
+
+### Phase 1.15 — Release hygiene and documentation
+
+**Deliverable**: `LICENSE` file, `CHANGELOG.md` per UPM convention, and XML doc comments on every public type and member. Reconcile all docs with the final M1 surface.
+
+**Tests**:
+
 - No CS1591 (missing XML doc) warnings on the public surface; LICENSE and CHANGELOG.md present and referenced from package.json where applicable
 
 **Exit**: M1 release tag (v0.1); dogfood in a real project before declaring the API stable.
