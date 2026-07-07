@@ -3,15 +3,15 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-07-07 (1.13 merged; 1.14 dev acceptance implemented, pending Unity verification)
+Last updated: 2026-07-07 (1.14 tests Unity-verified and merged; hardening pass next)
 
 ## Current position
 
 - **Milestone**: M1 (Core), production cut. See `docs/planning/phases.md`.
-- **Done through**: Phase 1.13 (safe mode) Unity-verified and merged to `main`.
-- **Phase restructure (user decision, 2026-07-07)**: release hygiene (LICENSE, CHANGELOG, XML docs) split out of 1.14 into a new **1.15**, which now carries the v0.1 tag. 1.14 is dev acceptance only (composed demo + benchmarks); between 1.14 and 1.15 sits a hardening pass (full test sweep + code review) — everything must be flawless before 1.15 documents it.
-- **Remaining M1**: 1.14 (verify in Unity) → hardening pass → 1.15 (hygiene + docs, v0.1 tag).
-- **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge. Active: `task/1.14-acceptance`.
+- **Done through**: Phase 1.14 (dev acceptance) merged to `main`. Unity run 2026-07-07: 196 tests green including the new 10k-tween and 1k×10-child-sequence zero-alloc guards. **Composed demo visual pass**: confirm it has been eyeballed in Play mode; if not, it is the one open 1.14 exit item.
+- **Phase restructure (user decision, 2026-07-07)**: release hygiene (LICENSE, CHANGELOG, XML docs) split out of 1.14 into a new **1.15**, which now carries the v0.1 tag. Between 1.14 and 1.15 sits a hardening pass (full test sweep + code review) — everything must be flawless before 1.15 documents it.
+- **Remaining M1**: hardening pass → 1.15 (hygiene + docs, v0.1 tag).
+- **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
 
 ## Done
 
@@ -23,17 +23,12 @@ Last updated: 2026-07-07 (1.13 merged; 1.14 dev acceptance implemented, pending 
 
 ## In flight
 
-- **Phase 1.14 — M1 dev acceptance** (`task/1.14-acceptance`, this session):
-  - Benchmarks added to `Tests/Performance/PerformanceTests.cs`: `Tick_SteadyState10kTweens_ZeroManagedAlloc`, `Tick_SteadyState1kSequencesOf10_ZeroManagedAlloc` (5 appended + 5 joined children each), and `Throughput_Tick1kSequencesOf10` (report-only). Also serves as the "release build skips wrapper" alloc verification.
-  - Composed demo added: `Samples~/ComposedDemo/` (registered in package.json samples). Orbiters (infinite Incremental + Yoyo loops via shortcuts), a wave of generic tweens (EveryLoop stagger, parametric OutElastic, shared SetTarget tag), a master sequence (Append/Join, nested sub-sequence, label Insert + deferred From, callbacks, restart loop), and an OnGUI control panel (PauseAll/ResumeAll, Reverse, Seek, global time scale slider, target-filtered Kill).
-  - Harness green: 184 + 172 (release leg); stubs extended (GUILayout/GUISkin/Mathf.Approximately/Color.white).
-- **Awaiting**: in-Unity run — Performance suite (the two new alloc guards must pass with real Unity GC) and visual verification of the composed demo. Then ff-merge.
+- Nothing half-built. M1 dev work (1.1–1.14) is complete and merged.
 
 ## Next up
 
-1. Verify 1.14 in Unity (Performance suite + composed demo visually), merge `task/1.14-acceptance`.
-2. Hardening pass: full test sweep + deep code review of the whole M1 surface; fix everything found.
-3. Phase 1.15 — Release hygiene and documentation: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs, v0.1 tag.
+1. **Hardening pass** (user-mandated gate before 1.15): full test sweep + deep code review of the whole M1 surface; fix everything found. Candidate entry points: the "Known issues / tech debt" list below, edge-case coverage (Yoyo+Reverse composition, seek across EveryLoop delays, nested-sequence kill semantics), and a fresh end-to-end review of Runtime/.
+2. Phase 1.15 — Release hygiene and documentation: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs, v0.1 tag.
 
 ## Infra (2026-07-02)
 
