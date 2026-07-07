@@ -70,29 +70,9 @@ namespace PATween.Internal
 						: (Mathf.Pow(2f * t - 2f, 2f) * ((c2 + 1f) * (t * 2f - 2f) + c2) + 2f) * 0.5f;
 				}
 
-				case EaseType.InElastic:
-				{
-					if (t == 0f) return 0f;
-					if (t >= 1f) return 1f;
-					var c4 = (2f * Mathf.PI) / 3f;
-					return -Mathf.Pow(2f, 10f * t - 10f) * Mathf.Sin((t * 10f - 10.75f) * c4);
-				}
-				case EaseType.OutElastic:
-				{
-					if (t == 0f) return 0f;
-					if (t >= 1f) return 1f;
-					var c4 = (2f * Mathf.PI) / 3f;
-					return Mathf.Pow(2f, -10f * t) * Mathf.Sin((t * 10f - 0.75f) * c4) + 1f;
-				}
-				case EaseType.InOutElastic:
-				{
-					if (t == 0f) return 0f;
-					if (t >= 1f) return 1f;
-					var c5 = (2f * Mathf.PI) / 4.5f;
-					return t < 0.5f
-						? -(Mathf.Pow(2f, 20f * t - 10f) * Mathf.Sin((20f * t - 11.125f) * c5)) * 0.5f
-						: (Mathf.Pow(2f, -20f * t + 10f) * Mathf.Sin((20f * t - 11.125f) * c5)) * 0.5f + 1f;
-				}
+				case EaseType.InElastic: return InElastic(t, a, b);
+				case EaseType.OutElastic: return OutElastic(t, a, b);
+				case EaseType.InOutElastic: return InOutElastic(t, a, b);
 
 				case EaseType.OutBounce: return OutBounce(t);
 				case EaseType.InBounce: return 1f - OutBounce(1f - t);
@@ -106,10 +86,79 @@ namespace PATween.Internal
 				case EaseType.Custom:
 					return custom != null ? custom(t) : t;
 				case EaseType.BounceExact:
-					return OutBounce(t);
+					return BounceExact(t, a);
 
 				default: return t;
 			}
+		}
+
+		// Penner parametric elastic. An amplitude below 1 cannot reach the target
+		// (sin never exceeds 1), so it clamps to 1 with the classic quarter-period
+		// phase — at (a=1, p=0.3) these reduce exactly to the former hardcoded
+		// constants, so default behavior is unchanged.
+		private static void ElasticSetup(ref float a, ref float p, float defaultPeriod, out float s)
+		{
+			if (p <= 0f)
+			{
+				p = defaultPeriod;
+			}
+			if (a < 1f)
+			{
+				a = 1f;
+				s = p * 0.25f;
+			}
+			else
+			{
+				s = p / (2f * Mathf.PI) * Mathf.Asin(1f / a);
+			}
+		}
+
+		private static float InElastic(float t, float a, float p)
+		{
+			if (t == 0f) return 0f;
+			if (t >= 1f) return 1f;
+			ElasticSetup(ref a, ref p, 0.3f, out var s);
+			var u = t - 1f;
+			return -(a * Mathf.Pow(2f, 10f * u) * Mathf.Sin((u - s) * (2f * Mathf.PI) / p));
+		}
+
+		private static float OutElastic(float t, float a, float p)
+		{
+			if (t == 0f) return 0f;
+			if (t >= 1f) return 1f;
+			ElasticSetup(ref a, ref p, 0.3f, out var s);
+			return a * Mathf.Pow(2f, -10f * t) * Mathf.Sin((t - s) * (2f * Mathf.PI) / p) + 1f;
+		}
+
+		private static float InOutElastic(float t, float a, float p)
+		{
+			if (t == 0f) return 0f;
+			if (t >= 1f) return 1f;
+			// InOut runs each half at double speed; the classic default stretches
+			// the period accordingly (0.3 * 1.5 = 0.45).
+			ElasticSetup(ref a, ref p, 0.45f, out var s);
+			var u = t * 2f - 1f;
+			if (u < 0f)
+			{
+				return -0.5f * a * Mathf.Pow(2f, 10f * u) * Mathf.Sin((u - s) * (2f * Mathf.PI) / p);
+			}
+			return a * Mathf.Pow(2f, -10f * u) * Mathf.Sin((u - s) * (2f * Mathf.PI) / p) * 0.5f + 1f;
+		}
+
+		// Standard OutBounce for the initial fall; amplitude scales how deep the
+		// rebounds dip below the target. The first segment ends exactly at 1, so
+		// the scaled tail stays continuous, and t=1 still lands on 1 exactly.
+		private static float BounceExact(float t, float a)
+		{
+			if (a <= 0f)
+			{
+				a = 1f;
+			}
+			if (t < 1f / 2.75f)
+			{
+				return 7.5625f * t * t;
+			}
+			return 1f - a * (1f - OutBounce(t));
 		}
 
 		private static float OutBounce(float t)

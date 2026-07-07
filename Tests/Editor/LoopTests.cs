@@ -61,6 +61,48 @@ namespace PATween.Tests
 		}
 
 		[Test]
+		public void Incremental_HighCycleCount_StaysCorrect()
+		{
+			// Guards the O(1) cycle-base cache: value must stay exact deep into
+			// an incremental loop, not just for the first few cycles.
+			var v = 0f;
+			global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(-1, LoopType.Incremental)
+				.Start();
+
+			for (var i = 0; i < 200; i++)
+			{
+				PATweenRunner.ManualTick(1.0);
+			}
+			PATweenRunner.ManualTick(0.5);
+			Assert.That(v, Is.EqualTo(200.5f).Within(1e-2f));
+		}
+
+		[Test]
+		public void Incremental_ReverseAcrossCycles_RecomputesBase()
+		{
+			// Backward jumps invalidate the incremental cache's +1 fast path;
+			// the base must be recomputed, not advanced.
+			var v = 0f;
+			var t = global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(5, LoopType.Incremental)
+				.Start();
+
+			PATweenRunner.ManualTick(3.5);
+			Assert.That(v, Is.EqualTo(3.5f).Within(1e-3f), "cycle 3, mid");
+
+			t.Reverse();
+			PATweenRunner.ManualTick(2.0);
+			Assert.That(v, Is.EqualTo(1.5f).Within(1e-3f), "back in cycle 1, mid");
+
+			t.Reverse();
+			PATweenRunner.ManualTick(1.0);
+			Assert.That(v, Is.EqualTo(2.5f).Within(1e-3f), "forward again into cycle 2, mid");
+		}
+
+		[Test]
 		public void Restart_RepeatsSamePattern()
 		{
 			var v = 0f;

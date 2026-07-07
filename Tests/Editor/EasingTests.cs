@@ -97,6 +97,75 @@ namespace PATween.Tests
 		}
 
 		[Test]
+		public void OutElastic_DefaultParameters_MatchClassicConstants()
+		{
+			// The parametric formula at (a=1, p=0.3) must reduce to the former
+			// hardcoded Penner constants: 2^(-10t) * sin((10t - 0.75) * 2pi/3) + 1.
+			var ease = Easing.OutElastic();
+			for (var i = 1; i < 10; i++)
+			{
+				var t = i / 10f;
+				var classic = Mathf.Pow(2f, -10f * t) * Mathf.Sin((t * 10f - 0.75f) * (2f * Mathf.PI / 3f)) + 1f;
+				Assert.That(ease.Evaluate(t), Is.EqualTo(classic).Within(1e-4f), $"t={t}");
+			}
+		}
+
+		[Test]
+		public void OutElastic_Amplitude_AffectsOvershoot()
+		{
+			var loPeak = MaxOver(Easing.OutElastic(1f), 200);
+			var hiPeak = MaxOver(Easing.OutElastic(2f), 200);
+			Assert.That(hiPeak, Is.GreaterThan(loPeak));
+			Assert.That(loPeak, Is.GreaterThan(1f), "default amplitude still overshoots");
+		}
+
+		[Test]
+		public void OutElastic_Period_ChangesOscillationCount()
+		{
+			Assert.That(CountCrossings(Easing.OutElastic(1f, 0.1f), 400),
+				Is.GreaterThan(CountCrossings(Easing.OutElastic(1f, 0.6f), 400)),
+				"shorter period oscillates more");
+		}
+
+		[Test]
+		public void InOutElastic_Parameters_ChangeShape()
+		{
+			var a = Easing.InOutElastic();
+			var b = Easing.InOutElastic(2f, 0.2f);
+			var differs = false;
+			for (var i = 1; i < 40; i++)
+			{
+				if (Mathf.Abs(a.Evaluate(i / 40f) - b.Evaluate(i / 40f)) > 1e-3f)
+				{
+					differs = true;
+					break;
+				}
+			}
+			Assert.That(differs, Is.True);
+		}
+
+		[Test]
+		public void BounceExact_Amplitude_ScalesReboundDepth()
+		{
+			var full = MaxDipAfterFirstImpact(Easing.BounceExact(1f));
+			var shallow = MaxDipAfterFirstImpact(Easing.BounceExact(0.25f));
+			Assert.That(shallow, Is.LessThan(full));
+			Assert.That(shallow, Is.GreaterThan(0f), "still bounces");
+		}
+
+		[Test]
+		public void BounceExact_UnitAmplitude_MatchesOutBounce()
+		{
+			var exact = Easing.BounceExact(1f);
+			var std = Easing.OutBounce();
+			for (var i = 0; i <= 50; i++)
+			{
+				var t = i / 50f;
+				Assert.That(exact.Evaluate(t), Is.EqualTo(std.Evaluate(t)).Within(1e-5f), $"t={t}");
+			}
+		}
+
+		[Test]
 		public void SetEase_AppliedDuringStep()
 		{
 			var v = 0f;
@@ -168,6 +237,40 @@ namespace PATween.Tests
 		private static void AssertMid(EaseRef ease, float expected)
 		{
 			Assert.That(ease.Evaluate(0.5f), Is.EqualTo(expected).Within(1e-3f), ease.Type.ToString());
+		}
+
+		private static int CountCrossings(EaseRef ease, int samples)
+		{
+			// Counts crossings of the target value (1.0) — a proxy for how many
+			// oscillations the elastic tail performs.
+			var crossings = 0;
+			var prevAbove = ease.Evaluate(1f / samples) > 1f;
+			for (var i = 2; i < samples; i++)
+			{
+				var above = ease.Evaluate((float)i / samples) > 1f;
+				if (above != prevAbove)
+				{
+					crossings++;
+					prevAbove = above;
+				}
+			}
+			return crossings;
+		}
+
+		private static float MaxDipAfterFirstImpact(EaseRef ease)
+		{
+			// Largest 1-v deviation after the first impact (t > 1/2.75).
+			var maxDip = 0f;
+			for (var i = 0; i <= 200; i++)
+			{
+				var t = Mathf.Lerp(1f / 2.75f, 1f, i / 200f);
+				var dip = 1f - ease.Evaluate(t);
+				if (dip > maxDip)
+				{
+					maxDip = dip;
+				}
+			}
+			return maxDip;
 		}
 
 		private static float MaxOver(EaseRef ease, int samples)

@@ -27,6 +27,12 @@ namespace PATween.Internal
 		private bool stopAtNextBoundary;
 		private bool stopAtStartBoundary;
 
+		// Incremental-loop cycle base cache. cycleIndex advances by at most 1 per
+		// step, so tracking the last base keeps GetCycleEnds O(1) amortized instead
+		// of O(cycleIndex) per frame; -1 means invalid (recompute from startValue).
+		private int incrementalCacheIndex = -1;
+		private T incrementalCacheBase;
+
 		public Func<T> Getter
 		{
 			get => getter;
@@ -130,6 +136,7 @@ namespace PATween.Internal
 				return;
 			}
 			snapPending = false;
+			incrementalCacheIndex = -1;
 
 			// fromValue holds the pristine user-supplied value (the relative delta
 			// for None, the 'from' argument otherwise) so re-resolving after a
@@ -185,6 +192,7 @@ namespace PATween.Internal
 			lastCycleIndex = 0;
 			stopAtNextBoundary = false;
 			stopAtStartBoundary = false;
+			incrementalCacheIndex = -1;
 			Direction = 1;
 		}
 
@@ -404,13 +412,27 @@ namespace PATween.Internal
 				case LoopType.Incremental:
 				{
 					var delta = interpolator.Subtract(endValue, startValue);
-					var shifted = startValue;
-					for (var i = 0; i < cycleIndex; i++)
+					if (cycleIndex == 0)
 					{
-						shifted = interpolator.Add(shifted, delta);
+						incrementalCacheBase = startValue;
 					}
-					cycleFrom = shifted;
-					cycleTo = interpolator.Add(shifted, delta);
+					else if (incrementalCacheIndex == cycleIndex - 1)
+					{
+						incrementalCacheBase = interpolator.Add(incrementalCacheBase, delta);
+					}
+					else if (incrementalCacheIndex != cycleIndex)
+					{
+						// Backward jump or cold cache: recompute once from scratch.
+						var shifted = startValue;
+						for (var i = 0; i < cycleIndex; i++)
+						{
+							shifted = interpolator.Add(shifted, delta);
+						}
+						incrementalCacheBase = shifted;
+					}
+					incrementalCacheIndex = cycleIndex;
+					cycleFrom = incrementalCacheBase;
+					cycleTo = interpolator.Add(incrementalCacheBase, delta);
 					break;
 				}
 				default:
@@ -442,6 +464,8 @@ namespace PATween.Internal
 			lastCycleIndex = 0;
 			stopAtNextBoundary = false;
 			stopAtStartBoundary = false;
+			incrementalCacheIndex = -1;
+			incrementalCacheBase = default;
 		}
 	}
 }

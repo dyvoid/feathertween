@@ -3,7 +3,7 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 
 ## Current position
 
@@ -49,22 +49,26 @@ Last updated: 2026-07-06
 - Performance tests require the consuming project to install `com.unity.test-framework.performance` (test-only dependency).
 - An abandoned (never-started) `SequenceBuilder` leaks its already-allocated child store slots until the next `TweenStore.Reset()`; the LeakDetector warns via finalizer.
 
-### From code review (2026-07-06)
+### From code review (2026-07-06, verified + triaged 2026-07-07)
 
-**High**
+Resolved 2026-07-07:
 
-- **`TweenData<T>` not pooled**: `TweenBuilderBuffer.Build()` does `new TweenData<T>()` every time. Builder buffers are pooled, but the runtime data they produce is not. Every `Start()` allocates. The zero-alloc guarantee covers the tick loop, not creation — clarify docs or pool the data records.
-- **Incremental loop `GetCycleEnds` is O(cycleIndex)**: The `Add` loop in `TweenDataT.cs:404-414` recomputes the offset from scratch every frame. At high cycle counts (infinite incremental loops) this becomes a per-frame linear cost. Needs `IInterpolator<T>.Scale(T, int)` or cached cycle base — public interface change, needs ADR.
-- **Elastic ease ignores `amplitude`/`period` parameters**: `EaseEval` receives `paramA`/`paramB` but the elastic formulas use hardcoded constants. `Easing.InElastic(amplitude, period)` is cosmetic-only. Same for `BounceExact` amplitude.
+- ~~Incremental loop `GetCycleEnds` O(cycleIndex)~~ — fixed with a cached cycle base (O(1) amortized; backward jumps recompute once). No interface change was needed, contrary to the review's suggestion.
+- ~~Elastic/BounceExact parameters ignored~~ — implemented parametric Penner elastic (amplitude/period) and amplitude-scaled BounceExact; defaults reduce exactly to the former hardcoded constants.
+- ~~Docs claimed `TweenData<T>` pooling that doesn't exist~~ — §8.1 amended to state reality; pooling itself is scheduled (below).
+- ~~`Easing.Linear()` "allocates a struct per call"~~ — **struck**: `EaseRef` is a readonly struct; `new` on it is stack construction, zero heap alloc. The finding misread C# struct semantics.
 
-**Medium**
+Scheduled in phase 1.12 (storage surgery, now in `docs/implementation.md` §10):
 
-- **`RemoveFromActiveList` is O(n) per `Free()`**: Applies to all kills, not just `Kill(target)`. Batch kills on scene transition → O(n²). Broader than the existing bullet above.
-- **Safe mode not implemented**: Invariant 6 specifies try/catch around step and callbacks; currently absent. A throwing getter/setter will corrupt tick iteration. Scheduled for phase 1.13, just confirming it's a real gap.
-- **Builder buffer callback duplication**: `TweenBuilderBuffer` and `SequenceBuilderBuffer` duplicate ~120 lines of identical callback list infrastructure (`Add`/`Transfer`/`Clear`). Maintenance hazard — any callback change needs two edits.
-- **`Interpolators.Get<T>()` dictionary lookup per `Build()`**: Could use a generic static class pattern (`InterpolatorCache<T>.Value`) for O(1) JIT-inlined access instead of `Dictionary<Type, object>` + unbox.
-- **`Easing` parameterless factories allocate a new struct per call**: `Easing.Linear()` etc. could be `static readonly` fields for the parameterless variants. Called on every tween creation via `ResetConfig()`.
-- **8 callback list fields on every `TweenData`**: Most tweens use 0-2 callbacks but carry 8 `List<>` reference slots (64 bytes). Since `TweenData` isn't pooled, this is pure per-instance waste.
+- `TweenData<T>` pooling so `Start()` is alloc-free after warmup; the pooling design also collapses the 8 per-instance callback-list fields into a lazily allocated slot structure.
+- Swap-remove + index map for active lists (`RemoveFromActiveList` is O(n) per `Free()`; batch kills O(n²)).
+- Target-indexed multimap for `Kill(target)` (was already scheduled).
+
+Remaining tracked debt:
+
+- **Safe mode absent** — scheduled 1.13, confirmed real gap (a throwing setter corrupts tick iteration until then).
+- **Builder buffer callback duplication** (~120 lines shared between `TweenBuilderBuffer`/`SequenceBuilderBuffer`) — extract a shared `CallbackBuffer` when either next changes (refactor-on-touch).
+- **`Interpolators.Get<T>()` dictionary lookup per `Build()`** — valid micro-opt (generic static cache), but the cache must handle `Interpolators.Reset()` re-registration (version stamp) or interpolator-swapping tests break. Low urgency; fold into 1.12 or M2 fast paths.
 
 ## Test status
 

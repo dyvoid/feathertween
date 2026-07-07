@@ -2,7 +2,7 @@
 
 ### 8.1 Allocation budget
 
-- Tween creation: 1 `TweenData<T>` from pool (no alloc after warmup) + 1 delegate pair (getter, setter) for generic form. Typed shortcuts may amortize delegates via cached statics where possible.
+- Tween creation: 1 `TweenData<T>` from pool (no alloc after warmup) + 1 delegate pair (getter, setter) for generic form. Typed shortcuts may amortize delegates via cached statics where possible. *Status (2026-07-07)*: builder buffers are pooled but `Build()` still does `new TweenData<T>()` per `Start()`; data-record pooling lands with the storage work in phase 1.12. Until then the zero-alloc guarantee covers the tick loop and callback dispatch, not creation.
 - Per-frame step: 0 managed alloc.
 - Callback dispatch: 0 alloc; single delegates, not delegate lists, not params arrays.
 - Awaiter: `TweenAwaiter` struct is alloc-free on the await side. The continuation registration allocates one delegate per await (standard C# state machine behavior). No `TaskCompletionSource`.
@@ -202,7 +202,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 #### Phase 1.12 — Filters and bulk ops
 
-**Deliverable**: `Dictionary<object, List<int>>` target-indexed multimap maintained on Start / Kill / Recycle. `Kill(target)`, `IsTweening(target)`, `Kill(id)`, `KillAll`, `PauseAll`, `ResumeAll`.
+**Deliverable**: `Dictionary<object, List<int>>` target-indexed multimap maintained on Start / Kill / Recycle. `Kill(target)`, `IsTweening(target)`, `Kill(id)`, `KillAll`, `PauseAll`, `ResumeAll`. **Storage surgery bundled here** (same code region, one commit series): per-type `TweenData<T>` pooling so `Start()` is alloc-free after warmup (§8.1 budget) — the pooling design should also collapse the eight per-instance callback-list fields into a lazily allocated slot structure; and swap-remove + index map for the active lists so `Free()` stops being an O(n) scan (batch kills are currently O(n²)).
 
 **Tests**:
 
