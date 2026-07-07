@@ -3,7 +3,7 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-07-07
+Last updated: 2026-07-07 (end of session)
 
 ## Current position
 
@@ -20,6 +20,7 @@ Last updated: 2026-07-07
 - **Phase 1.10 (2026-07-07, branch `task/1.10-seek-control`)**: `Tween.Seek`/`Sequence.Seek` per §3.15 (silent single-sample vs boundary-walking; pause halts a firing seek); `SequenceData` rewritten around a bidirectional `AdvanceTo(from, to)` cycle walk shared by tick/Seek/ForceComplete (Yoyo cycles are backward local walks); `SequenceBuilder.SetLoops` (Restart/Yoyo; Incremental degrades to Restart); `Sequence.Reverse`; `Sequence.TotalProgress`; mid-play `Sequence.Insert` (deferred from callbacks via new `SequenceInsert` queue op); per-tween `SetTimeScale` + `PATween.SetGlobalTimeScale` + per-phase `PATween.SetTimeScale` (engine-side, governs `ignoreTimeScale` tweens too — decided + documented). 21 tests in `Tests/Editor/SeekControlTests.cs`. **Semantics notes**: sequence completion now fires the final loop-end `OnStepComplete` (matches tween §3.14); `To` children re-snap from current values on loop wrap (deferred-snap design), so exact per-cycle replay needs `FromTo`/`From` children. `SetCancelOnError` moved to 1.13 (no-op until safe mode exists).
 - **Review-fix pass (2026-07-07)**: incremental-loop O(1) cycle cache; parametric elastic (amplitude/period) + amplitude-scaled `BounceExact`; §8.1 doc reconciliation. See "From code review" below.
 - **Phases 1.1–1.9** (merged to `main`): storage/handle scaffold, PlayerLoop runner, builder/handle split, generic tween core, full ease system, From/FromTo, loops/delays/direction/reverse, sequence builder, callbacks.
+- **Documentation reconciliation (2026-07-07, end of session)**: `docs/ROADMAP.md` marked phases 1.10–1.12 as `Done`; `docs/api.md` and `docs/architecture/sequence.md` corrected `Sequence.Insert` milestone from M2 to phase 1.10.
 - **Phase 1.9 highlights**: full callback set on both builders, target-capture OnComplete/OnKill (CallbackEntry + cached per-type invoker, zero-alloc dispatch), handle-side OnStepComplete, TweenCommandQueue deferred-mutation buffer (Kill/Complete/Restart/Reverse from inside callbacks defer to end of tick), TweenOps dedupe of handle logic, firing-matrix compliance fix (no OnKill on completion paths, §3.14). 21 tests in `Tests/Editor/CallbackTests.cs` + callback-dispatch zero-alloc perf guard.
 - **Phase 1.8 highlights**: `SequenceBuilder` (Append/Insert/Join/Prepend*/AppendInterval/AppendCallback/AddLabel/AddPause/Clear), `Position` type, `SequenceCancelBehavior`, `SetDefaults` cascade frozen at append, label resolution at `Start()`, typed child storage (ids only, no boxing), sequenced-From snap deferred to parent-window entry, nested sequences, `Sequence` handle control surface. 23 tests in `Tests/Editor/SequenceTests.cs` + zero-alloc sequence tick guard in the perf suite.
 - **Deferred-snap refactor**: start-value capture moved to `TweenData<T>.ResolveStartValues()`; `FromValue` holds the pristine user value so Restart re-arm is safe.

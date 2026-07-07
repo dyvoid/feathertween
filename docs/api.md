@@ -81,7 +81,7 @@ public readonly struct Sequence : IEquatable<Sequence>
     public void Kill(bool complete = false);
     public void Complete();
 
-    // Mid-play modification (M2)
+    // Mid-play modification (phase 1.10)
     public void Insert<T>(float time, TweenBuilder<T> child);
     public void Insert<T>(Position position, TweenBuilder<T> child);
     public void Insert(float time, SequenceBuilder child);

@@ -26,7 +26,7 @@ All signatures accept builders, never started handles.
 - `Insert(time: t)` with `t < 0`: throws. The sequence's own delay is the only way to defer.
 - `Insert(time: t)` with `t > current duration`: extends the sequence's duration to `t + child.duration`.
 - `Start()` on an empty sequence: produces a zero-duration `Sequence` that completes on its first tick (callbacks fire normally).
-- Mid-play insertion: a `Sequence` handle's `Insert(...)` (M2) accepts new children at any position. If the position is at or before the playhead, the child will not tick until `Restart` or `Seek` revisits that range.
+- Mid-play insertion: a `Sequence` handle's `Insert(...)` (phase 1.10) accepts new children at any position. If the position is at or before the playhead, the child will not tick until `Restart` or `Seek` revisits that range.
 - **Cascading auto-kill policy** (`SequenceCancelBehavior`, set via `SequenceBuilder.SetCancelBehavior`):
   - `ContinueOnChildAutoKill` (default): if a child auto-kills, the parent treats it as completed at the current parent-local time and continues. Other children are unaffected.
   - `KillSequenceOnChildAutoKill`: any child auto-kill propagates `Kill(false)` to the parent. The parent's `OnKill` fires; remaining children are killed in turn.
