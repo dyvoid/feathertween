@@ -8,13 +8,15 @@ Last updated: 2026-07-07
 ## Current position
 
 - **Milestone**: M1 (Core), production cut. See `docs/implementation.md` §10.
-- **Done through**: Phase 1.9 (Callbacks), verified green in Unity (Editor + Runtime + Performance).
+- **Done through**: Phase 1.10 (Seek/control) implemented and green in the compile-check harness (148 tests); **needs an in-Unity verification pass** (Editor + Runtime + Performance) before it counts as done-done. Phase 1.9 and earlier verified in Unity 2026-07-03.
 - **Remaining M1 phases** (renumbered 2026-07-02, production cut; M1 is now 14 linear phases): 1.9 (callbacks) → 1.10 (seek/control) → 1.11 (typed shortcuts) → 1.12 (filters/bulk ops) → 1.13 (safe mode) → 1.14 (acceptance, v0.1 tag). Fast paths, TweenSettings, and the cross-engine benchmark moved to M2.
-- **Next phase**: 1.10 — Seek and control surface (bidirectional AdvanceTo rework, sequence SetLoops, global/per-phase time scale).
+- **Next phase**: 1.11 — Typed shortcuts (Move/Rotate/Scale/LocalMove/LocalRotate, Fade, Color, FillAmount), after 1.10 is verified in Unity.
 - **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
 
 ## Done
 
+- **Phase 1.10 (2026-07-07, branch `task/1.10-seek-control`)**: `Tween.Seek`/`Sequence.Seek` per §3.15 (silent single-sample vs boundary-walking; pause halts a firing seek); `SequenceData` rewritten around a bidirectional `AdvanceTo(from, to)` cycle walk shared by tick/Seek/ForceComplete (Yoyo cycles are backward local walks); `SequenceBuilder.SetLoops` (Restart/Yoyo; Incremental degrades to Restart); `Sequence.Reverse`; `Sequence.TotalProgress`; mid-play `Sequence.Insert` (deferred from callbacks via new `SequenceInsert` queue op); per-tween `SetTimeScale` + `PATween.SetGlobalTimeScale` + per-phase `PATween.SetTimeScale` (engine-side, governs `ignoreTimeScale` tweens too — decided + documented). 21 tests in `Tests/Editor/SeekControlTests.cs`. **Semantics notes**: sequence completion now fires the final loop-end `OnStepComplete` (matches tween §3.14); `To` children re-snap from current values on loop wrap (deferred-snap design), so exact per-cycle replay needs `FromTo`/`From` children. `SetCancelOnError` moved to 1.13 (no-op until safe mode exists).
+- **Review-fix pass (2026-07-07)**: incremental-loop O(1) cycle cache; parametric elastic (amplitude/period) + amplitude-scaled `BounceExact`; §8.1 doc reconciliation. See "From code review" below.
 - **Phases 1.1–1.9** (merged to `main`): storage/handle scaffold, PlayerLoop runner, builder/handle split, generic tween core, full ease system, From/FromTo, loops/delays/direction/reverse, sequence builder, callbacks.
 - **Phase 1.9 highlights**: full callback set on both builders, target-capture OnComplete/OnKill (CallbackEntry + cached per-type invoker, zero-alloc dispatch), handle-side OnStepComplete, TweenCommandQueue deferred-mutation buffer (Kill/Complete/Restart/Reverse from inside callbacks defer to end of tick), TweenOps dedupe of handle logic, firing-matrix compliance fix (no OnKill on completion paths, §3.14). 21 tests in `Tests/Editor/CallbackTests.cs` + callback-dispatch zero-alloc perf guard.
 - **Phase 1.8 highlights**: `SequenceBuilder` (Append/Insert/Join/Prepend*/AppendInterval/AppendCallback/AddLabel/AddPause/Clear), `Position` type, `SequenceCancelBehavior`, `SetDefaults` cascade frozen at append, label resolution at `Start()`, typed child storage (ids only, no boxing), sequenced-From snap deferred to parent-window entry, nested sequences, `Sequence` handle control surface. 23 tests in `Tests/Editor/SequenceTests.cs` + zero-alloc sequence tick guard in the perf suite.
@@ -25,11 +27,12 @@ Last updated: 2026-07-07
 
 ## In flight
 
-- Nothing half-built. All suites green in Unity (2026-07-03).
+- **Phase 1.10 on `task/1.10-seek-control`**, harness-green, awaiting in-Unity verification + fast-forward merge to `main`.
 
 ## Next up
 
-1. Begin Phase 1.10 — Seek and control surface: rework `SequenceData.Step` into a shared bidirectional `AdvanceTo(from, to, fireCallbacks)` boundary walk; `Seek(seconds, fireCallbacks)` per §3.15; sequence `SetLoops`; `PATween.SetGlobalTimeScale` + per-phase scale; sequence `Reverse`; mid-play `Sequence.Insert`. See `docs/implementation.md` §10 phase 1.10.
+1. Verify 1.10 in Unity (Editor + Runtime + Performance suites), then fast-forward merge `task/1.10-seek-control` into `main`.
+2. Begin Phase 1.11 — Typed shortcuts: `PATween.Move/Rotate/Scale/LocalMove/LocalRotate` (Transform), `Fade` (CanvasGroup), `Color`/`FillAmount` (Image), all on the lambda core. See `docs/implementation.md` §10 phase 1.11.
 
 ## Infra (2026-07-02)
 
@@ -40,7 +43,6 @@ Last updated: 2026-07-07
 
 ## Open questions / decisions pending
 
-- Sequence `Reverse()`/direction support is deferred to 1.10 (Seek/control surface) — `SequenceData.Step` is forward-only for now.
 - `AddLabel(name, Position)` resolves at definition time (only `Insert`/`AddPause` defer label resolution to `Start()`); duplicate label names throw.
 
 ## Known issues / tech debt
@@ -72,7 +74,8 @@ Remaining tracked debt:
 
 ## Test status
 
-- All suites green in Unity (Editor + Runtime + Performance), verified 2026-07-03 (phase 1.9 included).
+- Compile-check harness: 148 tests green (2026-07-07, includes phase 1.10 + review fixes).
+- Unity (Editor + Runtime + Performance): last verified 2026-07-03 (through 1.9). 1.10 changes not yet run in Unity.
 
 ## Consumer setup reminders
 

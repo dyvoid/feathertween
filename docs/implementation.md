@@ -172,7 +172,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 #### Phase 1.10 — Seek and remaining control surface
 
-**Deliverable**: `Seek(seconds, fireCallbacks)` per §3.15. `Pause` / `Resume` / `Restart` / `Play` / `Complete` / `Kill(complete)`. `SetTimeScale` (negative rejected). `SetCancelOnError`. Mid-play `Sequence.Insert` (the data plumbing is part of M1; the API was originally tagged M2 but ships here). **`SequenceBuilder.SetLoops(count, LoopType)`** — sequence-level looping via the same `AdvanceTo` boundary walk (loop wrap is a boundary crossing; Restart and Yoyo at minimum, Incremental if it falls out naturally). **Global and per-phase time scale** — `PATween.SetGlobalTimeScale(float)` and `PATween.SetTimeScale(UpdatePhase, float)` applied at the hidden root sequences (goal 1: timeScale composes recursively; the roots already exist, this exposes the knob).
+**Deliverable**: `Seek(seconds, fireCallbacks)` per §3.15. `Pause` / `Resume` / `Restart` / `Play` / `Complete` / `Kill(complete)`. `SetTimeScale` (negative rejected). `SetCancelOnError` *(moved to 1.13: the flag is meaningless until the safe-mode try/catch wrapper exists, and shipping a no-op API would be an API lie)*. Mid-play `Sequence.Insert` (the data plumbing is part of M1; the API was originally tagged M2 but ships here). **`SequenceBuilder.SetLoops(count, LoopType)`** — sequence-level looping via the same `AdvanceTo` boundary walk (loop wrap is a boundary crossing; Restart and Yoyo at minimum, Incremental if it falls out naturally). **Global and per-phase time scale** — `PATween.SetGlobalTimeScale(float)` and `PATween.SetTimeScale(UpdatePhase, float)` applied at the hidden root sequences (goal 1: timeScale composes recursively; the roots already exist, this exposes the knob).
 
 **Tests**:
 
@@ -184,7 +184,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 - Sequence with `SetLoops(2, Restart)`: children replay with re-armed snaps; callbacks fire per loop; `Duration` reports a single cycle, `TotalProgress` spans all loops
 - Sequence with `SetLoops(2, Yoyo)`: second cycle traverses children in reverse window order
 - `SetGlobalTimeScale(0.5)` halves observed progress in all phases; per-phase scale composes multiplicatively with per-tween `SetTimeScale`
-- Interaction with `ignoreTimeScale` decided and documented (root scale is engine-side, distinct from Unity `Time.timeScale`; proposal: root scale applies to all tweens, `ignoreTimeScale` only opts out of Unity's)
+- Interaction with `ignoreTimeScale` decided and documented (root scale is engine-side, distinct from Unity `Time.timeScale`; **decided 2026-07-07**: root/global/per-phase/per-tween scales apply to all tweens including `ignoreTimeScale` ones; `ignoreTimeScale` only opts out of Unity's `Time.timeScale`)
 
 **Exit**: full handle control surface; sequences loop; time is globally controllable.
 
