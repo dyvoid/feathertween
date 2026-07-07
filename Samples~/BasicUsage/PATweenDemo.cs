@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using PATween;
-using static PATween.PATween;
 
 namespace PATween.Samples
 {
@@ -91,7 +90,7 @@ namespace PATween.Samples
 			var t = go.transform;
 			var top = origin + Vector3.up * 2f;
 
-			var tween = To(() => t.position, p => t.position = p, top, duration)
+			var tween = PATween.To(() => t.position, p => t.position = p, top, duration)
 				.SetEase(Easing.InOutSine())
 				.SetLoops(-1, LoopType.Yoyo)
 				.SetTarget(go)
@@ -106,7 +105,7 @@ namespace PATween.Samples
 			var t = go.transform;
 			var big = Vector3.one * 1.75f;
 
-			var tween = To(() => t.localScale, s => t.localScale = s, big, duration)
+			var tween = PATween.To(() => t.localScale, s => t.localScale = s, big, duration)
 				.SetEase(Easing.OutBack())
 				.SetLoops(-1, LoopType.Yoyo)
 				.SetTarget(go)
@@ -121,7 +120,7 @@ namespace PATween.Samples
 			var t = go.transform;
 			var target = Quaternion.Euler(0f, 180f, 0f);
 
-			var tween = To(() => t.rotation, r => t.rotation = r, target, duration)
+			var tween = PATween.To(() => t.rotation, r => t.rotation = r, target, duration)
 				.SetEase(Easing.InOutCubic())
 				.SetLoops(-1, LoopType.Incremental)
 				.SetTarget(go)
@@ -135,7 +134,7 @@ namespace PATween.Samples
 			var go = Spawn(PrimitiveType.Cube, origin, Color.red, "Color");
 			var renderer = go.GetComponent<Renderer>();
 
-			var tween = To(() => renderer.material.color, c => renderer.material.color = c, Color.blue, duration)
+			var tween = PATween.To(() => renderer.material.color, c => renderer.material.color = c, Color.blue, duration)
 				.SetEase(Easing.Linear())
 				.SetLoops(-1, LoopType.Yoyo)
 				.SetTarget(go)
@@ -150,7 +149,7 @@ namespace PATween.Samples
 			var t = go.transform;
 			var ground = origin;
 
-			var tween = To(() => t.position, p => t.position = p, ground, duration)
+			var tween = PATween.To(() => t.position, p => t.position = p, ground, duration)
 				.SetEase(Easing.OutBounce())
 				.SetLoops(-1, LoopType.Restart)
 				.SetDelay(0.25f, DelayType.EveryLoop)

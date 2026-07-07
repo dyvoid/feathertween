@@ -1,6 +1,5 @@
 using UnityEngine;
 using PATween;
-using static PATween.PATween;
 
 namespace PATween.Samples.SequenceDemo
 {
@@ -73,7 +72,7 @@ namespace PATween.Samples.SequenceDemo
 			var buddyT = buddy.transform;
 			var dropInT = dropIn.transform;
 
-			var sb = Sequence()
+			var sb = PATween.Sequence()
 				.SetDefaults(ease: Easing.InOutSine())
 				.SetAutoKill(false)
 				.OnStart(() => phaseLabel = "show started (OnStart)")
@@ -82,13 +81,13 @@ namespace PATween.Samples.SequenceDemo
 
 			// 1. Append: two sequential moves. The ease comes from SetDefaults.
 			sb.AppendCallback(() => phaseLabel = "append: move right");
-			sb.Append(To(() => runnerT.position, p => runnerT.position = p, new Vector3(4f, 0f, 0f), stepDuration));
+			sb.Append(PATween.To(() => runnerT.position, p => runnerT.position = p, new Vector3(4f, 0f, 0f), stepDuration));
 
 			sb.AppendCallback(() => phaseLabel = "append + join: up, buddy scales");
-			sb.Append(To(() => runnerT.position, p => runnerT.position = p, new Vector3(4f, 2f, 0f), stepDuration));
+			sb.Append(PATween.To(() => runnerT.position, p => runnerT.position = p, new Vector3(4f, 2f, 0f), stepDuration));
 
 			// 3. Join: runs in parallel with the move above.
-			sb.Join(To(() => buddyT.localScale, s => buddyT.localScale = s, Vector3.one * 1.8f, stepDuration));
+			sb.Join(PATween.To(() => buddyT.localScale, s => buddyT.localScale = s, Vector3.one * 1.8f, stepDuration));
 
 			// 4. AppendCallback: zero-duration event between children.
 			sb.AppendCallback(() =>
@@ -103,14 +102,14 @@ namespace PATween.Samples.SequenceDemo
 
 			// Settle back down after the pause.
 			sb.AppendCallback(() => phaseLabel = "resume: settle down");
-			sb.Append(To(() => runnerT.position, p => runnerT.position = p, new Vector3(4f, 0f, 0f), stepDuration));
+			sb.Append(PATween.To(() => runnerT.position, p => runnerT.position = p, new Vector3(4f, 0f, 0f), stepDuration));
 
 			// 6. Insert at a label that is only defined afterwards - resolution
 			// happens at Start(). 7. The From child does not snap (the capsule
 			// does not teleport up) until the playhead reaches this window.
 			sb.Insert(
 				Position.AtLabel("finale"),
-				From(() => dropInT.position, p => dropInT.position = p, new Vector3(4f, 3f, 4f), stepDuration)
+				PATween.From(() => dropInT.position, p => dropInT.position = p, new Vector3(4f, 3f, 4f), stepDuration)
 					.SetEase(Easing.OutBounce()));
 			sb.AddLabel("finale", Position.End);
 

@@ -18,6 +18,12 @@ Canonical C# style for PATween. AI agents additionally apply the project's Unity
 - Boolean names use affirmative/negative phrasing (`isAlive`, `hasAmmo`).
 - File and folder names PascalCase, English, no spaces.
 
+## Static API usage in samples and docs
+
+The public entry point is the static class `PATween.PATween`. Call it as `PATween.To(...)`, `PATween.Sequence(...)`, `PATween.Move(...)`, etc.
+
+Do **not** use `using static PATween.PATween;` in samples, documentation, or any PATween-authored code. It dumps every static method into scope and shadows common Unity types (`Color`, `Image`, `Text`, etc.) and .NET primitive types, producing cryptic `CS0119` compiler errors.
+
 ## Access and fields
 
 - Always declare visibility; default to `private`.

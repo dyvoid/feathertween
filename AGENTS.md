@@ -49,6 +49,7 @@ Full design and locked anchors: `docs/architecture/design.md` and `docs/architec
 5. Pooled backing classes must have a finalizer that enqueues a leak-detection id; runner drains on main thread.
 6. Safe mode (try/catch around step and callbacks) stays in core, default `true` in Editor, `false` in release.
 7. The repo root IS the UPM package — Unity imports every file and DLL in it. Anything Unity must not see (dev tooling, .NET projects, build output) lives in a `~`-suffixed folder (like `Samples~`, `tools~`) or a dot-folder (like `.github`). Never generate or commit DLLs/`bin`/`obj` in a Unity-visible path.
+8. Samples and docs must call the static API as `PATween.To(...)`, `PATween.Sequence(...)`, etc. Never use `using static PATween.PATween;`; it shadows Unity built-in types such as `Color` and `Image` and produces `CS0119` errors.
 
 ## AI Instructions
 
