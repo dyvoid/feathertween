@@ -188,10 +188,10 @@ namespace PATween
 		public SequenceBuilder Append(SequenceBuilder child)
 		{
 			ValidateOrThrow();
-			var (id, gen, length) = ConsumeSequence(child);
+			var (id, gen, length, infinite) = ConsumeSequence(child);
 			var start = buffer.Cursor;
-			buffer.AddEntry(id, gen, start, length, false, SequenceChildKind.Tween, -1);
-			buffer.SetAppendAnchors(start, start + length);
+			buffer.AddEntry(id, gen, start, length, infinite, SequenceChildKind.Tween, -1);
+			buffer.SetAppendAnchors(start, infinite ? start : start + length);
 			return this;
 		}
 
@@ -235,16 +235,16 @@ namespace PATween
 				throw new ArgumentOutOfRangeException(
 					nameof(time), "Insert time cannot be negative; use SetDelay on the sequence to defer.");
 			}
-			var (id, gen, length) = ConsumeSequence(child);
-			buffer.AddEntry(id, gen, time, length, false, SequenceChildKind.Tween, -1);
+			var (id, gen, length, infinite) = ConsumeSequence(child);
+			buffer.AddEntry(id, gen, time, length, infinite, SequenceChildKind.Tween, -1);
 			return this;
 		}
 
 		public SequenceBuilder Insert(Position position, SequenceBuilder child)
 		{
 			ValidateOrThrow();
-			var (id, gen, length) = ConsumeSequence(child);
-			AddPositionedEntry(id, gen, position, 0d, length, false, SequenceChildKind.Tween, -1);
+			var (id, gen, length, infinite) = ConsumeSequence(child);
+			AddPositionedEntry(id, gen, position, 0d, length, infinite, SequenceChildKind.Tween, -1);
 			return this;
 		}
 
@@ -481,7 +481,7 @@ namespace PATween
 			return (id, gen, absorb, length, infinite);
 		}
 
-		private (int id, uint gen, double length) ConsumeSequence(SequenceBuilder child)
+		private (int id, uint gen, double length, bool infinite) ConsumeSequence(SequenceBuilder child)
 		{
 			var childBuffer = child.Buffer;
 			if (childBuffer == null || childBuffer == buffer)
@@ -510,13 +510,18 @@ namespace PATween
 
 			var data = childBuffer.Build();
 			data.AutoKill = false;
-			var length = childBuffer.Delay + data.Duration;
+			// Window spans all of the child's cycles; an infinite child gets an
+			// open window, mirroring ConsumeTween.
+			var infinite = childBuffer.Loops < 0;
+			var length = infinite
+				? 0d
+				: childBuffer.Delay + data.Duration * childBuffer.Loops;
 
 			var (id, gen) = TweenStore.Allocate();
 			TweenStore.SetDataDetached(id, data);
 			SequenceBuilderBufferPool.Return(childBuffer);
 
-			return (id, gen, length);
+			return (id, gen, length, infinite);
 		}
 
 		private static void ValidateLabelName(string name)

@@ -198,6 +198,9 @@ namespace PATween.Internal
 
 		private static void TickActiveCore(List<int> active, double scaledDt, double unscaledDt)
 		{
+			// Stale entries can survive a tick aborted by an exception (safe mode
+			// off); freeing them now could kill unrelated tweens in re-used slots.
+			pendingKills.Clear();
 			tickSnapshotIds.Clear();
 			tickSnapshotGens.Clear();
 			for (var i = 0; i < active.Count; i++)

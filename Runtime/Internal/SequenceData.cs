@@ -612,7 +612,7 @@ namespace PATween.Internal
 
 		// Walks the playhead to the end with callbacks (Complete / Kill(true)
 		// semantics); pauses are crossed, not halted at. An infinite loop
-		// completes its current cycle (�docs/api/handles.md).
+		// completes its current cycle (docs/api/handles.md).
 		public override void ForceComplete()
 		{
 			delayRemaining = 0d;
@@ -627,7 +627,7 @@ namespace PATween.Internal
 				target = (c + 1) * duration;
 			}
 			AdvanceTo(target, fire: true, haltOnPause: false, out _);
-			// The final cycle boundary is a loop end like any other (�docs/api/handles.md);
+			// The final cycle boundary is a loop end like any other (docs/api/handles.md);
 			// intermediate boundaries fired inside the walk.
 			InvokeOnStepComplete();
 		}
@@ -696,7 +696,7 @@ namespace PATween.Internal
 					continue;
 				}
 				// Completed children are at their terminal value; freeing them is
-				// disposal, not a kill — no OnKill (�docs/api/handles.md). Children cut short by
+				// disposal, not a kill — no OnKill (docs/api/handles.md). Children cut short by
 				// a parent Kill(false) are cancelled and get OnKill.
 				if (child.Status != TweenStatus.Completed)
 				{

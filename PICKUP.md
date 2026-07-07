@@ -3,7 +3,7 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-07-07 (1.14 tests Unity-verified and merged; hardening pass next)
+Last updated: 2026-07-08 (hardening pass: full Runtime/ review, 3 bugs fixed + 2 nested-loop tests; open semantics decisions logged below)
 
 ## Current position
 
@@ -41,6 +41,17 @@ Last updated: 2026-07-07 (1.14 tests Unity-verified and merged; hardening pass n
 
 - `AddLabel(name, Position)` resolves at definition time (only `Insert`/`AddPause` defer label resolution to `Start()`); duplicate label names throw.
 
+### From code review (2026-07-08) — semantics decisions needed
+
+Deliberate non-fixes from the hardening-pass review: the behavior is questionable but the right answer is a design decision, not a patch. Decide before 1.15 documents the contracts.
+
+- **`Reverse()` during an initial delay stalls a sequence forever**: in `SequenceData.Step` a negative `dt` never decrements `delayRemaining`, so the sequence reports `Delayed` every frame and never moves. Decide: rewind through the delay, settle at playhead 0, or no-op while delayed. Tween-level delay has the same question.
+- **Dead-handle `OnKill(cb)` fires the callback immediately** (test-locked in `TweenBuilderTests`). This conflicts with "natural completion never fires OnKill": a naturally-completed auto-killed tween returns a dead handle, so a late `OnKill` subscription fires for a tween that was never killed. Decide: keep the late-fire convenience and document the exception, or make dead-handle `OnKill` a no-op (updates that test).
+- **Zero-duration tween + `SetLoops(-1, Incremental)` can freeze a frame**: `cycleSlot` clamps to 1e-9, `cycleIndex` explodes, and the incremental cold-cache recompute in `GetCycleEnds` loops `cycleIndex` times. Decide: reject `duration <= 0` with infinite loops at build time, or clamp.
+- **Manual-phase destroyed-target cleanup depends on `ManualTick` being called**: if manual ticking stops, tweens on destroyed Unity objects in that phase are never auto-killed and `byTarget` pins them until reset. Probably a doc note ("keep ticking or kill explicitly"), but decide.
+- **`IntInterpolator.Lerp` truncates toward zero**, so negative-range int tweens step asymmetrically around 0. Floor/round would be uniform; changing it alters observable values, so it needs decision + test updates in one move.
+- **`TweenData<T>.ForceComplete` leaves `localTime` stale**: after `Complete()` on a non-autokill tween, a later `Seek` starts from the old playhead. Harmless today (`ResetPlayhead` covers Restart/Play), but a trap for future timeline features.
+
 ## Known issues / tech debt
 
 - Performance tests require the consuming project to install `com.unity.test-framework.performance` (test-only dependency).
@@ -57,6 +68,17 @@ Resolved 2026-07-07:
 
 Resolved in phase 1.12 (2026-07-07): `TweenData<T>` pooling, swap-remove active lists, target multimap — all landed (see Done). The 8-callback-list-field collapse was **deliberately dropped**: pooled reuse amortizes the per-instance cost, so the collapse would save memory, not allocations; revisit only if record memory shows up in profiling (M2+).
 
+### From code review (2026-07-08, full Runtime/ read — hardening pass)
+
+Fixed same day (harness: 186 + 174 release-leg green, including 2 new nested-loop tests):
+
+- **Stale `pendingKills` after an exception-aborted tick** — the list is now cleared at the start of `TickActiveCore`; entries surviving a throw (safe mode off) could free re-used slots and kill unrelated tweens on the next frame.
+- **`TweenStore.Free` double-free hazard** — new `slotFree` bitmap; a second `Free` of the same slot is now a no-op instead of pushing a duplicate free-list entry (which would alias one slot between two future `Allocate` calls). Note: `Allocate` → `Free` without `SetData` remains legal (tests pin it); the guard keys on free-list membership, not on `data[id]`.
+- **Nested sequence loops truncated** — `ConsumeSequence` ignored the child's `SetLoops`: window was `delay + one cycle`, so a looping child was cancelled after ~1 cycle and an infinite child was treated as finite. Now `delay + duration × loops`, with an open window for `SetLoops(-1)`, matching `ConsumeTween` and the invariant in `docs/architecture/sequence.md` ("infinite child does not extend Duration"). New tests: `NestedSequence_WithLoops_PlaysAllCycles`, `NestedSequence_InfiniteLoops_OpenWindow_DoesNotExtendDuration`.
+- Mojibake (`�`) in three `SequenceData` comments.
+
+Not fixed on purpose — see "Open questions / decisions pending" above.
+
 Remaining tracked debt:
 
 - ~~Safe mode absent~~ — implemented in 1.13 (this branch).
@@ -65,8 +87,8 @@ Remaining tracked debt:
 
 ## Test status
 
-- Compile-check harness: 184 tests green + 172 in the PATWEEN_RELEASE leg (2026-07-07, includes phase 1.13).
-- Unity (Editor + Runtime + Performance): verified 2026-07-07 through phase 1.12; **1.13 not yet run in Unity**.
+- Compile-check harness: 186 tests green + 174 in the PATWEEN_RELEASE leg (2026-07-08, includes hardening-pass fixes and 2 new nested-loop tests).
+- Unity (Editor + Runtime + Performance): 196 green 2026-07-07 (through 1.14); hardening-pass changes verified in Unity 2026-07-08 (store tests re-run green after `slotFree` fix).
 
 ## Consumer setup reminders
 

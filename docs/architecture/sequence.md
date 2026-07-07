@@ -39,6 +39,7 @@ All signatures accept builders, never started handles.
 
 - A sequence can contain tweens, sequences, callbacks, intervals, labels, pauses.
 - Inserted children get `autoKill = false`, `delay` absorbed into insertion offset.
+- A finite looping child's window spans **all** of its cycles: `[_start, _start + delay + duration × loops]`. This holds for tween children and nested sequence children alike.
 - Infinite-loop children (`SetLoops(-1)`) keep the `-1` sentinel internally; sequence duration math treats them as `∞`. The sequence's own duration is the max of finite children's `[_start, _end]` ranges; an infinite child does not extend the sequence's reported `Duration`. Inspector / serialization paths clamp to a UI-visible cap.
 - A child can only have one parent (enforced by single-use builder).
 - **Manual phase**: children inherit `UpdatePhase` from their parent sequence. A `Manual` sequence cannot contain `Update`-phase children, and vice versa. Phase mismatch at `Append/Insert` throws.

@@ -20,6 +20,11 @@ namespace PATween.Internal
 		// makes RemoveFromActiveList an O(1) swap-remove.
 		private static int[] activeIndex;
 
+		// True while the slot sits on the free list. Guards Free against
+		// double-freeing a slot, which would push a duplicate free-list entry
+		// and alias the slot between two future Allocate calls.
+		private static bool[] slotFree;
+
 		// Target-indexed multimap for Kill(target)/IsTweening(target). Includes
 		// detached (sequence-child) slots so bulk kills reach nested tweens.
 		private static readonly Dictionary<object, List<int>> byTarget = new Dictionary<object, List<int>>();
@@ -100,6 +105,7 @@ namespace PATween.Internal
 			}
 
 			var id = freeList.Pop();
+			slotFree[id] = false;
 			var gen = generations[id];
 			return (id, gen);
 		}
@@ -140,6 +146,12 @@ namespace PATween.Internal
 			{
 				return;
 			}
+
+			if (slotFree[id])
+			{
+				return; // already on the free list; a second push would alias the slot
+			}
+			slotFree[id] = true;
 
 			var freed = data[id];
 			if (freed != null)
@@ -324,6 +336,7 @@ namespace PATween.Internal
 			data = new TweenData[capacity];
 			generations = new uint[capacity];
 			activeIndex = new int[capacity];
+			slotFree = new bool[capacity];
 			freeList = new Stack<int>(capacity);
 			activeUpdate = new List<int>();
 			activeLate = new List<int>();
@@ -334,6 +347,7 @@ namespace PATween.Internal
 			{
 				generations[i] = 1;
 				activeIndex[i] = -1;
+				slotFree[i] = true;
 			}
 			for (var i = capacity - 1; i >= 0; i--)
 			{
@@ -353,6 +367,7 @@ namespace PATween.Internal
 			{
 				data[i] = null;
 				activeIndex[i] = -1;
+				slotFree[i] = true;
 				generations[i] = unchecked(generations[i] + 1);
 				if (generations[i] == 0)
 				{
@@ -371,10 +386,12 @@ namespace PATween.Internal
 			System.Array.Resize(ref data, newCapacity);
 			System.Array.Resize(ref generations, newCapacity);
 			System.Array.Resize(ref activeIndex, newCapacity);
+			System.Array.Resize(ref slotFree, newCapacity);
 			for (var i = oldCapacity; i < newCapacity; i++)
 			{
 				generations[i] = 1;
 				activeIndex[i] = -1;
+				slotFree[i] = true;
 			}
 			for (var i = newCapacity - 1; i >= oldCapacity; i--)
 			{

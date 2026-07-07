@@ -128,6 +128,8 @@ namespace PATween.Internal
 			loopType = type;
 		}
 
+		public int Loops => loops;
+
 		public double Cursor => cursor;
 		public double JoinAnchor => joinAnchor;
 		public double LastAddedStart => lastAddedStart;

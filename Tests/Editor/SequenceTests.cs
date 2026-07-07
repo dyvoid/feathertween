@@ -351,6 +351,59 @@ namespace PATween.Tests
 		}
 
 		[Test]
+		public void NestedSequence_WithLoops_PlaysAllCycles()
+		{
+			var a = 0f;
+			var b = 0f;
+			var completed = false;
+			var inner = ManualSequence().SetLoops(2);
+			inner.Append(global::PATween.PATween.FromTo(() => b, v => b = v, 0f, 1f, 1f));
+
+			var outer = ManualSequence();
+			outer.Append(FloatTween(() => a, v => a = v, 1f, 1f));
+			outer.Append(inner);
+			outer.OnComplete(() => completed = true);
+			var seq = outer.Start();
+
+			Assert.That(seq.Duration, Is.EqualTo(3f).Within(1e-4f), "child window spans all of its cycles");
+
+			PATweenRunner.ManualTick(1.5);
+			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "nested cycle 1 mid");
+
+			PATweenRunner.ManualTick(1.0);
+			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "nested cycle 2 mid (re-snapped from 0)");
+			Assert.That(completed, Is.False, "parent still running during child's second cycle");
+
+			PATweenRunner.ManualTick(1.0);
+			Assert.That(b, Is.EqualTo(1f).Within(1e-3f), "nested cycle 2 done");
+			Assert.That(completed, Is.True, "parent completes only after all child cycles");
+		}
+
+		[Test]
+		public void NestedSequence_InfiniteLoops_OpenWindow_DoesNotExtendDuration()
+		{
+			var a = 0f;
+			var b = 0f;
+			var inner = ManualSequence().SetLoops(-1);
+			inner.Append(global::PATween.PATween.FromTo(() => b, v => b = v, 0f, 1f, 0.5f));
+
+			var outer = ManualSequence();
+			outer.Insert(0f, inner);
+			outer.Append(FloatTween(() => a, v => a = v, 1f, 1f));
+			var seq = outer.Start();
+
+			Assert.That(seq.Duration, Is.EqualTo(1f).Within(1e-4f),
+				"infinite child does not extend the sequence's reported Duration");
+
+			PATweenRunner.ManualTick(0.75);
+			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "infinite child looping (cycle 2 mid)");
+			Assert.That(a, Is.EqualTo(0.75f).Within(1e-3f));
+
+			PATweenRunner.ManualTick(0.5);
+			Assert.That(seq.IsAlive, Is.False, "parent completed at its finite duration");
+		}
+
+		[Test]
 		public void MixedValueTypes_StoredInTypedSlots()
 		{
 			var f = 0f;
