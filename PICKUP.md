@@ -8,13 +8,14 @@ Last updated: 2026-07-07
 ## Current position
 
 - **Milestone**: M1 (Core), production cut. See `docs/implementation.md` §10.
-- **Done through**: Phase 1.10 (Seek/control) implemented and green in the compile-check harness (148 tests); **needs an in-Unity verification pass** (Editor + Runtime + Performance) before it counts as done-done. Phase 1.9 and earlier verified in Unity 2026-07-03.
+- **Done through**: Phase 1.11 (typed shortcuts) implemented and green in the compile-check harness (161 tests); **1.10 and 1.11 need an in-Unity verification pass** (Editor + Runtime + Performance) before they count as done-done. Phase 1.9 and earlier verified in Unity 2026-07-03.
 - **Remaining M1 phases** (renumbered 2026-07-02, production cut; M1 is now 14 linear phases): 1.9 (callbacks) → 1.10 (seek/control) → 1.11 (typed shortcuts) → 1.12 (filters/bulk ops) → 1.13 (safe mode) → 1.14 (acceptance, v0.1 tag). Fast paths, TweenSettings, and the cross-engine benchmark moved to M2.
-- **Next phase**: 1.11 — Typed shortcuts (Move/Rotate/Scale/LocalMove/LocalRotate, Fade, Color, FillAmount), after 1.10 is verified in Unity.
+- **Next phase**: 1.12 — Filters and bulk ops + storage surgery (target multimap, Kill/Pause/Resume-All, TweenData pooling, swap-remove active lists).
 - **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
 
 ## Done
 
+- **Phase 1.11 (2026-07-07, branch `task/1.11-typed-shortcuts`)**: `PATween.Move/LocalMove/Scale/Rotate/LocalRotate` (Transform, Euler + Quaternion overloads), `Fade` (CanvasGroup), `Color`/`Fade`/`FillAmount` (Image) — all lambda-core builders with auto-set target. **Package now depends on `com.unity.ugui`** (Runtime asmdef references `UnityEngine.UI`). Compile-check stubs got real vector/quaternion math so shortcut tests assert values in the harness. 13 tests in `Tests/Editor/ShortcutTests.cs`.
 - **Phase 1.10 (2026-07-07, branch `task/1.10-seek-control`)**: `Tween.Seek`/`Sequence.Seek` per §3.15 (silent single-sample vs boundary-walking; pause halts a firing seek); `SequenceData` rewritten around a bidirectional `AdvanceTo(from, to)` cycle walk shared by tick/Seek/ForceComplete (Yoyo cycles are backward local walks); `SequenceBuilder.SetLoops` (Restart/Yoyo; Incremental degrades to Restart); `Sequence.Reverse`; `Sequence.TotalProgress`; mid-play `Sequence.Insert` (deferred from callbacks via new `SequenceInsert` queue op); per-tween `SetTimeScale` + `PATween.SetGlobalTimeScale` + per-phase `PATween.SetTimeScale` (engine-side, governs `ignoreTimeScale` tweens too — decided + documented). 21 tests in `Tests/Editor/SeekControlTests.cs`. **Semantics notes**: sequence completion now fires the final loop-end `OnStepComplete` (matches tween §3.14); `To` children re-snap from current values on loop wrap (deferred-snap design), so exact per-cycle replay needs `FromTo`/`From` children. `SetCancelOnError` moved to 1.13 (no-op until safe mode exists).
 - **Review-fix pass (2026-07-07)**: incremental-loop O(1) cycle cache; parametric elastic (amplitude/period) + amplitude-scaled `BounceExact`; §8.1 doc reconciliation. See "From code review" below.
 - **Phases 1.1–1.9** (merged to `main`): storage/handle scaffold, PlayerLoop runner, builder/handle split, generic tween core, full ease system, From/FromTo, loops/delays/direction/reverse, sequence builder, callbacks.
@@ -27,12 +28,12 @@ Last updated: 2026-07-07
 
 ## In flight
 
-- **Phase 1.10 on `task/1.10-seek-control`**, harness-green, awaiting in-Unity verification + fast-forward merge to `main`.
+- Nothing half-built; 1.10 and 1.11 merged to `main`, harness-green, awaiting in-Unity verification.
 
 ## Next up
 
-1. Verify 1.10 in Unity (Editor + Runtime + Performance suites), then fast-forward merge `task/1.10-seek-control` into `main`.
-2. Begin Phase 1.11 — Typed shortcuts: `PATween.Move/Rotate/Scale/LocalMove/LocalRotate` (Transform), `Fade` (CanvasGroup), `Color`/`FillAmount` (Image), all on the lambda core. See `docs/implementation.md` §10 phase 1.11.
+1. Verify 1.10 + 1.11 in Unity (Editor + Runtime + Performance suites). Consumer project must resolve the new `com.unity.ugui` dependency.
+2. Begin Phase 1.12 — Filters and bulk ops + storage surgery: target-indexed multimap, `Kill(target)`/`IsTweening(target)`/`KillAll`/`PauseAll`/`ResumeAll`, `TweenData<T>` pooling, swap-remove active lists. See `docs/implementation.md` §10 phase 1.12.
 
 ## Infra (2026-07-02)
 
@@ -74,7 +75,7 @@ Remaining tracked debt:
 
 ## Test status
 
-- Compile-check harness: 148 tests green (2026-07-07, includes phase 1.10 + review fixes).
+- Compile-check harness: 161 tests green (2026-07-07, includes phases 1.10–1.11 + review fixes).
 - Unity (Editor + Runtime + Performance): last verified 2026-07-03 (through 1.9). 1.10 changes not yet run in Unity.
 
 ## Consumer setup reminders
