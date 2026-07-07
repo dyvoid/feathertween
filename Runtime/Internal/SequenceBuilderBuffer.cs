@@ -25,6 +25,8 @@ namespace PATween.Internal
 		private SequenceCancelBehavior cancelBehavior;
 		private int loops;
 		private LoopType loopType;
+		private bool safeMode;
+		private bool cancelOnError;
 
 		private EaseRef defaultEase;
 		private bool hasDefaultEase;
@@ -106,6 +108,18 @@ namespace PATween.Internal
 		{
 			get => cancelBehavior;
 			set => cancelBehavior = value;
+		}
+
+		public bool SafeMode
+		{
+			get => safeMode;
+			set => safeMode = value;
+		}
+
+		public bool CancelOnError
+		{
+			get => cancelOnError;
+			set => cancelOnError = value;
 		}
 
 		public void SetLoops(int count, LoopType type)
@@ -375,6 +389,8 @@ namespace PATween.Internal
 			data.IgnoreTimeScale = ignoreTimeScale;
 			data.AutoKill = autoKill;
 			data.Target = target;
+			data.SafeMode = safeMode;
+			data.CancelOnError = cancelOnError;
 			TransferCallbacks(data);
 			data.Status = delay > 0f ? TweenStatus.Delayed : TweenStatus.Playing;
 			return data;
@@ -478,6 +494,8 @@ namespace PATween.Internal
 			cancelBehavior = SequenceCancelBehavior.ContinueOnChildAutoKill;
 			loops = 1;
 			loopType = LoopType.Restart;
+			safeMode = SafeModeDefault.Value;
+			cancelOnError = false;
 			hasDefaultEase = false;
 			hasDefaultLoops = false;
 			hasDefaultDelay = false;

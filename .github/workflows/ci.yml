@@ -23,3 +23,12 @@ jobs:
         run: >
           dotnet run --project tools~/compile-check/PATween.TestRunner.csproj
           -c Release -- --noresult --where "cat != RequiresUnity"
+
+      # Safe mode is compiled out under PATWEEN_RELEASE; this leg proves the
+      # release path builds and behaves (ReleaseModeTests: throwing setter
+      # propagates despite SetSafeMode(true)).
+      - name: Run EditMode suite with PATWEEN_RELEASE (safe mode compiled out)
+        run: >
+          dotnet run --project tools~/compile-check/PATween.TestRunner.csproj
+          -c Release -p:DefineConstants=PATWEEN_RELEASE
+          -- --noresult --where "cat != RequiresUnity && cat != RequiresSafeMode"

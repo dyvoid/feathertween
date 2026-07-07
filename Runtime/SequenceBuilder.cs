@@ -56,6 +56,22 @@ namespace PATween
 			return this;
 		}
 
+		// Try/catch around the sequence's own callback invocations (children
+		// carry their own flag). See TweenBuilder<T>.SetSafeMode.
+		public SequenceBuilder SetSafeMode(bool value)
+		{
+			ValidateOrThrow();
+			buffer.SafeMode = value;
+			return this;
+		}
+
+		public SequenceBuilder SetCancelOnError(bool value)
+		{
+			ValidateOrThrow();
+			buffer.CancelOnError = value;
+			return this;
+		}
+
 		public SequenceBuilder SetCancelBehavior(SequenceCancelBehavior behavior)
 		{
 			ValidateOrThrow();

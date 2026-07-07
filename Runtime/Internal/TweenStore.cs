@@ -382,13 +382,17 @@ namespace PATween.Internal
 			}
 		}
 
+		// Off-thread guard, part of the safe-mode debug layer: compiled out
+		// under PATWEEN_RELEASE along with the try/catch wrappers.
 		private static void AssertMainThread()
 		{
+#if !PATWEEN_RELEASE
 			if (Thread.CurrentThread.ManagedThreadId != mainThreadId)
 			{
 				throw new System.InvalidOperationException(
 					"[PATween] TweenStore must be accessed from the main thread.");
 			}
+#endif
 		}
 	}
 }

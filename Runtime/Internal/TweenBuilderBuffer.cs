@@ -25,6 +25,8 @@ namespace PATween.Internal
 		private LoopType loopType;
 		private float delay;
 		private DelayType delayType;
+		private bool safeMode;
+		private bool cancelOnError;
 		private List<CallbackEntry> onStart;
 		private List<CallbackEntry> onPlay;
 		private List<CallbackEntry> onPause;
@@ -161,6 +163,17 @@ namespace PATween.Internal
 			set => delayType = value;
 		}
 
+		public bool SafeMode
+		{
+			get => safeMode;
+			set => safeMode = value;
+		}
+
+		public bool CancelOnError
+		{
+			get => cancelOnError;
+			set => cancelOnError = value;
+		}
 
 		public TweenBuilderBuffer()
 		{
@@ -254,6 +267,8 @@ namespace PATween.Internal
 			data.Delay = delay;
 			data.DelayType = delayType;
 			data.Direction = 1;
+			data.SafeMode = safeMode;
+			data.CancelOnError = cancelOnError;
 			data.Interpolator = Interpolators.Get<T>();
 			data.SnapMode = snapMode;
 			// Pristine value for (re-)resolution: FromTo carries the explicit
@@ -357,6 +372,8 @@ namespace PATween.Internal
 			loopType = LoopType.Restart;
 			delay = 0f;
 			delayType = DelayType.FirstLoop;
+			safeMode = SafeModeDefault.Value;
+			cancelOnError = false;
 			phaseExplicit = false;
 			easeExplicit = false;
 			loopsExplicit = false;

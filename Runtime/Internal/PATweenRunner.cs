@@ -318,13 +318,17 @@ namespace PATween.Internal
 			}
 		}
 
+		// Off-thread guard, part of the safe-mode debug layer: compiled out
+		// under PATWEEN_RELEASE along with the try/catch wrappers.
 		private static void AssertMainThread()
 		{
+#if !PATWEEN_RELEASE
 			if (Thread.CurrentThread.ManagedThreadId != mainThreadId)
 			{
 				throw new InvalidOperationException(
 					"[PATween] PATweenRunner must be ticked from the main thread.");
 			}
+#endif
 		}
 
 		private struct PATweenUpdate {}

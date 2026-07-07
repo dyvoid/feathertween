@@ -51,6 +51,25 @@ namespace PATween
 			return this;
 		}
 
+		// Try/catch around setter and callback invocations. Default on in the
+		// Editor, off in player builds; PATWEEN_RELEASE compiles the wrapper out
+		// entirely (docs/architecture/overview.md "Safe mode").
+		public TweenBuilder<T> SetSafeMode(bool value)
+		{
+			ValidateOrThrow();
+			buffer.SafeMode = value;
+			return this;
+		}
+
+		// In safe mode: a setter exception kills the tween silently and fires
+		// OnKill; a callback exception is logged and cancels the tween.
+		public TweenBuilder<T> SetCancelOnError(bool value)
+		{
+			ValidateOrThrow();
+			buffer.CancelOnError = value;
+			return this;
+		}
+
 		public TweenBuilder<T> SetRelative(bool value)
 		{
 			ValidateOrThrow();
@@ -187,6 +206,18 @@ namespace PATween
 
 			var data = buffer.Build();
 			data.ResolveStartValues();
+
+			// A safe-mode From/FromTo snap whose setter threw cancelled the
+			// record before it ever got a store slot: recycle it and hand back
+			// a dead handle instead of storing an unkillable corpse.
+			if (data.Status == TweenStatus.Cancelled)
+			{
+				data.ReturnToPool();
+				TweenBuilderBufferPool<T>.Return(buffer);
+				buffer = null;
+				generation = 0;
+				return new Tween(-1, 0);
+			}
 
 			var (id, gen) = TweenStore.Allocate();
 			TweenStore.SetData(id, data);

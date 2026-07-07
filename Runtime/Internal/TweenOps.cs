@@ -102,6 +102,10 @@ namespace PATween.Internal
 			if (!alreadyCompleted)
 			{
 				data.ForceComplete();
+				if (data.Status == TweenStatus.Cancelled)
+				{
+					return; // safe-mode error killed (and freed) it mid-walk
+				}
 				data.Status = TweenStatus.Completed;
 				data.InvokeOnComplete();
 			}
@@ -165,6 +169,10 @@ namespace PATween.Internal
 			if (complete && data.Status != TweenStatus.Cancelled)
 			{
 				data.ForceComplete();
+				if (data.Status == TweenStatus.Cancelled)
+				{
+					return; // safe-mode error killed (and freed) it mid-walk
+				}
 				data.Status = TweenStatus.Completed;
 				data.InvokeOnComplete();
 			}

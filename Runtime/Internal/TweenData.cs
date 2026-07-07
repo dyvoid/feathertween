@@ -15,6 +15,8 @@ namespace PATween.Internal
 		private int direction = 1;
 		private int selfId = -1;
 		private bool startFired;
+		private bool safeMode = SafeModeDefault.Value;
+		private bool cancelOnError;
 
 		private List<CallbackEntry> onStart;
 		private List<CallbackEntry> onPlay;
@@ -113,6 +115,23 @@ namespace PATween.Internal
 
 		public bool IsUnityObject => isUnityObject;
 
+		// Per-tween try/catch around setter and callback invocations. Compiled
+		// out entirely under PATWEEN_RELEASE (docs/architecture/overview.md).
+		public bool SafeMode
+		{
+			get => safeMode;
+			set => safeMode = value;
+		}
+
+		// With safe mode: a setter exception kills the tween silently and fires
+		// OnKill; a callback exception cancels the tween (deferred) after logging.
+		// Without it, safe mode logs the setter exception and kills without OnKill.
+		public bool CancelOnError
+		{
+			get => cancelOnError;
+			set => cancelOnError = value;
+		}
+
 		// Per-tween playback rate. Engine-side: applies to scaled and unscaled
 		// time alike (IgnoreTimeScale only opts out of Unity's Time.timeScale).
 		// Negative values are rejected in TweenOps; direction is owned by Reverse.
@@ -166,6 +185,20 @@ namespace PATween.Internal
 			{
 				for (var i = 0; i < onUpdate.Count; i++)
 				{
+#if !PATWEEN_RELEASE
+					if (safeMode)
+					{
+						try
+						{
+							onUpdate[i]?.Invoke(easedT);
+						}
+						catch (Exception e)
+						{
+							HandleCallbackError(e);
+						}
+						continue;
+					}
+#endif
 					onUpdate[i]?.Invoke(easedT);
 				}
 			}
@@ -199,7 +232,7 @@ namespace PATween.Internal
 			list.Add(entry);
 		}
 
-		private static void InvokeList(List<CallbackEntry> list)
+		private void InvokeList(List<CallbackEntry> list)
 		{
 			if (list == null)
 			{
@@ -210,6 +243,20 @@ namespace PATween.Internal
 			{
 				for (var i = 0; i < list.Count; i++)
 				{
+#if !PATWEEN_RELEASE
+					if (safeMode)
+					{
+						try
+						{
+							list[i].Invoke();
+						}
+						catch (Exception e)
+						{
+							HandleCallbackError(e);
+						}
+						continue;
+					}
+#endif
 					list[i].Invoke();
 				}
 			}
@@ -218,6 +265,44 @@ namespace PATween.Internal
 				TweenCommandQueue.ExitCallback();
 			}
 		}
+
+#if !PATWEEN_RELEASE
+		// Safe-mode setter exception: the value write failed mid-step, so the
+		// animation contract is broken — kill the tween. CancelOnError kills
+		// silently and fires OnKill; without it, log and dispose without OnKill
+		// (docs/api/handles.md firing matrix).
+		protected void CancelFromError(Exception e)
+		{
+			if (!cancelOnError)
+			{
+				UnityEngine.Debug.LogException(e);
+			}
+			Status = TweenStatus.Cancelled;
+			if (cancelOnError)
+			{
+				InvokeOnKill();
+			}
+			if (selfId >= 0)
+			{
+				TweenStore.Free(selfId);
+			}
+		}
+
+		// Safe-mode callback exception: user-code side effect, always logged.
+		// Remaining callbacks in the list still run; CancelOnError additionally
+		// cancels the tween (deferred — we are inside a callback scope).
+		protected void HandleCallbackError(Exception e)
+		{
+			UnityEngine.Debug.LogException(e);
+			if (cancelOnError && selfId >= 0
+				&& (status == TweenStatus.Playing
+					|| status == TweenStatus.Delayed
+					|| status == TweenStatus.Paused))
+			{
+				TweenOps.Kill(selfId, TweenStore.GetGeneration(selfId), complete: false);
+			}
+		}
+#endif
 
 		public virtual void Reset()
 		{
@@ -231,6 +316,8 @@ namespace PATween.Internal
 			direction = 1;
 			selfId = -1;
 			startFired = false;
+			safeMode = SafeModeDefault.Value;
+			cancelOnError = false;
 			onStart?.Clear();
 			onPlay?.Clear();
 			onPause?.Clear();

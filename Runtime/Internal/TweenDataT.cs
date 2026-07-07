@@ -129,6 +129,31 @@ namespace PATween.Internal
 			set => snapPending = value;
 		}
 
+		// All value writes funnel through here. Safe mode wraps the setter in a
+		// try/catch; a throw kills the tween (CancelFromError) and the caller
+		// must stop touching it. Returns false when the tween killed itself.
+		// PATWEEN_RELEASE compiles the wrapper out to a bare call.
+		private bool ApplySetter(T value)
+		{
+#if !PATWEEN_RELEASE
+			if (SafeMode)
+			{
+				try
+				{
+					setter(value);
+					return true;
+				}
+				catch (Exception e)
+				{
+					CancelFromError(e);
+					return false;
+				}
+			}
+#endif
+			setter(value);
+			return true;
+		}
+
 		public override void ResolveStartValues()
 		{
 			if (!snapPending)
@@ -153,11 +178,17 @@ namespace PATween.Internal
 				case SnapMode.From:
 					startValue = fromValue;
 					endValue = getter != null ? getter() : default;
-					setter?.Invoke(startValue);
+					if (setter != null && !ApplySetter(startValue))
+					{
+						return;
+					}
 					break;
 				case SnapMode.FromTo:
 					startValue = fromValue;
-					setter?.Invoke(startValue);
+					if (setter != null && !ApplySetter(startValue))
+					{
+						return;
+					}
 					break;
 			}
 		}
@@ -207,7 +238,10 @@ namespace PATween.Internal
 			if (setter != null)
 			{
 				GetCycleEnds(finalIndex, out _, out var cycleTo);
-				setter(cycleTo);
+				if (!ApplySetter(cycleTo))
+				{
+					return;
+				}
 			}
 
 			// Complete()/Kill(true) fire OnStepComplete for the remaining loop
@@ -345,7 +379,10 @@ namespace PATween.Internal
 				if (everyLoop && cycleIndex > 0)
 				{
 					GetCycleEnds(cycleIndex - 1, out _, out var prevEnd);
-					setter(prevEnd);
+					if (!ApplySetter(prevEnd))
+					{
+						return;
+					}
 				}
 			}
 			else
@@ -354,7 +391,10 @@ namespace PATween.Internal
 				GetCycleEnds(cycleIndex, out var cycleFrom, out var cycleTo);
 				var easedT = ease.Evaluate(tInCycle);
 				var value = interpolator.Lerp(cycleFrom, cycleTo, easedT);
-				setter(value);
+				if (!ApplySetter(value))
+				{
+					return;
+				}
 				InvokeOnUpdate(easedT);
 			}
 
@@ -465,7 +505,10 @@ namespace PATween.Internal
 			{
 				GetCycleEnds(cycleIndex, out var cycleFrom, out var cycleTo);
 				var easedT = ease.Evaluate(tInCycle);
-				setter(interpolator.Lerp(cycleFrom, cycleTo, easedT));
+				if (!ApplySetter(interpolator.Lerp(cycleFrom, cycleTo, easedT)))
+				{
+					return;
+				}
 				if (fireCallbacks)
 				{
 					InvokeOnUpdate(easedT);

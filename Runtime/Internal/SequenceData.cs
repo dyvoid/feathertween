@@ -344,9 +344,9 @@ namespace PATween.Internal
 						if (e.Start <= next)
 						{
 							e.Finished = true;
-							if (fire)
+							if (fire && !InvokeEntryCallback(e.CallbackIndex))
 							{
-								InvokeEntryCallback(e.CallbackIndex);
+								return false;
 							}
 						}
 						break;
@@ -354,18 +354,18 @@ namespace PATween.Internal
 						if (i == pauseIndex)
 						{
 							e.Finished = true;
-							if (fire)
+							if (fire && !InvokeEntryCallback(e.CallbackIndex))
 							{
-								InvokeEntryCallback(e.CallbackIndex);
+								return false;
 							}
 						}
 						else if (!haltOnPause && e.Start <= next)
 						{
 							// Force-complete / silent walks blow through pauses.
 							e.Finished = true;
-							if (fire)
+							if (fire && !InvokeEntryCallback(e.CallbackIndex))
 							{
-								InvokeEntryCallback(e.CallbackIndex);
+								return false;
 							}
 						}
 						break;
@@ -577,18 +577,42 @@ namespace PATween.Internal
 			}
 		}
 
-		private void InvokeEntryCallback(int index)
+		// Returns false when a safe-mode callback error with CancelOnError
+		// killed the sequence mid-walk (same unwind contract as child auto-kill).
+		private bool InvokeEntryCallback(int index)
 		{
 			if (index < 0 || callbacks == null || index >= callbacks.Count)
 			{
-				return;
+				return true;
 			}
+#if !PATWEEN_RELEASE
+			if (SafeMode)
+			{
+				try
+				{
+					callbacks[index]?.Invoke();
+				}
+				catch (Exception e)
+				{
+					UnityEngine.Debug.LogException(e);
+					if (CancelOnError)
+					{
+						Status = TweenStatus.Cancelled;
+						InvokeOnKill();
+						TweenStore.Free(SelfId);
+						return false;
+					}
+				}
+				return true;
+			}
+#endif
 			callbacks[index]?.Invoke();
+			return true;
 		}
 
 		// Walks the playhead to the end with callbacks (Complete / Kill(true)
 		// semantics); pauses are crossed, not halted at. An infinite loop
-		// completes its current cycle (Âdocs/api/handles.md).
+		// completes its current cycle (ï¿½docs/api/handles.md).
 		public override void ForceComplete()
 		{
 			delayRemaining = 0d;
@@ -603,7 +627,7 @@ namespace PATween.Internal
 				target = (c + 1) * duration;
 			}
 			AdvanceTo(target, fire: true, haltOnPause: false, out _);
-			// The final cycle boundary is a loop end like any other (Âdocs/api/handles.md);
+			// The final cycle boundary is a loop end like any other (ï¿½docs/api/handles.md);
 			// intermediate boundaries fired inside the walk.
 			InvokeOnStepComplete();
 		}
@@ -672,7 +696,7 @@ namespace PATween.Internal
 					continue;
 				}
 				// Completed children are at their terminal value; freeing them is
-				// disposal, not a kill â€” no OnKill (Âdocs/api/handles.md). Children cut short by
+				// disposal, not a kill â€” no OnKill (ï¿½docs/api/handles.md). Children cut short by
 				// a parent Kill(false) are cancelled and get OnKill.
 				if (child.Status != TweenStatus.Completed)
 				{
