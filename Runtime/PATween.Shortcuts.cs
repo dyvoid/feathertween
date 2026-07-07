@@ -1,0 +1,102 @@
+using System;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace PATween
+{
+	// Typed shortcuts (phase 1.11). Each builds a lambda pair on the generic
+	// core, auto-sets the target so Kill(target)/IsTweening(target) reach the
+	// tween, and returns the ordinary builder for chaining (From, SetEase, ...).
+	// The per-creation delegate-pair allocation is the accepted lambda baseline;
+	// hand-written zero-alloc fast paths are an M2 deliverable.
+	public static partial class PATween
+	{
+		public static TweenBuilder<Vector3> Move(Transform target, Vector3 end, float duration)
+		{
+			RequireTarget(target);
+			return To(() => target.position, v => target.position = v, end, duration)
+				.SetTarget(target);
+		}
+
+		public static TweenBuilder<Vector3> LocalMove(Transform target, Vector3 end, float duration)
+		{
+			RequireTarget(target);
+			return To(() => target.localPosition, v => target.localPosition = v, end, duration)
+				.SetTarget(target);
+		}
+
+		public static TweenBuilder<Vector3> Scale(Transform target, Vector3 end, float duration)
+		{
+			RequireTarget(target);
+			return To(() => target.localScale, v => target.localScale = v, end, duration)
+				.SetTarget(target);
+		}
+
+		public static TweenBuilder<Vector3> Scale(Transform target, float uniformEnd, float duration)
+			=> Scale(target, new Vector3(uniformEnd, uniformEnd, uniformEnd), duration);
+
+		public static TweenBuilder<Quaternion> Rotate(Transform target, Quaternion end, float duration)
+		{
+			RequireTarget(target);
+			return To(() => target.rotation, v => target.rotation = v, end, duration)
+				.SetTarget(target);
+		}
+
+		public static TweenBuilder<Quaternion> Rotate(Transform target, Vector3 eulerAngles, float duration)
+			=> Rotate(target, Quaternion.Euler(eulerAngles.x, eulerAngles.y, eulerAngles.z), duration);
+
+		public static TweenBuilder<Quaternion> LocalRotate(Transform target, Quaternion end, float duration)
+		{
+			RequireTarget(target);
+			return To(() => target.localRotation, v => target.localRotation = v, end, duration)
+				.SetTarget(target);
+		}
+
+		public static TweenBuilder<Quaternion> LocalRotate(Transform target, Vector3 eulerAngles, float duration)
+			=> LocalRotate(target, Quaternion.Euler(eulerAngles.x, eulerAngles.y, eulerAngles.z), duration);
+
+		public static TweenBuilder<float> Fade(CanvasGroup target, float endAlpha, float duration)
+		{
+			RequireTarget(target);
+			return To(() => target.alpha, v => target.alpha = v, endAlpha, duration)
+				.SetTarget(target);
+		}
+
+		public static TweenBuilder<UnityEngine.Color> Color(Image target, UnityEngine.Color end, float duration)
+		{
+			RequireTarget(target);
+			return To(() => target.color, v => target.color = v, end, duration)
+				.SetTarget(target);
+		}
+
+		public static TweenBuilder<float> Fade(Image target, float endAlpha, float duration)
+		{
+			RequireTarget(target);
+			return To(
+					() => target.color.a,
+					v =>
+					{
+						var c = target.color;
+						c.a = v;
+						target.color = c;
+					},
+					endAlpha, duration)
+				.SetTarget(target);
+		}
+
+		public static TweenBuilder<float> FillAmount(Image target, float end, float duration)
+		{
+			RequireTarget(target);
+			return To(() => target.fillAmount, v => target.fillAmount = v, end, duration)
+				.SetTarget(target);
+		}
+
+		private static void RequireTarget(UnityEngine.Object target)
+		{
+			if (target == null)
+			{
+				throw new ArgumentNullException(nameof(target), "[PATween] Shortcut target is null or destroyed.");
+			}
+		}
+	}
+}

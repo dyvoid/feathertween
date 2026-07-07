@@ -4,6 +4,9 @@
   "displayName": "PATween",
   "description": "A robust, minimal C# tween engine for Unity. Compositional sequences, static-method API, struct handles, PlayerLoop runner.",
   "unity": "6000.3",
+  "dependencies": {
+    "com.unity.ugui": "2.0.0"
+  },
   "author": {
     "name": "PATween"
   },
