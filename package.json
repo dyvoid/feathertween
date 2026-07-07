@@ -26,6 +26,11 @@
       "displayName": "Sequence Demo",
       "description": "A choreographed show exercising sequence features: Append/Join, SetDefaults cascade, callbacks, AddPause with auto-resume, label-based Insert, deferred From snap, and Restart looping.",
       "path": "Samples~/SequenceDemo"
+    },
+    {
+      "displayName": "Composed Demo",
+      "description": "The M1 acceptance demo: infinite Incremental/Yoyo loops, EveryLoop-staggered generic tweens with parametric elastic ease, a master sequence with a nested sub-sequence and label-based deferred From, plus a runtime control panel (pause/resume all, reverse, seek, global time scale, target-filtered kill).",
+      "path": "Samples~/ComposedDemo"
     }
   ]
 }

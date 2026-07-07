@@ -74,6 +74,7 @@ namespace UnityEngine
 		public static float Sin(float f) => (float)Math.Sin(f);
 		public static float Cos(float f) => (float)Math.Cos(f);
 		public static float Sqrt(float f) => (float)Math.Sqrt(f);
+		public static bool Approximately(float a, float b) => Math.Abs(a - b) < 1e-6f;
 		public static float Abs(float f) => Math.Abs(f);
 		public static float Exp(float f) => (float)Math.Exp(f);
 		public static float Log(float f, float b) => (float)Math.Log(f, b);
@@ -130,6 +131,7 @@ namespace UnityEngine
 		public static Color yellow => default;
 		public static Color red => default;
 		public static Color blue => default;
+		public static Color white => default;
 		public static Color operator +(Color a, Color b) => new Color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
 		public static Color operator -(Color a, Color b) => new Color(a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a);
 	}
@@ -298,6 +300,26 @@ namespace UnityEngine
 	public static class GUI
 	{
 		public static void Label(Rect r, string text) { }
+		public static bool enabled { get; set; }
+		public static GUISkin skin => new GUISkin();
+	}
+
+	public class GUISkin
+	{
+		public GUIStyle box => new GUIStyle();
+	}
+
+	public class GUIStyle { }
+
+	public static class GUILayout
+	{
+		public static void BeginArea(Rect r, GUIStyle style) { }
+		public static void EndArea() { }
+		public static void BeginHorizontal() { }
+		public static void EndHorizontal() { }
+		public static void Label(string text) { }
+		public static bool Button(string text) => false;
+		public static float HorizontalSlider(float value, float min, float max) => value;
 	}
 
 	public class HeaderAttribute : System.Attribute

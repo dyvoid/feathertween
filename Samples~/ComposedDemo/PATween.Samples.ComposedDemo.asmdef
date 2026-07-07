@@ -1,0 +1,16 @@
+{
+  "name": "PATween.Samples.ComposedDemo",
+  "rootNamespace": "PATween.Samples.ComposedDemo",
+  "references": [
+    "PATween"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -168,6 +168,60 @@ namespace PATween.Tests.Performance
 				$"Steady-state sequence ticking allocated {delta} bytes over 600 ticks; must be zero.");
 		}
 
+		// M1 acceptance benchmark (docs/planning/phases.md 1.14): 10k float tweens.
+		[Test]
+		public void Tick_SteadyState10kTweens_ZeroManagedAlloc()
+		{
+			SpawnManualTweens(10_000);
+			Warmup(120);
+
+			var before = GC.GetAllocatedBytesForCurrentThread();
+			for (var i = 0; i < 600; i++)
+			{
+				PATweenRunner.ManualTick(0.016);
+			}
+			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
+
+			Assert.That(delta, Is.Zero,
+				$"Steady-state ticking 10k tweens allocated {delta} bytes over 600 ticks; must be zero.");
+		}
+
+		// M1 acceptance benchmark (docs/planning/phases.md 1.14): 1k sequences x 10 children.
+		[Test]
+		public void Tick_SteadyState1kSequencesOf10_ZeroManagedAlloc()
+		{
+			Spawn10ChildSequences(1000);
+			Warmup(120);
+
+			var before = GC.GetAllocatedBytesForCurrentThread();
+			for (var i = 0; i < 600; i++)
+			{
+				PATweenRunner.ManualTick(0.016);
+			}
+			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
+
+			Assert.That(delta, Is.Zero,
+				$"Steady-state ticking 1k 10-child sequences allocated {delta} bytes over 600 ticks; must be zero.");
+		}
+
+		private static void Spawn10ChildSequences(int count)
+		{
+			for (var i = 0; i < count; i++)
+			{
+				var sb = global::PATween.PATween.Sequence()
+					.SetUpdate(UpdatePhase.Manual)
+					.SetAutoKill(false);
+				for (var c = 0; c < 5; c++)
+				{
+					// 5 appended + 5 joined = 10 children, half overlapping so
+					// several windows are active on any given tick.
+					sb.Append(global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f));
+					sb.Join(global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f));
+				}
+				sb.Start();
+			}
+		}
+
 		[Test, Performance]
 		public void Throughput_Tick1kTweens()
 		{
@@ -184,6 +238,18 @@ namespace PATween.Tests.Performance
 		public void Throughput_Tick10kTweens()
 		{
 			SpawnManualTweens(10_000);
+			Warmup(60);
+
+			Measure.Method(() => PATweenRunner.ManualTick(0.016))
+				.WarmupCount(20)
+				.MeasurementCount(100)
+				.Run();
+		}
+
+		[Test, Performance]
+		public void Throughput_Tick1kSequencesOf10()
+		{
+			Spawn10ChildSequences(1000);
 			Warmup(60);
 
 			Measure.Method(() => PATweenRunner.ManualTick(0.016))
