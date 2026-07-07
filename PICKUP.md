@@ -8,7 +8,7 @@ Last updated: 2026-07-07 (end of session)
 ## Current position
 
 - **Milestone**: M1 (Core), production cut. See `docs/implementation.md` §10.
-- **Done through**: Phase 1.12 (filters/bulk ops + storage surgery) implemented and green in the compile-check harness (173 tests); **1.10–1.12 need an in-Unity verification pass** (Editor + Runtime + Performance) before they count as done-done. Phase 1.9 and earlier verified in Unity 2026-07-03.
+- **Done through**: Phase 1.12 (filters/bulk ops + storage surgery) done-done. Compile-check harness green (173 tests); Editor + Runtime + Performance suites verified in Unity 2026-07-07.
 - **Remaining M1 phases** (renumbered 2026-07-02, production cut; M1 is now 14 linear phases): 1.9 (callbacks) → 1.10 (seek/control) → 1.11 (typed shortcuts) → 1.12 (filters/bulk ops) → 1.13 (safe mode) → 1.14 (acceptance, v0.1 tag). Fast paths, TweenSettings, and the cross-engine benchmark moved to M2.
 - **Next phase**: 1.13 — Safe mode and assertions (try/catch around setter and callback invocations, `SetSafeMode`, `SetCancelOnError`, off-thread assertion).
 - **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
@@ -30,12 +30,11 @@ Last updated: 2026-07-07 (end of session)
 
 ## In flight
 
-- Nothing half-built; 1.10–1.12 merged to `main`, harness-green, awaiting in-Unity verification.
+- Nothing half-built; 1.10–1.12 verified in Unity and merged to `main`. Ready to start 1.13.
 
 ## Next up
 
-1. Verify 1.10–1.12 in Unity (Editor + Runtime + Performance suites). Consumer project must resolve the new `com.unity.ugui` dependency.
-2. Begin Phase 1.13 — Safe mode and assertions: try/catch wrapper around setter and callback invocations, `SetSafeMode` per tween, `SetCancelOnError`, off-thread assertion, `PATWEEN_RELEASE` define. See `docs/implementation.md` §10 phase 1.13.
+1. Begin Phase 1.13 — Safe mode and assertions: try/catch wrapper around setter and callback invocations, `SetSafeMode` per tween, `SetCancelOnError`, off-thread assertion, `PATWEEN_RELEASE` define. See `docs/implementation.md` §10 phase 1.13.
 
 ## Infra (2026-07-02)
 
@@ -73,7 +72,7 @@ Remaining tracked debt:
 ## Test status
 
 - Compile-check harness: 173 tests green (2026-07-07, includes phases 1.10–1.12 + review fixes).
-- Unity (Editor + Runtime + Performance): last verified 2026-07-03 (through 1.9). 1.10–1.12 changes not yet run in Unity.
+- Unity (Editor + Runtime + Performance): verified 2026-07-07 through phase 1.12.
 
 ## Consumer setup reminders
 
