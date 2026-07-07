@@ -1,11 +1,8 @@
 # PATween
 
-<!-- Dynamic badges (CI status, package version, last commit, issues) do not
-     work on private repos: GitHub proxies README images anonymously, so the
-     Actions badge always reads "no status" and shields.io gets 404s.
-     Restore them if this repo ever goes public:
-     [![CI](https://github.com/dyvoid/patween/actions/workflows/ci.yml/badge.svg)](https://github.com/dyvoid/patween/actions/workflows/ci.yml)
--->
+[![CI](https://github.com/dyvoid/patween/actions/workflows/ci.yml/badge.svg)](https://github.com/dyvoid/patween/actions/workflows/ci.yml)
+[![GitHub last commit](https://img.shields.io/github/last-commit/dyvoid/patween)](https://github.com/dyvoid/patween/commits/main)
+[![GitHub issues](https://img.shields.io/github/issues/dyvoid/patween)](https://github.com/dyvoid/patween/issues)
 [![Unity](https://img.shields.io/badge/Unity-6000.3%2B-black?logo=unity)](https://unity.com)
 
 A robust, minimal C# tween engine for Unity. Compositional sequences, static-method API, struct handles, PlayerLoop runner.

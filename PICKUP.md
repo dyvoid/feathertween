@@ -18,6 +18,7 @@ Last updated: 2026-07-07 (sample static-import fix)
 - **Phases 1.1–1.12** merged to `main`: storage/handle scaffold, PlayerLoop runner, builder/handle split, generic tween core, ease system, From/FromTo, loops/delays/reverse, sequence builder, callbacks, seek/control, typed shortcuts, filters/bulk ops, storage surgery.
 - **Documentation pass (this session)**: reorganized docs into `design/`, `architecture/`, `api/`, `guides/`, and `planning/`; removed monolithic section numbering and production-cut reshuffle noise; split `implementation.md` and `reference.md` into focused files.
 - **Sample static-import fix**: removed `using static PATween.PATween;` from `Samples~/BasicUsage/PATweenDemo.cs` and `Samples~/SequenceDemo/PATweenSequenceDemo.cs`; calls are now `PATween.To(...)`, `PATween.Sequence(...)`, and `PATween.From(...)`. This fixes the `CS0119` collision with `UnityEngine.Color` that broke the compile-check CI. Added AGENTS.md invariant (#8) and `docs/guides/conventions.md` rule.
+- **README badges**: enabled CI status, last commit, and issues shields.
 - Earlier history: see git log.
 
 ## In flight
