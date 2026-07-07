@@ -75,6 +75,7 @@ namespace PATween.Tests
 		}
 
 		[Test]
+		[Category("RequiresSafeMode")] // the off-thread assert is compiled out under PATWEEN_RELEASE
 		public void OffThreadManualTick_Throws()
 		{
 			Exception caught = null;

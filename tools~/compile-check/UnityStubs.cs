@@ -54,6 +54,7 @@ namespace UnityEngine
 		public static void Log(object m) { }
 		public static void LogWarning(object m) { }
 		public static void LogError(object m) { }
+		public static void LogException(Exception e) { }
 	}
 
 	public static class Time
