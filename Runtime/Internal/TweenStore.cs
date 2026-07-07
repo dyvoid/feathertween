@@ -16,6 +16,19 @@ namespace PATween.Internal
 		private static List<int> activeFixed;
 		private static List<int> activeManual;
 
+		// Slot -> position in its phase's active list (-1 when not listed);
+		// makes RemoveFromActiveList an O(1) swap-remove.
+		private static int[] activeIndex;
+
+		// Target-indexed multimap for Kill(target)/IsTweening(target). Includes
+		// detached (sequence-child) slots so bulk kills reach nested tweens.
+		private static readonly Dictionary<object, List<int>> byTarget = new Dictionary<object, List<int>>();
+		private static readonly Stack<List<int>> targetListPool = new Stack<List<int>>(16);
+
+		// Freed records queue here and recycle at end of tick, so an in-flight
+		// step never sees its instance re-rented mid-walk.
+		private static readonly List<TweenData> pendingPoolReturns = new List<TweenData>(64);
+
 		private static int mainThreadId;
 		private static bool initialized;
 
@@ -45,6 +58,11 @@ namespace PATween.Internal
 			{
 				ClearAndBumpAll();
 			}
+
+			byTarget.Clear();
+			targetListPool.Clear();
+			pendingPoolReturns.Clear();
+			TweenDataPoolRegistry.ClearAll();
 
 			initialized = true;
 		}
@@ -96,6 +114,7 @@ namespace PATween.Internal
 			newData.SelfId = id;
 			data[id] = newData;
 			AddToActiveList(id, newData.Phase);
+			AddToTargetMap(id, newData.Target);
 		}
 
 		// Sequence children occupy store slots but are ticked by their parent,
@@ -109,6 +128,7 @@ namespace PATween.Internal
 			}
 			newData.SelfId = id;
 			data[id] = newData;
+			AddToTargetMap(id, newData.Target);
 		}
 
 		public static void Free(int id)
@@ -125,6 +145,7 @@ namespace PATween.Internal
 			if (freed != null)
 			{
 				RemoveFromActiveList(id, freed.Phase);
+				RemoveFromTargetMap(id, freed.Target);
 				data[id] = null;
 			}
 			generations[id] = unchecked(generations[id] + 1);
@@ -136,25 +157,93 @@ namespace PATween.Internal
 
 			// After bookkeeping so a cascade (sequence freeing children) sees a
 			// consistent store and cannot double-free this slot.
-			freed?.OnFree();
+			if (freed != null)
+			{
+				freed.OnFree();
+				pendingPoolReturns.Add(freed);
+			}
 		}
 
-		private static void AddToActiveList(int id, UpdatePhase phase)
+		// Recycles freed records into their per-type pools. Called by the runner
+		// at end of tick; safe to call any time no step is mid-flight.
+		public static void FlushPoolReturns()
 		{
-			GetActiveList(phase).Add(id);
+			for (var i = 0; i < pendingPoolReturns.Count; i++)
+			{
+				pendingPoolReturns[i].ReturnToPool();
+			}
+			pendingPoolReturns.Clear();
 		}
 
-		private static void RemoveFromActiveList(int id, UpdatePhase phase)
+		private static void AddToTargetMap(int id, object target)
 		{
-			var list = GetActiveList(phase);
+			if (target == null)
+			{
+				return;
+			}
+			if (!byTarget.TryGetValue(target, out var list))
+			{
+				list = targetListPool.Count > 0 ? targetListPool.Pop() : new List<int>(4);
+				byTarget.Add(target, list);
+			}
+			list.Add(id);
+		}
+
+		private static void RemoveFromTargetMap(int id, object target)
+		{
+			if (target == null || !byTarget.TryGetValue(target, out var list))
+			{
+				return;
+			}
 			for (var i = list.Count - 1; i >= 0; i--)
 			{
 				if (list[i] == id)
 				{
-					list.RemoveAt(i);
-					return;
+					list[i] = list[list.Count - 1];
+					list.RemoveAt(list.Count - 1);
+					break;
 				}
 			}
+			if (list.Count == 0)
+			{
+				byTarget.Remove(target);
+				targetListPool.Push(list);
+			}
+		}
+
+		public static bool TryGetByTarget(object target, out List<int> ids)
+		{
+			if (target == null)
+			{
+				ids = null;
+				return false;
+			}
+			return byTarget.TryGetValue(target, out ids);
+		}
+
+		private static void AddToActiveList(int id, UpdatePhase phase)
+		{
+			var list = GetActiveList(phase);
+			activeIndex[id] = list.Count;
+			list.Add(id);
+		}
+
+		// O(1) swap-remove; the runner ticks a snapshot, so in-list order is
+		// not load-bearing.
+		private static void RemoveFromActiveList(int id, UpdatePhase phase)
+		{
+			var idx = activeIndex[id];
+			if (idx < 0)
+			{
+				return;
+			}
+			var list = GetActiveList(phase);
+			var lastPos = list.Count - 1;
+			var lastId = list[lastPos];
+			list[idx] = lastId;
+			activeIndex[lastId] = idx;
+			list.RemoveAt(lastPos);
+			activeIndex[id] = -1;
 		}
 
 		private static List<int> GetActiveList(UpdatePhase phase)
@@ -234,6 +323,7 @@ namespace PATween.Internal
 		{
 			data = new TweenData[capacity];
 			generations = new uint[capacity];
+			activeIndex = new int[capacity];
 			freeList = new Stack<int>(capacity);
 			activeUpdate = new List<int>();
 			activeLate = new List<int>();
@@ -243,6 +333,7 @@ namespace PATween.Internal
 			for (var i = 0; i < capacity; i++)
 			{
 				generations[i] = 1;
+				activeIndex[i] = -1;
 			}
 			for (var i = capacity - 1; i >= 0; i--)
 			{
@@ -261,6 +352,7 @@ namespace PATween.Internal
 			for (var i = 0; i < data.Length; i++)
 			{
 				data[i] = null;
+				activeIndex[i] = -1;
 				generations[i] = unchecked(generations[i] + 1);
 				if (generations[i] == 0)
 				{
@@ -278,9 +370,11 @@ namespace PATween.Internal
 			var oldCapacity = data.Length;
 			System.Array.Resize(ref data, newCapacity);
 			System.Array.Resize(ref generations, newCapacity);
+			System.Array.Resize(ref activeIndex, newCapacity);
 			for (var i = oldCapacity; i < newCapacity; i++)
 			{
 				generations[i] = 1;
+				activeIndex[i] = -1;
 			}
 			for (var i = newCapacity - 1; i >= oldCapacity; i--)
 			{

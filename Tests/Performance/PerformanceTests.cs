@@ -45,6 +45,40 @@ namespace PATween.Tests.Performance
 		}
 
 		[Test]
+		public void Create_AfterWarmup_ZeroManagedAlloc()
+		{
+			// §8.1: creation is 1 pooled TweenData<T> + 1 delegate pair. With
+			// cached static delegates the whole create/kill cycle must be
+			// alloc-free once pools are warm (records, builder buffers, lists).
+			const int batch = 256;
+			for (var round = 0; round < 3; round++)
+			{
+				SpawnKillBatch(batch);
+			}
+
+			var before = GC.GetAllocatedBytesForCurrentThread();
+			SpawnKillBatch(batch);
+			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
+
+			Assert.That(delta, Is.Zero,
+				$"Create/kill cycle allocated {delta} bytes after warmup; TweenData pooling must make Start() alloc-free.");
+		}
+
+		private static void SpawnKillBatch(int count)
+		{
+			for (var i = 0; i < count; i++)
+			{
+				global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f)
+					.SetUpdate(UpdatePhase.Manual)
+					.SetAutoKill(false)
+					.Start();
+			}
+			PATweenRunner.ManualTick(0.016);
+			global::PATween.PATween.KillAll();
+			PATweenRunner.ManualTick(0.016); // drain pool returns
+		}
+
+		[Test]
 		public void Tick_SteadyState1kTweens_ZeroManagedAlloc()
 		{
 			SpawnManualTweens(1000);

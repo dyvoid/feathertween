@@ -380,45 +380,41 @@ namespace PATween.Internal
 			return data;
 		}
 
+		// Direct loops, no method-group arguments: converting data.AddOnX to a
+		// delegate allocates even when the list is null (§8.1).
 		private void TransferCallbacks(TweenData data)
 		{
-			Transfer(onStart, data.AddOnStart);
-			Transfer(onPlay, data.AddOnPlay);
-			Transfer(onPause, data.AddOnPause);
-			Transfer(onStepComplete, data.AddOnStepComplete);
+			if (onStart != null)
+			{
+				for (var i = 0; i < onStart.Count; i++) data.AddOnStart(onStart[i].Plain);
+			}
+			if (onPlay != null)
+			{
+				for (var i = 0; i < onPlay.Count; i++) data.AddOnPlay(onPlay[i].Plain);
+			}
+			if (onPause != null)
+			{
+				for (var i = 0; i < onPause.Count; i++) data.AddOnPause(onPause[i].Plain);
+			}
+			if (onStepComplete != null)
+			{
+				for (var i = 0; i < onStepComplete.Count; i++) data.AddOnStepComplete(onStepComplete[i].Plain);
+			}
 			if (onComplete != null)
 			{
-				for (var i = 0; i < onComplete.Count; i++)
-				{
-					data.AddOnComplete(onComplete[i]);
-				}
+				for (var i = 0; i < onComplete.Count; i++) data.AddOnComplete(onComplete[i]);
 			}
 			if (onKill != null)
 			{
-				for (var i = 0; i < onKill.Count; i++)
-				{
-					data.AddOnKill(onKill[i]);
-				}
+				for (var i = 0; i < onKill.Count; i++) data.AddOnKill(onKill[i]);
 			}
-			Transfer(onRewind, data.AddOnRewind);
+			if (onRewind != null)
+			{
+				for (var i = 0; i < onRewind.Count; i++) data.AddOnRewind(onRewind[i].Plain);
+			}
 			if (onUpdate != null)
 			{
-				for (var i = 0; i < onUpdate.Count; i++)
-				{
-					data.AddOnUpdate(onUpdate[i]);
-				}
-			}
-		}
-
-		private static void Transfer(List<CallbackEntry> list, Action<Action> plainAdd)
-		{
-			if (list == null)
-			{
-				return;
-			}
-			for (var i = 0; i < list.Count; i++)
-			{
-				plainAdd(list[i].Plain);
+				for (var i = 0; i < onUpdate.Count; i++) data.AddOnUpdate(onUpdate[i]);
 			}
 		}
 

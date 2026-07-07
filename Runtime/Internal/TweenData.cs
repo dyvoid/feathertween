@@ -72,6 +72,11 @@ namespace PATween.Internal
 		// to cascade-free their child slots.
 		public virtual void OnFree() { }
 
+		// Recycles the record into its per-type pool (deferred to end of tick by
+		// TweenStore). SequenceData is not pooled: its entry array is unique per
+		// build, so recycling would only save the small header object.
+		public virtual void ReturnToPool() { }
+
 		public TweenStatus Status
 		{
 			get => status;

@@ -522,6 +522,11 @@ namespace PATween.Internal
 			}
 		}
 
+		public override void ReturnToPool()
+		{
+			TweenDataPool<T>.Return(this);
+		}
+
 		public override void Reset()
 		{
 			base.Reset();

@@ -190,6 +190,9 @@ namespace PATween.Internal
 			{
 				// Drains callbacks' deferred Kill/Complete/Restart/Reverse commands.
 				TweenCommandQueue.EndTick();
+				// Recycle freed records only after the drain: deferred commands may
+				// free more tweens, and nothing is mid-step anymore.
+				TweenStore.FlushPoolReturns();
 			}
 		}
 

@@ -2,11 +2,11 @@
 
 ### 8.1 Allocation budget
 
-- Tween creation: 1 `TweenData<T>` from pool (no alloc after warmup) + 1 delegate pair (getter, setter) for generic form. Typed shortcuts may amortize delegates via cached statics where possible. *Status (2026-07-07)*: builder buffers are pooled but `Build()` still does `new TweenData<T>()` per `Start()`; data-record pooling lands with the storage work in phase 1.12. Until then the zero-alloc guarantee covers the tick loop and callback dispatch, not creation.
+- Tween creation: 1 `TweenData<T>` from pool (no alloc after warmup) + 1 delegate pair (getter, setter) for generic form. Typed shortcuts may amortize delegates via cached statics where possible. *Status (2026-07-07)*: implemented in phase 1.12 — records recycle through per-type `TweenDataPool<T>` (returns deferred to end of tick so no instance is re-rented mid-step), and a create/kill cycle with cached delegates is asserted zero-alloc after warmup. `SequenceData` is not pooled (its entry array is unique per build).
 - Per-frame step: 0 managed alloc.
 - Callback dispatch: 0 alloc; single delegates, not delegate lists, not params arrays.
 - Awaiter: `TweenAwaiter` struct is alloc-free on the await side. The continuation registration allocates one delegate per await (standard C# state machine behavior). No `TaskCompletionSource`.
-- `Kill(target)` is a linear scan of the active list; O(n) per call. Replaced by the target-indexed multimap in phase 1.12 (filters and bulk ops).
+- `Kill(target)` resolves through the target-indexed multimap (phase 1.12): O(k) in the target's own tween count. `Free()` is an O(1) swap-remove from its active list via a slot→index map.
 
 ### 8.2 SoA-readiness
 
