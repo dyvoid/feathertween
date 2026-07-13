@@ -1,14 +1,14 @@
 # API Guide
 
-This section documents the public PATween API. If you are new to the library, start with the quickstart below, then jump to the topic that matches what you are building.
+This section documents the public FeatherTween API. If you are new to the library, start with the quickstart below, then jump to the topic that matches what you are building.
 
 ## Quickstart
 
 ```csharp
-using PATween;
+using Dyvoid.FeatherTween;
 
 // A one-shot tween
-Tween t = PATween.To(
+Tween t = FT.To(
     () => transform.position.x,
     v  => transform.position = transform.position with { x = v },
     endValue: 10f,
@@ -20,20 +20,20 @@ Tween t = PATween.To(
 .Start();
 
 // Or use a typed shortcut
-PATween.Move(transform, new Vector3(2, 3, 4), 1f)
+FT.Move(transform, new Vector3(2, 3, 4), 1f)
     .SetEase(Easing.OutBack(1.5f))
     .Start();
 
 // A sequence
-Sequence seq = PATween.Sequence()
-    .Append(PATween.Move(transform, new Vector3(0, 5, 0), 0.5f))
+Sequence seq = FT.Sequence()
+    .Append(FT.Move(transform, new Vector3(0, 5, 0), 0.5f))
     .AppendInterval(0.25f)
     .AppendCallback(() => Debug.Log("midpoint"))
-    .Append(PATween.Scale(transform, Vector3.one * 2f, 0.5f))
+    .Append(FT.Scale(transform, Vector3.one * 2f, 0.5f))
     .Start();
 
 // Await a tween
-await PATween.Fade(canvasGroup, 0f, 0.5f);
+await FT.Fade(canvasGroup, 0f, 0.5f);
 ```
 
 ## API map
@@ -52,7 +52,7 @@ await PATween.Fade(canvasGroup, 0f, 0.5f);
 
 ## Namespaces
 
-- `PATween` — public API
-- `PATween.Internal` — runtime internals (not intended for direct use)
-- `PATween.Editor` — inspectors and editor tools
-- `PATween.UniTask` — optional UniTask integration (separate asmdef)
+- `FeatherTween` — public API
+- `Dyvoid.FeatherTween.Internal` — runtime internals (not intended for direct use)
+- `Dyvoid.FeatherTween.Editor` — inspectors and editor tools
+- `FeatherTween.UniTask` — optional UniTask integration (separate asmdef)

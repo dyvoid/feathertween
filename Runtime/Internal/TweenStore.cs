@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
-namespace PATween.Internal
+namespace Dyvoid.FeatherTween.Internal
 {
 	internal static class TweenStore
 	{
@@ -100,7 +100,7 @@ namespace PATween.Internal
 			{
 				Grow(data.Length * 2);
 #if UNITY_EDITOR
-				Debug.LogWarning($"[PATween] TweenStore grew to {data.Length}. Consider PATween.SetCapacity to pre-size.");
+				Debug.LogWarning($"[FeatherTween] TweenStore grew to {data.Length}. Consider FT.SetCapacity to pre-size.");
 #endif
 			}
 
@@ -400,14 +400,14 @@ namespace PATween.Internal
 		}
 
 		// Off-thread guard, part of the safe-mode debug layer: compiled out
-		// under PATWEEN_RELEASE along with the try/catch wrappers.
+		// under FEATHERTWEEN_RELEASE along with the try/catch wrappers.
 		private static void AssertMainThread()
 		{
-#if !PATWEEN_RELEASE
+#if !FEATHERTWEEN_RELEASE
 			if (Thread.CurrentThread.ManagedThreadId != mainThreadId)
 			{
 				throw new System.InvalidOperationException(
-					"[PATween] TweenStore must be accessed from the main thread.");
+					"[FeatherTween] TweenStore must be accessed from the main thread.");
 			}
 #endif
 		}

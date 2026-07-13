@@ -1,4 +1,4 @@
-namespace PATween
+namespace Dyvoid.FeatherTween
 {
 	public enum UpdatePhase
 	{

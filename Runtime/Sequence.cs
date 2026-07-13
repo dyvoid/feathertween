@@ -1,7 +1,7 @@
 using System;
-using PATween.Internal;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween
+namespace Dyvoid.FeatherTween
 {
 	public readonly struct Sequence : IEquatable<Sequence>
 	{
@@ -78,14 +78,14 @@ namespace PATween
 			var data = TweenStore.Get(id, generation) as SequenceData;
 			if (data == null)
 			{
-				throw new InvalidOperationException("[PATween] Insert on a dead or invalid sequence.");
+				throw new InvalidOperationException("[FeatherTween] Insert on a dead or invalid sequence.");
 			}
 
 			var childBuffer = tween.Buffer;
 			if (childBuffer == null || childBuffer.Released || childBuffer.Generation != tween.Generation)
 			{
 				throw new InvalidOperationException(
-					"[PATween] Child builder was already consumed (started or appended elsewhere).");
+					"[FeatherTween] Child builder was already consumed (started or appended elsewhere).");
 			}
 
 			if (!childBuffer.PhaseExplicit)
@@ -97,7 +97,7 @@ namespace PATween
 				var childPhase = childBuffer.Phase;
 				TweenBuilderBufferPool<T>.Return(childBuffer);
 				throw new ArgumentException(
-					$"[PATween] Child update phase {childPhase} does not match sequence phase {data.Phase}.");
+					$"[FeatherTween] Child update phase {childPhase} does not match sequence phase {data.Phase}.");
 			}
 
 			var childData = childBuffer.Build();

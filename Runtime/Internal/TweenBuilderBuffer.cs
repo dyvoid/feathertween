@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PATween.Internal
+namespace Dyvoid.FeatherTween.Internal
 {
 	internal sealed class TweenBuilderBuffer<T>
 	{

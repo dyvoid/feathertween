@@ -1,8 +1,8 @@
 {
-  "name": "PATween.Tests.Performance",
-  "rootNamespace": "PATween.Tests.Performance",
+  "name": "FeatherTween.Tests.Performance",
+  "rootNamespace": "Dyvoid.FeatherTween.Tests.Performance",
   "references": [
-    "PATween",
+    "FeatherTween",
     "UnityEngine.TestRunner",
     "UnityEditor.TestRunner",
     "Unity.PerformanceTesting"

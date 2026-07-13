@@ -5,8 +5,8 @@
 Both `TweenBuilder<T>` and `Tween` expose `GetAwaiter()` returning a `TweenAwaiter` struct (implements `INotifyCompletion`). The builder's awaiter calls `.Start()` internally before returning the handle's awaiter.
 
 ```csharp
-await PATween.Move(transform, p, 1f);                  // builder.GetAwaiter() starts implicitly
-Tween t = PATween.Move(transform, p, 1f).Start();
+await FT.Move(transform, p, 1f);                  // builder.GetAwaiter() starts implicitly
+Tween t = FT.Move(transform, p, 1f).Start();
 await t;                                                // await an already-running handle
 ```
 
@@ -16,7 +16,7 @@ Allocation: the `TweenAwaiter` struct is alloc-free on the await side. Registeri
 
 ## UniTask integration
 
-A separate asmdef `PATween.UniTask` with `PATWEEN_UNITASK` define adds cancellation-aware await semantics.
+A separate asmdef `FeatherTween.UniTask` with `FEATHERTWEEN_UNITASK` define adds cancellation-aware await semantics.
 
 ```csharp
 public static UniTask ToUniTask(this Tween t,
@@ -69,7 +69,7 @@ Usage:
 ```csharp
 [SerializeField] TweenSettings<float> windowAnim;
 public void SetOpen(bool open) =>
-    PATween.AnchoredPosY(rect, windowAnim.WithDirection(toEndValue: open)).Start();
+    FT.AnchoredPosY(rect, windowAnim.WithDirection(toEndValue: open)).Start();
 ```
 
 The custom drawer collapses common fields into a single line with a foldout for advanced options. The AnimationCurve field is hidden unless `ease == Curve`. No reflection at runtime.

@@ -1,4 +1,4 @@
-# Git Strategy for PATween
+# Git Strategy for FeatherTween
 
 ## Core Approach: Trunk-Based Development
 

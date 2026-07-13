@@ -1,10 +1,10 @@
 using System;
 using NUnit.Framework;
 using Unity.PerformanceTesting;
-using PATween;
-using PATween.Internal;
+using Dyvoid.FeatherTween;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween.Tests.Performance
+namespace Dyvoid.FeatherTween.Tests.Performance
 {
 	// Two distinct concerns live here:
 	//   1. Allocation guards   -> hard pass/fail. Steady-state ticking must not allocate managed memory.
@@ -19,16 +19,16 @@ namespace PATween.Tests.Performance
 		public void SetUp()
 		{
 			TweenStore.Reset();
-			PATweenRunner.Reset();
+			FeatherTweenRunner.Reset();
 			Interpolators.Reset();
-			global::PATween.PATween.SetCapacity(200_000, 0);
+			global::Dyvoid.FeatherTween.FT.SetCapacity(200_000, 0);
 		}
 
 		private static void SpawnManualTweens(int count)
 		{
 			for (var i = 0; i < count; i++)
 			{
-				global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f)
+				global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f)
 					.SetUpdate(UpdatePhase.Manual)
 					.SetAutoKill(false)
 					.Start();
@@ -40,7 +40,7 @@ namespace PATween.Tests.Performance
 		{
 			for (var i = 0; i < ticks; i++)
 			{
-				PATweenRunner.ManualTick(0.016);
+				FeatherTweenRunner.ManualTick(0.016);
 			}
 		}
 
@@ -68,14 +68,14 @@ namespace PATween.Tests.Performance
 		{
 			for (var i = 0; i < count; i++)
 			{
-				global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f)
+				global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f)
 					.SetUpdate(UpdatePhase.Manual)
 					.SetAutoKill(false)
 					.Start();
 			}
-			PATweenRunner.ManualTick(0.016);
-			global::PATween.PATween.KillAll();
-			PATweenRunner.ManualTick(0.016); // drain pool returns
+			FeatherTweenRunner.ManualTick(0.016);
+			global::Dyvoid.FeatherTween.FT.KillAll();
+			FeatherTweenRunner.ManualTick(0.016); // drain pool returns
 		}
 
 		[Test]
@@ -87,7 +87,7 @@ namespace PATween.Tests.Performance
 			var before = GC.GetAllocatedBytesForCurrentThread();
 			for (var i = 0; i < 600; i++)
 			{
-				PATweenRunner.ManualTick(0.016);
+				FeatherTweenRunner.ManualTick(0.016);
 			}
 			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
 
@@ -108,7 +108,7 @@ namespace PATween.Tests.Performance
 			var before = GC.GetAllocatedBytesForCurrentThread();
 			for (var i = 0; i < 300; i++)
 			{
-				PATweenRunner.ManualTick(0.016);
+				FeatherTweenRunner.ManualTick(0.016);
 			}
 			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
 
@@ -122,7 +122,7 @@ namespace PATween.Tests.Performance
 			var sink = 0f;
 			for (var i = 0; i < 100; i++)
 			{
-				global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 1f)
+				global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 1f)
 					.SetUpdate(UpdatePhase.Manual)
 					.SetLoops(-1, LoopType.Restart)
 					.OnUpdate(t => sink = t)
@@ -134,7 +134,7 @@ namespace PATween.Tests.Performance
 			var before = GC.GetAllocatedBytesForCurrentThread();
 			for (var i = 0; i < 600; i++)
 			{
-				PATweenRunner.ManualTick(0.016);
+				FeatherTweenRunner.ManualTick(0.016);
 			}
 			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
 
@@ -147,12 +147,12 @@ namespace PATween.Tests.Performance
 		{
 			for (var i = 0; i < 100; i++)
 			{
-				var sb = global::PATween.PATween.Sequence()
+				var sb = global::Dyvoid.FeatherTween.FT.Sequence()
 					.SetUpdate(UpdatePhase.Manual)
 					.SetAutoKill(false);
-				sb.Append(global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f));
-				sb.Join(global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f));
-				sb.Append(global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f));
+				sb.Append(global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f));
+				sb.Join(global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f));
+				sb.Append(global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f));
 				sb.Start();
 			}
 			Warmup(120);
@@ -160,7 +160,7 @@ namespace PATween.Tests.Performance
 			var before = GC.GetAllocatedBytesForCurrentThread();
 			for (var i = 0; i < 600; i++)
 			{
-				PATweenRunner.ManualTick(0.016);
+				FeatherTweenRunner.ManualTick(0.016);
 			}
 			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
 
@@ -178,7 +178,7 @@ namespace PATween.Tests.Performance
 			var before = GC.GetAllocatedBytesForCurrentThread();
 			for (var i = 0; i < 600; i++)
 			{
-				PATweenRunner.ManualTick(0.016);
+				FeatherTweenRunner.ManualTick(0.016);
 			}
 			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
 
@@ -196,7 +196,7 @@ namespace PATween.Tests.Performance
 			var before = GC.GetAllocatedBytesForCurrentThread();
 			for (var i = 0; i < 600; i++)
 			{
-				PATweenRunner.ManualTick(0.016);
+				FeatherTweenRunner.ManualTick(0.016);
 			}
 			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
 
@@ -208,15 +208,15 @@ namespace PATween.Tests.Performance
 		{
 			for (var i = 0; i < count; i++)
 			{
-				var sb = global::PATween.PATween.Sequence()
+				var sb = global::Dyvoid.FeatherTween.FT.Sequence()
 					.SetUpdate(UpdatePhase.Manual)
 					.SetAutoKill(false);
 				for (var c = 0; c < 5; c++)
 				{
 					// 5 appended + 5 joined = 10 children, half overlapping so
 					// several windows are active on any given tick.
-					sb.Append(global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f));
-					sb.Join(global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f));
+					sb.Append(global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f));
+					sb.Join(global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f));
 				}
 				sb.Start();
 			}
@@ -228,7 +228,7 @@ namespace PATween.Tests.Performance
 			SpawnManualTweens(1000);
 			Warmup(60);
 
-			Measure.Method(() => PATweenRunner.ManualTick(0.016))
+			Measure.Method(() => FeatherTweenRunner.ManualTick(0.016))
 				.WarmupCount(20)
 				.MeasurementCount(100)
 				.Run();
@@ -240,7 +240,7 @@ namespace PATween.Tests.Performance
 			SpawnManualTweens(10_000);
 			Warmup(60);
 
-			Measure.Method(() => PATweenRunner.ManualTick(0.016))
+			Measure.Method(() => FeatherTweenRunner.ManualTick(0.016))
 				.WarmupCount(20)
 				.MeasurementCount(100)
 				.Run();
@@ -252,7 +252,7 @@ namespace PATween.Tests.Performance
 			Spawn10ChildSequences(1000);
 			Warmup(60);
 
-			Measure.Method(() => PATweenRunner.ManualTick(0.016))
+			Measure.Method(() => FeatherTweenRunner.ManualTick(0.016))
 				.WarmupCount(20)
 				.MeasurementCount(100)
 				.Run();
@@ -265,7 +265,7 @@ namespace PATween.Tests.Performance
 
 			Measure.Method(() =>
 				{
-					global::PATween.PATween.To(zeroGetter, noopSetter, 1f, 100_000f)
+					global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f)
 						.SetUpdate(UpdatePhase.Manual)
 						.SetAutoKill(false)
 						.Start();

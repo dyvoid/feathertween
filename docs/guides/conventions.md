@@ -1,6 +1,6 @@
 # Code Conventions
 
-Canonical C# style for PATween. AI agents additionally apply the project's Unity dev skill, which encodes the same rules in more detail; this document is the human-facing source of truth.
+Canonical C# style for FT. AI agents additionally apply the project's Unity dev skill, which encodes the same rules in more detail; this document is the human-facing source of truth.
 
 ## Formatting
 
@@ -20,9 +20,9 @@ Canonical C# style for PATween. AI agents additionally apply the project's Unity
 
 ## Static API usage in samples and docs
 
-The public entry point is the static class `PATween.PATween`. Call it as `PATween.To(...)`, `PATween.Sequence(...)`, `PATween.Move(...)`, etc.
+The public entry point is the static class `FT`. Call it as `FT.To(...)`, `FT.Sequence(...)`, `FT.Move(...)`, etc.
 
-Do **not** use `using static PATween.PATween;` in samples, documentation, or any PATween-authored code. It dumps every static method into scope and shadows common Unity types (`Color`, `Image`, `Text`, etc.) and .NET primitive types, producing cryptic `CS0119` compiler errors.
+Do **not** use `using static Dyvoid.FeatherTween.FT;` in samples, documentation, or any FeatherTween-authored code. It dumps every static method into scope and shadows common Unity types (`Color`, `Image`, `Text`, etc.) and .NET primitive types, producing cryptic `CS0119` compiler errors.
 
 ## Access and fields
 

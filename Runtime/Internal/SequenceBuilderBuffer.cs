@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PATween.Internal
+namespace Dyvoid.FeatherTween.Internal
 {
 	internal sealed class SequenceBuilderBuffer
 	{
@@ -361,7 +361,7 @@ namespace PATween.Internal
 				if (!labels.TryGetValue(pending.Label, out var labelTime))
 				{
 					throw new InvalidOperationException(
-						$"[PATween] Sequence label '{pending.Label}' is undefined at Start().");
+						$"[FeatherTween] Sequence label '{pending.Label}' is undefined at Start().");
 				}
 				var e = entries[pending.EntryIndex];
 				e.Start = labelTime + pending.Offset;
@@ -369,7 +369,7 @@ namespace PATween.Internal
 				{
 					throw new ArgumentOutOfRangeException(
 						nameof(pending.Offset),
-						$"[PATween] Label '{pending.Label}' with offset resolves to a negative time.");
+						$"[FeatherTween] Label '{pending.Label}' with offset resolves to a negative time.");
 				}
 				entries[pending.EntryIndex] = e;
 				TrackAdded(e.Start, e.Infinite ? e.Start : e.End);

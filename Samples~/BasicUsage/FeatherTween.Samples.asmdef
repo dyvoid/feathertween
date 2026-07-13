@@ -1,8 +1,8 @@
 {
-  "name": "PATween.Samples",
-  "rootNamespace": "PATween.Samples",
+  "name": "FeatherTween.Samples",
+  "rootNamespace": "Dyvoid.FeatherTween.Samples",
   "references": [
-    "PATween"
+    "FeatherTween"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

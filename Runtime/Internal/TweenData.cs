@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PATween.Internal
+namespace Dyvoid.FeatherTween.Internal
 {
 	internal class TweenData
 	{
@@ -116,7 +116,7 @@ namespace PATween.Internal
 		public bool IsUnityObject => isUnityObject;
 
 		// Per-tween try/catch around setter and callback invocations. Compiled
-		// out entirely under PATWEEN_RELEASE (docs/architecture/overview.md).
+		// out entirely under FEATHERTWEEN_RELEASE (docs/architecture/overview.md).
 		public bool SafeMode
 		{
 			get => safeMode;
@@ -185,7 +185,7 @@ namespace PATween.Internal
 			{
 				for (var i = 0; i < onUpdate.Count; i++)
 				{
-#if !PATWEEN_RELEASE
+#if !FEATHERTWEEN_RELEASE
 					if (safeMode)
 					{
 						try
@@ -243,7 +243,7 @@ namespace PATween.Internal
 			{
 				for (var i = 0; i < list.Count; i++)
 				{
-#if !PATWEEN_RELEASE
+#if !FEATHERTWEEN_RELEASE
 					if (safeMode)
 					{
 						try
@@ -266,7 +266,7 @@ namespace PATween.Internal
 			}
 		}
 
-#if !PATWEEN_RELEASE
+#if !FEATHERTWEEN_RELEASE
 		// Safe-mode setter exception: the value write failed mid-step, so the
 		// animation contract is broken — kill the tween. CancelOnError kills
 		// silently and fires OnKill; without it, log and dispose without OnKill

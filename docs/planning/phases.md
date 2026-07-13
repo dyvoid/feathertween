@@ -8,7 +8,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 ### Phase 1.1 — Storage and handle scaffold (no animation)
 
-**Deliverable**: `TweenStore` skeleton (pooled `TweenData` slots, generation ids, free list, per-phase active lists). `Tween` and `Sequence` struct handles with generation check. `TweenStatus` enum. `TweenStore.Reset()` for Fast Enter Play Mode and `[InitializeOnLoad]`. `PATween.SetCapacity(int tweens, int sequences)`. Internal-only `Allocate` / `Free` test seams. Pool exhaustion behavior: grow by doubling, emit `Debug.LogWarning` in Editor. **No PlayerLoop, no interpolation, no builder.**
+**Deliverable**: `TweenStore` skeleton (pooled `TweenData` slots, generation ids, free list, per-phase active lists). `Tween` and `Sequence` struct handles with generation check. `TweenStatus` enum. `TweenStore.Reset()` for Fast Enter Play Mode and `[InitializeOnLoad]`. `FT.SetCapacity(int tweens, int sequences)`. Internal-only `Allocate` / `Free` test seams. Pool exhaustion behavior: grow by doubling, emit `Debug.LogWarning` in Editor. **No PlayerLoop, no interpolation, no builder.**
 
 **Tests**:
 
@@ -23,7 +23,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 ### Phase 1.2 — PlayerLoop runner and root scheduler
 
-**Deliverable**: PlayerLoop injection for `Update` / `LateUpdate` / `FixedUpdate`. `Manual` phase via `PATweenRunner.ManualTick(dt)`. Editor mirror via `EditorApplication.update`. Hidden root sequence per phase advances `_localTime` (`double` accumulator). Time sources per design anchors / runner docs. Main-thread assertion. Reset on Fast Enter Play Mode + assembly reload.
+**Deliverable**: PlayerLoop injection for `Update` / `LateUpdate` / `FixedUpdate`. `Manual` phase via `FeatherTweenRunner.ManualTick(dt)`. Editor mirror via `EditorApplication.update`. Hidden root sequence per phase advances `_localTime` (`double` accumulator). Time sources per design anchors / runner docs. Main-thread assertion. Reset on Fast Enter Play Mode + assembly reload.
 
 **Tests**:
 
@@ -51,7 +51,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 ### Phase 1.4 — Generic tween core (lambda, linear ease)
 
-**Deliverable**: `PATween.To<T>(getter, setter, end, duration)` for `float`. `IInterpolator<T>` registry; built-ins for `float`, `Vector2/3/4`, `Color`, `Quaternion`, `int`. Update step: dt → t → setter (linear ease only). `_isUnityObject` cached flag + auto-kill scan. `SetTarget`, `SetUpdate`, `SetAutoKill`, `SetRelative`, `ignoreTimeScale`.
+**Deliverable**: `FT.To<T>(getter, setter, end, duration)` for `float`. `IInterpolator<T>` registry; built-ins for `float`, `Vector2/3/4`, `Color`, `Quaternion`, `int`. Update step: dt → t → setter (linear ease only). `_isUnityObject` cached flag + auto-kill scan. `SetTarget`, `SetUpdate`, `SetAutoKill`, `SetRelative`, `ignoreTimeScale`.
 
 **Tests**:
 
@@ -131,7 +131,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 ### Phase 1.10 — Seek and remaining control surface
 
-**Deliverable**: `Tween.Seek` / `Sequence.Seek`; `SequenceBuilder.SetLoops`; `Sequence.Reverse`; `Sequence.TotalProgress`; mid-play `Sequence.Insert`; per-tween `SetTimeScale` + `PATween.SetGlobalTimeScale` + per-phase `PATween.SetTimeScale`.
+**Deliverable**: `Tween.Seek` / `Sequence.Seek`; `SequenceBuilder.SetLoops`; `Sequence.Reverse`; `Sequence.TotalProgress`; mid-play `Sequence.Insert`; per-tween `SetTimeScale` + `FT.SetGlobalTimeScale` + per-phase `FT.SetTimeScale`.
 
 **Tests**:
 
@@ -144,7 +144,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 ### Phase 1.11 — Typed shortcuts (lambda)
 
-**Deliverable**: `PATween.Move/LocalMove/Scale/Rotate/LocalRotate` (Transform, Euler + Quaternion overloads), `Fade` (CanvasGroup), `Color`/`Fade`/`FillAmount` (Image) — all lambda-core builders with auto-set target.
+**Deliverable**: `FT.Move/LocalMove/Scale/Rotate/LocalRotate` (Transform, Euler + Quaternion overloads), `Fade` (CanvasGroup), `Color`/`Fade`/`FillAmount` (Image) — all lambda-core builders with auto-set target.
 
 **Tests**:
 
@@ -175,7 +175,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 - Setter that throws kills the tween and fires `OnKill` (with `SetCancelOnError(true)`)
 - Off-thread `.Start()` asserts in safe mode
-- Release build (`PATWEEN_RELEASE` define) skips the wrapper; verified with IL inspection or an alloc benchmark
+- Release build (`FEATHERTWEEN_RELEASE` define) skips the wrapper; verified with IL inspection or an alloc benchmark
 
 **Exit**: safe mode and assertion path verified.
 
@@ -205,15 +205,15 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 ### Hand-written zero-alloc fast paths
 
-**Deliverable**: override `Move` / `LocalMove` / `Scale` / `Fade` / `Color` to bypass the lambda core; each emits a static `IInterpolator<T>` instance and a no-closure setter dispatched through a typed-shortcut handle. Generic `PATween.To` keeps the lambda pair until M5.
+**Deliverable**: override `Move` / `LocalMove` / `Scale` / `Fade` / `Color` to bypass the lambda core; each emits a static `IInterpolator<T>` instance and a no-closure setter dispatched through a typed-shortcut handle. Generic `FT.To` keeps the lambda pair until M5.
 
-**Tests**: 10k `PATween.Move` tweens for 60s: 0 per-frame **and** 0 per-Start managed alloc. Behavior identical to the 1.11 lambda baseline (golden-trace test). Hand-written and lambda paths can coexist in the same sequence.
+**Tests**: 10k `FT.Move` tweens for 60s: 0 per-frame **and** 0 per-Start managed alloc. Behavior identical to the 1.11 lambda baseline (golden-trace test). Hand-written and lambda paths can coexist in the same sequence.
 
 ### TweenSettings serialization
 
 **Deliverable**: `[Serializable] TweenSettings` and `TweenSettings<T>`. `WithDirection`. PropertyDrawer with foldout; AnimationCurve hidden unless `ease == Curve`.
 
-**Tests**: round-trip serialize/deserialize; `WithDirection(true)` swaps start/end; PropertyDrawer renders the documented one-line + foldout layout (Editor-only snapshot); `PATween.From(rect, settings)` plays the configured tween.
+**Tests**: round-trip serialize/deserialize; `WithDirection(true)` swaps start/end; PropertyDrawer renders the documented one-line + foldout layout (Editor-only snapshot); `FT.From(rect, settings)` plays the configured tween.
 
 ### Cross-engine comparative benchmark
 
@@ -231,7 +231,7 @@ Composed demo reproducible against DOTween / PrimeTween reference recordings. Pe
 - Zero-alloc target-capture overloads for all callbacks (`OnStart`, `OnPlay`, `OnPause`, `OnUpdate`, `OnStepComplete`, `OnRewind`)
 - Typed shortcuts: `RectTransform`, `Material` (color/float/vector by property name), `SpriteRenderer`, `Camera`, `Light`, `AudioSource`
 - Shake/Punch shortcuts: `ShakePosition`, `ShakeRotation`, `ShakeScale`, `PunchPosition`, `ShakeCamera`
-- `PATween.Extensions` asmdef: optional `transform.PAMove(...)` style extension wrappers around the static shortcuts
+- `FeatherTween.Extensions` asmdef: optional `transform.PAMove(...)` style extension wrappers around the static shortcuts
 - 2-state target-capture overloads (`OnComplete<T0,T1>(s0, s1, (s0,s1) => ...)`)
 - `AddPause` and sequence `PlayLabel(string)`
 - More filter overloads (string id if profiler justifies)
@@ -240,9 +240,9 @@ Composed demo reproducible against DOTween / PrimeTween reference recordings. Pe
 ## M3 — Power features
 
 - Editor preview window (scrubber is 1.10's `Seek` + the existing editor-mode ticking; the highest-leverage designer feature on the roadmap)
-- Stagger helpers (`PATween.Stagger(targets, ...)`)
-- Speed-based tweens (`PATween.PositionAtSpeed`, etc.)
-- Path tweens (Linear, CatmullRom) and `LookAt` modes — ship as a separate asmdef (`PATween.Paths`) to protect the minimal-core goal
+- Stagger helpers (`FT.Stagger(targets, ...)`)
+- Speed-based tweens (`FT.PositionAtSpeed`, etc.)
+- Path tweens (Linear, CatmullRom) and `LookAt` modes — ship as a separate asmdef (`FeatherTween.Paths`) to protect the minimal-core goal
 - Blendable tweens (additive) — **requires an ADR before commitment**: additive composition means multiple writers per property, which cuts against the one-setter-per-tween storage model; this is the only roadmap item that could force an architectural rework
 - All parametric eases live (`Easing.OutBack(overshoot)`, `Easing.BounceExact(amp)`, `Easing.Elastic(s, p)`)
 - `TweenAssetSO` for shared presets

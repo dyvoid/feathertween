@@ -1,6 +1,6 @@
 # Easings
 
- PATween stores one `EaseRef` value per tween. The ease type and its parameters travel together, and new eases can be added without changing the public API.
+ FeatherTween stores one `EaseRef` value per tween. The ease type and its parameters travel together, and new eases can be added without changing the public API.
 
  ## `EaseRef`
 

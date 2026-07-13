@@ -1,7 +1,7 @@
 using UnityEditor;
-using PATween.Internal;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween.Editor
+namespace Dyvoid.FeatherTween.Editor
 {
 	internal static class TweenStoreEditorBootstrap
 	{

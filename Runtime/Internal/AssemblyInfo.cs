@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("PATween.Editor")]
-[assembly: InternalsVisibleTo("PATween.Tests.Editor")]
-[assembly: InternalsVisibleTo("PATween.Tests.Runtime")]
-[assembly: InternalsVisibleTo("PATween.Tests.Performance")]
+[assembly: InternalsVisibleTo("FeatherTween.Editor")]
+[assembly: InternalsVisibleTo("FeatherTween.Tests.Editor")]
+[assembly: InternalsVisibleTo("FeatherTween.Tests.Runtime")]
+[assembly: InternalsVisibleTo("FeatherTween.Tests.Performance")]

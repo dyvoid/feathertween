@@ -1,8 +1,8 @@
 using System;
 using UnityEngine;
-using PATween.Internal;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween
+namespace Dyvoid.FeatherTween
 {
 	public readonly struct EaseRef
 	{

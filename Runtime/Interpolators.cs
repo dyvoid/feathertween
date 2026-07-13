@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using PATween.Internal;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween
+namespace Dyvoid.FeatherTween
 {
 	public static class Interpolators
 	{
@@ -23,7 +23,7 @@ namespace PATween
 			if (TweenStore.HasLiveOfType<T>())
 			{
 				throw new InvalidOperationException(
-					$"[PATween] Cannot re-register IInterpolator<{typeof(T).Name}> while a tween of that type is live.");
+					$"[FeatherTween] Cannot re-register IInterpolator<{typeof(T).Name}> while a tween of that type is live.");
 			}
 			registry[typeof(T)] = interpolator;
 		}
@@ -35,7 +35,7 @@ namespace PATween
 				return (IInterpolator<T>)interp;
 			}
 			throw new InvalidOperationException(
-				$"[PATween] No IInterpolator<{typeof(T).Name}> registered.");
+				$"[FeatherTween] No IInterpolator<{typeof(T).Name}> registered.");
 		}
 
 		internal static bool IsRegistered<T>()

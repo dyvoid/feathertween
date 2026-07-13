@@ -1,7 +1,7 @@
 using UnityEditor;
-using PATween.Internal;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween.Editor
+namespace Dyvoid.FeatherTween.Editor
 {
 	[InitializeOnLoad]
 	internal static class EditorRunner
@@ -20,7 +20,7 @@ namespace PATween.Editor
 			{
 				return;
 			}
-			PATweenRunner.EnsureInitialized();
+			FeatherTweenRunner.EnsureInitialized();
 			lastTime = EditorApplication.timeSinceStartup;
 			EditorApplication.update += Tick;
 			subscribed = true;
@@ -46,7 +46,7 @@ namespace PATween.Editor
 			var now = EditorApplication.timeSinceStartup;
 			var dt = now - lastTime;
 			lastTime = now;
-			PATweenRunner.TickEditorDelta(dt);
+			FeatherTweenRunner.TickEditorDelta(dt);
 		}
 	}
 }

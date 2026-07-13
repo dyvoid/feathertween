@@ -17,18 +17,18 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Compile Runtime + Samples against Unity stubs
-        run: dotnet build tools~/compile-check/PATween.CompileCheck.csproj -c Release
+        run: dotnet build tools~/compile-check/FeatherTween.CompileCheck.csproj -c Release
 
       - name: Run EditMode suite (NUnitLite, excludes RequiresUnity)
         run: >
-          dotnet run --project tools~/compile-check/PATween.TestRunner.csproj
+          dotnet run --project tools~/compile-check/FeatherTween.TestRunner.csproj
           -c Release -- --noresult --where "cat != RequiresUnity"
 
-      # Safe mode is compiled out under PATWEEN_RELEASE; this leg proves the
+      # Safe mode is compiled out under FEATHERTWEEN_RELEASE; this leg proves the
       # release path builds and behaves (ReleaseModeTests: throwing setter
       # propagates despite SetSafeMode(true)).
-      - name: Run EditMode suite with PATWEEN_RELEASE (safe mode compiled out)
+      - name: Run EditMode suite with FEATHERTWEEN_RELEASE (safe mode compiled out)
         run: >
-          dotnet run --project tools~/compile-check/PATween.TestRunner.csproj
-          -c Release -p:DefineConstants=PATWEEN_RELEASE
+          dotnet run --project tools~/compile-check/FeatherTween.TestRunner.csproj
+          -c Release -p:DefineConstants=FEATHERTWEEN_RELEASE
           -- --noresult --where "cat != RequiresUnity && cat != RequiresSafeMode"

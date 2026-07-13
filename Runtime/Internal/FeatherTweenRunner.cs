@@ -5,9 +5,9 @@ using UnityEngine;
 using UnityEngine.LowLevel;
 using UnityEngine.PlayerLoop;
 
-namespace PATween.Internal
+namespace Dyvoid.FeatherTween.Internal
 {
-	internal static class PATweenRunner
+	internal static class FeatherTweenRunner
 	{
 		private static RootSequenceData rootUpdate;
 		private static RootSequenceData rootLate;
@@ -104,9 +104,9 @@ namespace PATween.Internal
 			}
 
 			var loop = PlayerLoop.GetCurrentPlayerLoop();
-			InsertAfter<Update.ScriptRunBehaviourUpdate>(ref loop, typeof(PATweenUpdate), TickUpdate);
-			InsertAfter<PreLateUpdate.ScriptRunBehaviourLateUpdate>(ref loop, typeof(PATweenLateUpdate), TickLate);
-			InsertAfter<FixedUpdate.ScriptRunBehaviourFixedUpdate>(ref loop, typeof(PATweenFixedUpdate), TickFixed);
+			InsertAfter<Update.ScriptRunBehaviourUpdate>(ref loop, typeof(FeatherTweenUpdate), TickUpdate);
+			InsertAfter<PreLateUpdate.ScriptRunBehaviourLateUpdate>(ref loop, typeof(FeatherTweenLateUpdate), TickLate);
+			InsertAfter<FixedUpdate.ScriptRunBehaviourFixedUpdate>(ref loop, typeof(FeatherTweenFixedUpdate), TickFixed);
 			PlayerLoop.SetPlayerLoop(loop);
 			installed = true;
 		}
@@ -119,9 +119,9 @@ namespace PATween.Internal
 			}
 
 			var loop = PlayerLoop.GetCurrentPlayerLoop();
-			Remove(ref loop, typeof(PATweenUpdate));
-			Remove(ref loop, typeof(PATweenLateUpdate));
-			Remove(ref loop, typeof(PATweenFixedUpdate));
+			Remove(ref loop, typeof(FeatherTweenUpdate));
+			Remove(ref loop, typeof(FeatherTweenLateUpdate));
+			Remove(ref loop, typeof(FeatherTweenFixedUpdate));
 			PlayerLoop.SetPlayerLoop(loop);
 			installed = false;
 		}
@@ -322,20 +322,20 @@ namespace PATween.Internal
 		}
 
 		// Off-thread guard, part of the safe-mode debug layer: compiled out
-		// under PATWEEN_RELEASE along with the try/catch wrappers.
+		// under FEATHERTWEEN_RELEASE along with the try/catch wrappers.
 		private static void AssertMainThread()
 		{
-#if !PATWEEN_RELEASE
+#if !FEATHERTWEEN_RELEASE
 			if (Thread.CurrentThread.ManagedThreadId != mainThreadId)
 			{
 				throw new InvalidOperationException(
-					"[PATween] PATweenRunner must be ticked from the main thread.");
+					"[FeatherTween] FeatherTweenRunner must be ticked from the main thread.");
 			}
 #endif
 		}
 
-		private struct PATweenUpdate {}
-		private struct PATweenLateUpdate {}
-		private struct PATweenFixedUpdate {}
+		private struct FeatherTweenUpdate {}
+		private struct FeatherTweenLateUpdate {}
+		private struct FeatherTweenFixedUpdate {}
 	}
 }

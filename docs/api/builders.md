@@ -1,6 +1,6 @@
 # Builders
 
-`PATween.X(...)` returns a builder, not a running tween. Builders are short-lived configuration structs with a pooled backing record. They are **single-use**: after `.Start()` or being claimed by a `SequenceBuilder.Append/Insert/Join`, every copy of the builder is invalidated.
+`FT.X(...)` returns a builder, not a running tween. Builders are short-lived configuration structs with a pooled backing record. They are **single-use**: after `.Start()` or being claimed by a `SequenceBuilder.Append/Insert/Join`, every copy of the builder is invalidated.
 
 ## `TweenBuilder<T>`
 
@@ -71,9 +71,9 @@ All of these return the builder so they can be chained.
 ## From / FromTo
 
 ```csharp
-PATween.Move(transform, target.position, 1f).From().Start();
-PATween.From(() => x, v => x = v, startValue, 1f).Start();
-PATween.FromTo(() => x, v => x = v, from, to, 1f).Start();
+FT.Move(transform, target.position, 1f).From().Start();
+FT.From(() => x, v => x = v, startValue, 1f).Start();
+FT.FromTo(() => x, v => x = v, from, to, 1f).Start();
 ```
 
 - **Root tween**: the snap (capture start + invoke `setter(start)`) fires at `.Start()`, regardless of `SetDelay`. The delay only defers interpolation, not the snap.

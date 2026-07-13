@@ -5,7 +5,7 @@
 The lambda core is the most flexible form. You supply a getter, a setter, an end value, and a duration.
 
 ```csharp
-Tween t = PATween.To(
+Tween t = FT.To(
     () => obj.value,
     v  => obj.value = v,
     endValue: 10f,
@@ -22,7 +22,7 @@ Supported value types in M1: `float`, `Vector2`, `Vector3`, `Vector4`, `Color`, 
 ### Zero-alloc target-capture variant
 
 ```csharp
-PATween.To(this, () => x.value, (s, v) => s.x.value = v, 10f, 1f)
+FT.To(this, () => x.value, (s, v) => s.x.value = v, 10f, 1f)
     .OnComplete(this, s => s.HandleDone())
     .Start();
 ```
@@ -31,27 +31,27 @@ Target-capture overloads avoid closure allocation when the lambda body does not 
 
 ## Typed shortcuts
 
-Static methods on `PATween` cover common Unity components. Each shortcut builds a lambda pair internally, sets `target` automatically, and returns a `TweenBuilder<T>`.
+Static methods on `FeatherTween` cover common Unity components. Each shortcut builds a lambda pair internally, sets `target` automatically, and returns a `TweenBuilder<T>`.
 
 ```csharp
-PATween.Move(transform, new Vector3(2, 3, 4), 1f).Start();
-PATween.LocalMove(transform, new Vector3(2, 3, 4), 1f).Start();
-PATween.Rotate(transform, new Vector3(0, 180, 0), 1f).Start();
-PATween.LocalRotate(transform, new Vector3(0, 180, 0), 1f).Start();
-PATween.Scale(transform, Vector3.one * 2f, 1f).Start();
+FT.Move(transform, new Vector3(2, 3, 4), 1f).Start();
+FT.LocalMove(transform, new Vector3(2, 3, 4), 1f).Start();
+FT.Rotate(transform, new Vector3(0, 180, 0), 1f).Start();
+FT.LocalRotate(transform, new Vector3(0, 180, 0), 1f).Start();
+FT.Scale(transform, Vector3.one * 2f, 1f).Start();
 
-PATween.Fade(canvasGroup, 0f, 0.5f).Start();
-PATween.Color(image, UnityEngine.Color.red, 0.3f).Start();
-PATween.Fade(image, 0f, 0.3f).Start();
-PATween.FillAmount(image, 0.5f, 0.3f).Start();
+FT.Fade(canvasGroup, 0f, 0.5f).Start();
+FT.Color(image, UnityEngine.Color.red, 0.3f).Start();
+FT.Fade(image, 0f, 0.3f).Start();
+FT.FillAmount(image, 0.5f, 0.3f).Start();
 ```
 
-Euler overloads take a `Vector3`; quaternion overloads take a `Quaternion`. The shortcut sets the kill-filter target automatically so `PATween.Kill(transform)` reaches the tween.
+Euler overloads take a `Vector3`; quaternion overloads take a `Quaternion`. The shortcut sets the kill-filter target automatically so `FT.Kill(transform)` reaches the tween.
 
 ### Fire and forget
 
 ```csharp
-PATween.Move(transform, target, 1f).SetEase(Easing.OutCubic).Start();
+FT.Move(transform, target, 1f).SetEase(Easing.OutCubic).Start();
 ```
 
 A started shortcut behaves exactly like a generic tween: it exposes the full handle control surface, supports callbacks, and participates in sequences.
@@ -61,9 +61,9 @@ A started shortcut behaves exactly like a generic tween: it exposes the full han
 See [builders.md](builders.md#from--fromto) for the full builder methods. The short version:
 
 ```csharp
-PATween.Move(transform, target.position, 1f).From().Start();
-PATween.From(() => x, v => x = v, startValue, 1f).Start();
-PATween.FromTo(() => x, v => x = v, from, to, 1f).Start();
+FT.Move(transform, target.position, 1f).From().Start();
+FT.From(() => x, v => x = v, startValue, 1f).Start();
+FT.FromTo(() => x, v => x = v, from, to, 1f).Start();
 ```
 
 Root tweens snap at `.Start()`; sequenced children snap when the parent playhead first crosses their start time.

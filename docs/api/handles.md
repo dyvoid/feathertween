@@ -93,8 +93,8 @@ There is no `Scheduled` state. A tween only exists as a `Tween` handle after `.S
 - Engine-wide time control lives on the static class:
 
 ```csharp
-PATween.SetGlobalTimeScale(float scale);              // all phases
-PATween.SetTimeScale(UpdatePhase phase, float scale); // one phase (e.g. slow gameplay, keep UI)
+FT.SetGlobalTimeScale(float scale);              // all phases
+FT.SetTimeScale(UpdatePhase phase, float scale); // one phase (e.g. slow gameplay, keep UI)
 ```
 
 Root scale is engine-side and distinct from Unity `Time.timeScale`; `ignoreTimeScale` opts a tween out of Unity's scale only.

@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
-using PATween;
+using Dyvoid.FeatherTween;
 
-namespace PATween.Samples
+namespace Dyvoid.FeatherTween.Samples
 {
 	// Attach to an empty GameObject and press Play.
-	// Spawns a row of primitives, each showcasing a different PATween feature.
-	public class PATweenDemo : MonoBehaviour
+	// Spawns a row of primitives, each showcasing a different FeatherTween feature.
+	public class FeatherTweenDemo : MonoBehaviour
 	{
 		[Header("Layout")]
 		[Tooltip("Horizontal spacing between demo objects.")]
@@ -90,7 +90,7 @@ namespace PATween.Samples
 			var t = go.transform;
 			var top = origin + Vector3.up * 2f;
 
-			var tween = PATween.To(() => t.position, p => t.position = p, top, duration)
+			var tween = FT.To(() => t.position, p => t.position = p, top, duration)
 				.SetEase(Easing.InOutSine())
 				.SetLoops(-1, LoopType.Yoyo)
 				.SetTarget(go)
@@ -105,7 +105,7 @@ namespace PATween.Samples
 			var t = go.transform;
 			var big = Vector3.one * 1.75f;
 
-			var tween = PATween.To(() => t.localScale, s => t.localScale = s, big, duration)
+			var tween = FT.To(() => t.localScale, s => t.localScale = s, big, duration)
 				.SetEase(Easing.OutBack())
 				.SetLoops(-1, LoopType.Yoyo)
 				.SetTarget(go)
@@ -120,7 +120,7 @@ namespace PATween.Samples
 			var t = go.transform;
 			var target = Quaternion.Euler(0f, 180f, 0f);
 
-			var tween = PATween.To(() => t.rotation, r => t.rotation = r, target, duration)
+			var tween = FT.To(() => t.rotation, r => t.rotation = r, target, duration)
 				.SetEase(Easing.InOutCubic())
 				.SetLoops(-1, LoopType.Incremental)
 				.SetTarget(go)
@@ -134,7 +134,7 @@ namespace PATween.Samples
 			var go = Spawn(PrimitiveType.Cube, origin, Color.red, "Color");
 			var renderer = go.GetComponent<Renderer>();
 
-			var tween = PATween.To(() => renderer.material.color, c => renderer.material.color = c, Color.blue, duration)
+			var tween = FT.To(() => renderer.material.color, c => renderer.material.color = c, Color.blue, duration)
 				.SetEase(Easing.Linear())
 				.SetLoops(-1, LoopType.Yoyo)
 				.SetTarget(go)
@@ -149,7 +149,7 @@ namespace PATween.Samples
 			var t = go.transform;
 			var ground = origin;
 
-			var tween = PATween.To(() => t.position, p => t.position = p, ground, duration)
+			var tween = FT.To(() => t.position, p => t.position = p, ground, duration)
 				.SetEase(Easing.OutBounce())
 				.SetLoops(-1, LoopType.Restart)
 				.SetDelay(0.25f, DelayType.EveryLoop)
@@ -162,7 +162,7 @@ namespace PATween.Samples
 		private GameObject Spawn(PrimitiveType type, Vector3 position, Color color, string label)
 		{
 			var go = GameObject.CreatePrimitive(type);
-			go.name = $"PATweenDemo_{label}";
+			go.name = $"FeatherTweenDemo_{label}";
 			go.transform.SetParent(transform, worldPositionStays: true);
 			go.transform.position = position;
 			go.GetComponent<Renderer>().material.color = color;

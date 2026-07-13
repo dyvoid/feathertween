@@ -1,4 +1,4 @@
-# PATween
+# FeatherTween
 
 [![CI](https://github.com/dyvoid/patween/actions/workflows/ci.yml/badge.svg)](https://github.com/dyvoid/patween/actions/workflows/ci.yml)
 [![GitHub last commit](https://img.shields.io/github/last-commit/dyvoid/patween)](https://github.com/dyvoid/patween/commits/main)
@@ -13,19 +13,44 @@ Early development — M1 (Core) is in progress. Phases 1.1–1.12 are complete (
 
 ## Getting Started
 
-PATween is distributed as a UPM package.
+FeatherTween is distributed as a UPM package.
 
 1. Add the repository as an embedded or scoped-registry package in your Unity project.
 2. Install the `com.unity.test-framework.performance` package if you want to run the performance benchmarks (test-only dependency).
-3. Open `Window > Package Manager > PATween > Samples` and import **Basic Usage** (tween features) or **Sequence Demo** (sequence choreography) for a quick demo.
+3. Open `Window > Package Manager > FeatherTween > Samples` and import **Basic Usage** (tween features) or **Sequence Demo** (sequence choreography) for a quick demo.
 
 See [`docs/guides/testing.md`](docs/guides/testing.md) for consumer-project setup details.
+
+## Usage
+
+The public API lives in the `Dyvoid.FeatherTween` namespace, and the entry point is the
+static class `FT`:
+
+```csharp
+using Dyvoid.FeatherTween;
+
+FT.To(() => value, v => value = v, target: 10f, duration: 1f).Start();
+FT.Move(transform, new Vector3(4f, 0f, 0f), 1f).Start();
+```
+
+Prefer the full product name at call sites? Add a file-scoped alias — `FT` stays the
+canonical type, and `FeatherTween` becomes an equivalent handle in that file:
+
+```csharp
+using FeatherTween = Dyvoid.FeatherTween.FT;
+
+FeatherTween.To(() => value, v => value = v, 10f, 1f).Start();
+```
+
+Avoid `using static Dyvoid.FeatherTween.FT;` — it dumps every shortcut into scope and
+shadows common Unity/.NET types (`Color`, `Image`, `Text`, …), producing cryptic `CS0119`
+errors.
 
 ## Project Structure
 
 ```
-Runtime/              Core engine (PATween.asmdef)
-Editor/               Inspector drawers and debugger (PATween.Editor.asmdef)
+Runtime/              Core engine (FeatherTween.asmdef)
+Editor/               Inspector drawers and debugger (FeatherTween.Editor.asmdef)
 Tests/
   Editor/             EditMode correctness tests
   Runtime/            PlayMode tests

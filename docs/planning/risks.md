@@ -12,7 +12,7 @@
 
 ## Open questions (not blocking M1)
 
-1. `globalTimeScale` knob on `PATween` (slow-mo everything)? Trivial to add; deferred until requested.
+1. `globalTimeScale` knob on `FeatherTween` (slow-mo everything)? Trivial to add; deferred until requested.
 2. Quaternion tweens: shortest-path vs. euler-additive? DOTween offers `RotateMode.Fast`, `FastBeyond360`, etc. Pick a sane default and a single alternative for M2.
 3. Should `Tween.SetUpdate(Manual)` allow per-tween manual ticking (`tween.Tick(dt)`) or only via the global `Manual` root? Lean toward the latter for API minimalism.
 4. Should `Append(Action)` exist as sugar for `AppendCallback(Action)`? Cheap convenience, possible ambiguity with `Append(Tween)`. Defer.

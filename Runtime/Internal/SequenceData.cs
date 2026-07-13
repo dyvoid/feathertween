@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PATween.Internal
+namespace Dyvoid.FeatherTween.Internal
 {
 	internal sealed class SequenceData : TweenData
 	{
@@ -227,7 +227,7 @@ namespace PATween.Internal
 			{
 				if (++guard > 1_000_000)
 				{
-					UnityEngine.Debug.LogError("[PATween] Sequence advance walk failed to converge; aborting.");
+					UnityEngine.Debug.LogError("[FeatherTween] Sequence advance walk failed to converge; aborting.");
 					break;
 				}
 
@@ -585,7 +585,7 @@ namespace PATween.Internal
 			{
 				return true;
 			}
-#if !PATWEEN_RELEASE
+#if !FEATHERTWEEN_RELEASE
 			if (SafeMode)
 			{
 				try

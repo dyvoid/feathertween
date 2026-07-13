@@ -17,7 +17,7 @@ Last updated: 2026-07-08 (hardening pass: full Runtime/ review, 3 bugs fixed + 2
 
 - **Phases 1.1–1.12** merged to `main`: storage/handle scaffold, PlayerLoop runner, builder/handle split, generic tween core, ease system, From/FromTo, loops/delays/reverse, sequence builder, callbacks, seek/control, typed shortcuts, filters/bulk ops, storage surgery.
 - **Documentation pass (this session)**: reorganized docs into `design/`, `architecture/`, `api/`, `guides/`, and `planning/`; removed monolithic section numbering and production-cut reshuffle noise; split `implementation.md` and `reference.md` into focused files.
-- **Sample static-import fix**: removed `using static PATween.PATween;` from `Samples~/BasicUsage/PATweenDemo.cs` and `Samples~/SequenceDemo/PATweenSequenceDemo.cs`; calls are now `PATween.To(...)`, `PATween.Sequence(...)`, and `PATween.From(...)`. This fixes the `CS0119` collision with `UnityEngine.Color` that broke the compile-check CI. Added AGENTS.md invariant (#8) and `docs/guides/conventions.md` rule.
+- **Sample static-import fix**: removed `using static Dyvoid.FeatherTween.FT;` from `Samples~/BasicUsage/FeatherTweenDemo.cs` and `Samples~/SequenceDemo/FeatherTweenSequenceDemo.cs`; calls are now `FT.To(...)`, `FT.Sequence(...)`, and `FT.From(...)`. This fixes the `CS0119` collision with `UnityEngine.Color` that broke the compile-check CI. Added AGENTS.md invariant (#8) and `docs/guides/conventions.md` rule.
 - **README badges**: enabled CI status, last commit, and issues shields; updated Status and project structure to reflect phases 1.1–1.12 done and both samples.
 - Earlier history: see git log.
 
@@ -87,7 +87,7 @@ Remaining tracked debt:
 
 ## Test status
 
-- Compile-check harness: 186 tests green + 174 in the PATWEEN_RELEASE leg (2026-07-08, includes hardening-pass fixes and 2 new nested-loop tests).
+- Compile-check harness: 186 tests green + 174 in the FEATHERTWEEN_RELEASE leg (2026-07-08, includes hardening-pass fixes and 2 new nested-loop tests).
 - Unity (Editor + Runtime + Performance): 196 green 2026-07-07 (through 1.14); hardening-pass changes verified in Unity 2026-07-08 (store tests re-run green after `slotFree` fix).
 
 ## Consumer setup reminders

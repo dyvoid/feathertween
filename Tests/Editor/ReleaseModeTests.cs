@@ -1,13 +1,13 @@
-// Only compiled in the PATWEEN_RELEASE CI leg. Behavioral proof that the
+// Only compiled in the FEATHERTWEEN_RELEASE CI leg. Behavioral proof that the
 // safe-mode wrapper is compiled out: with the wrapper gone, SetSafeMode(true)
 // is inert and a throwing setter propagates out of the tick.
-#if PATWEEN_RELEASE
+#if FEATHERTWEEN_RELEASE
 using System;
 using NUnit.Framework;
-using PATween;
-using PATween.Internal;
+using Dyvoid.FeatherTween;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween.Tests
+namespace Dyvoid.FeatherTween.Tests
 {
 	[TestFixture]
 	public class ReleaseModeTests
@@ -16,14 +16,14 @@ namespace PATween.Tests
 		public void SetUp()
 		{
 			TweenStore.Reset();
-			PATweenRunner.Reset();
+			FeatherTweenRunner.Reset();
 			Interpolators.Reset();
 		}
 
 		[Test]
 		public void Release_SetterThrows_PropagatesDespiteSafeMode()
 		{
-			global::PATween.PATween.To(
+			global::Dyvoid.FeatherTween.FT.To(
 					() => 0f,
 					_ => throw new InvalidOperationException("boom"),
 					1f, 1f)
@@ -32,7 +32,7 @@ namespace PATween.Tests
 				.SetCancelOnError(true)
 				.Start();
 
-			Assert.Throws<InvalidOperationException>(() => PATweenRunner.ManualTick(0.5));
+			Assert.Throws<InvalidOperationException>(() => FeatherTweenRunner.ManualTick(0.5));
 		}
 	}
 }

@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using UnityEngine;
 
-namespace PATween.Internal
+namespace Dyvoid.FeatherTween.Internal
 {
 	internal static class LeakDetector
 	{
@@ -23,7 +23,7 @@ namespace PATween.Internal
 		{
 			while (queue.TryDequeue(out var id))
 			{
-				Debug.LogWarning($"[PATween] Unconsumed TweenBuilder leaked (diagnostic id {id}). Did you forget to call .Start()?");
+				Debug.LogWarning($"[FeatherTween] Unconsumed TweenBuilder leaked (diagnostic id {id}). Did you forget to call .Start()?");
 			}
 		}
 

@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using PATween;
-using PATween.Internal;
+using Dyvoid.FeatherTween;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween.Tests
+namespace Dyvoid.FeatherTween.Tests
 {
 	[TestFixture]
 	public class TweenStoreTests
@@ -145,7 +145,7 @@ namespace PATween.Tests
 		}
 
 		[Test]
-		[Category("RequiresSafeMode")] // the off-thread assert is compiled out under PATWEEN_RELEASE
+		[Category("RequiresSafeMode")] // the off-thread assert is compiled out under FEATHERTWEEN_RELEASE
 		public void OffThreadAllocate_ThrowsInSafeMode()
 		{
 			Exception caught = null;
@@ -170,11 +170,11 @@ namespace PATween.Tests
 		public void SetCapacity_Grows_ButDoesNotShrink()
 		{
 			var initial = TweenStore.Capacity;
-			global::PATween.PATween.SetCapacity(initial * 4, 0);
+			global::Dyvoid.FeatherTween.FT.SetCapacity(initial * 4, 0);
 			Assert.That(TweenStore.Capacity, Is.GreaterThanOrEqualTo(initial * 4));
 
 			var grown = TweenStore.Capacity;
-			global::PATween.PATween.SetCapacity(8, 0);
+			global::Dyvoid.FeatherTween.FT.SetCapacity(8, 0);
 			Assert.That(TweenStore.Capacity, Is.EqualTo(grown), "SetCapacity must not shrink.");
 		}
 

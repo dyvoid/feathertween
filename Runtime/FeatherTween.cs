@@ -1,9 +1,9 @@
 using System;
-using PATween.Internal;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween
+namespace Dyvoid.FeatherTween
 {
-	public static partial class PATween
+	public static partial class FT
 	{
 		public static void SetCapacity(int tweens, int sequences)
 		{
@@ -18,16 +18,16 @@ namespace PATween
 		{
 			if (scale < 0f)
 			{
-				throw new ArgumentOutOfRangeException(nameof(scale), "[PATween] Global time scale cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(scale), "[FeatherTween] Global time scale cannot be negative.");
 			}
-			PATweenRunner.EnsureInitialized();
-			PATweenRunner.GlobalTimeScale = scale;
+			FeatherTweenRunner.EnsureInitialized();
+			FeatherTweenRunner.GlobalTimeScale = scale;
 		}
 
 		public static float GetGlobalTimeScale()
 		{
-			PATweenRunner.EnsureInitialized();
-			return PATweenRunner.GlobalTimeScale;
+			FeatherTweenRunner.EnsureInitialized();
+			return FeatherTweenRunner.GlobalTimeScale;
 		}
 
 		/// Per-phase playback rate; composes with the global scale.
@@ -35,16 +35,16 @@ namespace PATween
 		{
 			if (scale < 0f)
 			{
-				throw new ArgumentOutOfRangeException(nameof(scale), "[PATween] Phase time scale cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(scale), "[FeatherTween] Phase time scale cannot be negative.");
 			}
-			PATweenRunner.EnsureInitialized();
-			PATweenRunner.SetPhaseTimeScale(phase, scale);
+			FeatherTweenRunner.EnsureInitialized();
+			FeatherTweenRunner.SetPhaseTimeScale(phase, scale);
 		}
 
 		public static float GetTimeScale(UpdatePhase phase)
 		{
-			PATweenRunner.EnsureInitialized();
-			return PATweenRunner.GetPhaseTimeScale(phase);
+			FeatherTweenRunner.EnsureInitialized();
+			return FeatherTweenRunner.GetPhaseTimeScale(phase);
 		}
 
 		// Scratch for bulk-op snapshots: ops mutate the lists they iterate

@@ -1,9 +1,9 @@
 using NUnit.Framework;
 using UnityEngine;
-using PATween;
-using PATween.Internal;
+using Dyvoid.FeatherTween;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween.Tests
+namespace Dyvoid.FeatherTween.Tests
 {
 	[TestFixture]
 	public class EasingTests
@@ -12,7 +12,7 @@ namespace PATween.Tests
 		public void SetUp()
 		{
 			TweenStore.Reset();
-			PATweenRunner.Reset();
+			FeatherTweenRunner.Reset();
 			Interpolators.Reset();
 		}
 
@@ -169,12 +169,12 @@ namespace PATween.Tests
 		public void SetEase_AppliedDuringStep()
 		{
 			var v = 0f;
-			global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
+			global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetEase(Easing.InQuad())
 				.Start();
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f));
 		}
 
@@ -183,12 +183,12 @@ namespace PATween.Tests
 		{
 			var curve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 			var v = 0f;
-			global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
+			global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetEase(curve)
 				.Start();
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(v, Is.EqualTo(curve.Evaluate(0.5f)).Within(1e-3f));
 		}
 
