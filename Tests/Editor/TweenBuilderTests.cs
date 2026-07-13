@@ -3,10 +3,10 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using PATween;
-using PATween.Internal;
+using Dyvoid.FeatherTween;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween.Tests
+namespace Dyvoid.FeatherTween.Tests
 {
 	[TestFixture]
 	public class TweenBuilderTests
@@ -15,7 +15,7 @@ namespace PATween.Tests
 		public void SetUp()
 		{
 			TweenStore.Reset();
-			PATweenRunner.Reset();
+			FeatherTweenRunner.Reset();
 		}
 
 		[Test]
@@ -79,7 +79,7 @@ namespace PATween.Tests
 			System.GC.WaitForPendingFinalizers();
 
 			LogAssert.Expect(LogType.Warning, new Regex(@"Unconsumed TweenBuilder leaked"));
-			PATweenRunner.ManualTick(0.016);
+			FeatherTweenRunner.ManualTick(0.016);
 		}
 
 		[Test]

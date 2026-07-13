@@ -1,4 +1,4 @@
-# PATween — Design Proposal
+# FeatherTween — Design Proposal
 
 A robust, minimal C# tween engine for Unity. Compositional sequences, static-method API, struct handles, PlayerLoop runner.
 
@@ -27,9 +27,9 @@ A robust, minimal C# tween engine for Unity. Compositional sequences, static-met
 
 ## Design principles (locked anchors)
 
-1. **Static-method API**: typed shortcuts live as static methods on `PATween` (`PATween.Move(transform, ...)`), not as extension methods on Unity types. Avoids namespace pollution on `Transform`/`CanvasGroup`/etc. and gives one discoverable entry point. A small optional `PATween.Extensions` asmdef in a later milestone can re-add DOTween-style extension wrappers for users who prefer them.
+1. **Static-method API**: typed shortcuts live as static methods on `FeatherTween` (`FT.Move(transform, ...)`), not as extension methods on Unity types. Avoids namespace pollution on `Transform`/`CanvasGroup`/etc. and gives one discoverable entry point. A small optional `FeatherTween.Extensions` asmdef in a later milestone can re-add DOTween-style extension wrappers for users who prefer them.
 2. **Builder/handle split with explicit `.Start()`**.
-   - `PATween.X(...)` returns a `TweenBuilder<T>` struct; copies alias the same pooled backing record.
+   - `FT.X(...)` returns a `TweenBuilder<T>` struct; copies alias the same pooled backing record.
    - After `.Start()` or sequence consumption, every builder alias is invalid.
    - `.Start()` returns an immutable `Tween` handle (`id, generation`). Stale handles no-op safely.
    - Same split for `SequenceBuilder` and `Sequence`.

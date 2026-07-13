@@ -1,8 +1,12 @@
 {
-  "name": "PATween",
-  "rootNamespace": "PATween",
-  "references": ["UnityEngine.UI"],
-  "includePlatforms": [],
+  "name": "FeatherTween.Editor",
+  "rootNamespace": "Dyvoid.FeatherTween.Editor",
+  "references": [
+    "FeatherTween"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
   "overrideReferences": false,

@@ -5,14 +5,14 @@ A sequence is a parent timeline that composes tweens, callbacks, intervals, labe
 ## Building a sequence
 
 ```csharp
-SequenceBuilder sb = PATween.Sequence()
+SequenceBuilder sb = FT.Sequence()
     .SetDefaults(ease: Easing.OutQuad);
 
-sb.Append(PATween.Move(transform, p1, 0.5f));            // builder consumed by sequence
-sb.Append(PATween.Rotate(transform, r1, 0.5f));
+sb.Append(FT.Move(transform, p1, 0.5f));            // builder consumed by sequence
+sb.Append(FT.Rotate(transform, r1, 0.5f));
 sb.AppendInterval(0.25f);
-sb.Join(PATween.Fade(canvasGroup, 0f, 0.5f));            // parallel with previous
-sb.Insert(0f, PATween.Color(image, UnityEngine.Color.red, 1f));
+sb.Join(FT.Fade(canvasGroup, 0f, 0.5f));            // parallel with previous
+sb.Insert(0f, FT.Color(image, UnityEngine.Color.red, 1f));
 sb.AppendCallback(() => Debug.Log("step"));
 sb.AddLabel("intro", 1.2f);
 sb.Insert(Position.AtLabel("intro", +0.3f), nextTweenBuilder);

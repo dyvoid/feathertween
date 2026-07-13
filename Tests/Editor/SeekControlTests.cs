@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using PATween;
-using PATween.Internal;
+using Dyvoid.FeatherTween;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween.Tests
+namespace Dyvoid.FeatherTween.Tests
 {
 	// Phase 1.10: Seek traversal (docs/api/handles.md), sequence SetLoops/Reverse, mid-play
 	// Insert, and global / per-phase / per-tween time scale.
@@ -15,18 +15,18 @@ namespace PATween.Tests
 		public void SetUp()
 		{
 			TweenStore.Reset();
-			PATweenRunner.Reset();
+			FeatherTweenRunner.Reset();
 			Interpolators.Reset();
 		}
 
 		private static TweenBuilder<float> FloatTween(Func<float> getter, Action<float> setter, float end, float duration)
 		{
-			return global::PATween.PATween.To(getter, setter, end, duration);
+			return global::Dyvoid.FeatherTween.FT.To(getter, setter, end, duration);
 		}
 
 		private static SequenceBuilder ManualSequence()
 		{
-			return global::PATween.PATween.Sequence().SetUpdate(UpdatePhase.Manual);
+			return global::Dyvoid.FeatherTween.FT.Sequence().SetUpdate(UpdatePhase.Manual);
 		}
 
 		// --- Tween Seek ---
@@ -42,7 +42,7 @@ namespace PATween.Tests
 				.OnStepComplete(() => steps++)
 				.Start();
 
-			PATweenRunner.ManualTick(0.1);
+			FeatherTweenRunner.ManualTick(0.1);
 			t.Seek(2.5f);
 			Assert.That(v, Is.EqualTo(5f).Within(1e-3f), "sample at cycle 2 mid");
 			Assert.That(steps, Is.Zero, "silent seek fires no boundaries");
@@ -61,7 +61,7 @@ namespace PATween.Tests
 				.OnRewind(() => rewinds++)
 				.Start();
 
-			PATweenRunner.ManualTick(0.1);
+			FeatherTweenRunner.ManualTick(0.1);
 			t.Seek(2.5f, fireCallbacks: true);
 			Assert.That(steps, Is.EqualTo(2), "crossed 2 boundaries forward");
 
@@ -77,13 +77,13 @@ namespace PATween.Tests
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			PATweenRunner.ManualTick(0.2);
+			FeatherTweenRunner.ManualTick(0.2);
 			t.Pause();
 			t.Seek(0.75f);
 			Assert.That(v, Is.EqualTo(0.75f).Within(1e-3f));
 			Assert.That(t.Status, Is.EqualTo(TweenStatus.Paused), "seek preserves pause");
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(v, Is.EqualTo(0.75f).Within(1e-3f), "still paused, no advance");
 		}
 
@@ -96,7 +96,7 @@ namespace PATween.Tests
 				.SetAutoKill(false)
 				.Start();
 
-			PATweenRunner.ManualTick(0.01);
+			FeatherTweenRunner.ManualTick(0.01);
 			t.Seek(99f);
 			Assert.That(v, Is.EqualTo(1f).Within(1e-3f), "clamped to end");
 			t.Seek(-5f);
@@ -117,13 +117,13 @@ namespace PATween.Tests
 			sb.Append(FloatTween(() => v, x => v = x, 2f, 1f));
 			var seq = sb.Start();
 
-			PATweenRunner.ManualTick(0.1);
+			FeatherTweenRunner.ManualTick(0.1);
 			seq.Seek(1.5f);
 			Assert.That(log, Is.Empty, "silent seek fires nothing");
 			Assert.That(v, Is.EqualTo(1.5f).Within(1e-3f), "second child sampled mid");
 			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Playing), "not halted by the skipped pause");
 
-			PATweenRunner.ManualTick(0.25);
+			FeatherTweenRunner.ManualTick(0.25);
 			Assert.That(v, Is.EqualTo(1.75f).Within(1e-3f), "play continues from the sought position");
 			Assert.That(log, Is.Empty, "skipped callback stays consumed");
 		}
@@ -140,7 +140,7 @@ namespace PATween.Tests
 			sb.Append(FloatTween(() => v, x => v = x, 2f, 1f).SetEase(Easing.Linear()));
 			var seq = sb.Start();
 
-			PATweenRunner.ManualTick(0.1);
+			FeatherTweenRunner.ManualTick(0.1);
 			seq.Seek(2.5f, fireCallbacks: true);
 			Assert.That(log, Is.EqualTo(new[] { "cb" }), "callback crossed in order");
 			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Paused), "halted at the pause");
@@ -154,17 +154,17 @@ namespace PATween.Tests
 		{
 			var v = 5f;
 			var sb = ManualSequence();
-			sb.Append(global::PATween.PATween.From(() => v, x => v = x, 0f, 1f));
+			sb.Append(global::Dyvoid.FeatherTween.FT.From(() => v, x => v = x, 0f, 1f));
 			var seq = sb.Start();
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(v, Is.EqualTo(2.5f).Within(1e-3f), "From snapped to 0, moving toward 5");
 
 			// Mutate the target mid-flight, then seek backward across the child
 			// start: the snap must re-arm and capture fresh values on replay.
 			seq.Seek(0f, fireCallbacks: true);
 			v = 8f;
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(v, Is.EqualTo(4f).Within(1e-3f), "re-snap: 0 -> 8, mid = 4");
 		}
 
@@ -180,18 +180,18 @@ namespace PATween.Tests
 			// re-snaps from its current value on loop wrap by deferred-snap
 			// design, which would make cycle 1 a constant hold at the end value.)
 			var sb = ManualSequence().SetLoops(2, LoopType.Restart);
-			sb.Append(global::PATween.PATween.FromTo(() => v, x => v = x, 0f, 1f, 1f));
+			sb.Append(global::Dyvoid.FeatherTween.FT.FromTo(() => v, x => v = x, 0f, 1f, 1f));
 			var seq = sb.Start().OnStepComplete(() => steps++);
 			seq.OnComplete(() => completed = true);
 
 			Assert.That(seq.Duration, Is.EqualTo(1f).Within(1e-4f), "Duration reports a single cycle");
 
-			PATweenRunner.ManualTick(1.5);
+			FeatherTweenRunner.ManualTick(1.5);
 			Assert.That(seq.TotalProgress, Is.EqualTo(0.75f).Within(1e-3f), "TotalProgress spans all loops");
 			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f), "cycle 1 replays the pattern (re-snapped from 0)");
 			Assert.That(steps, Is.EqualTo(1), "one boundary crossed");
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(completed, Is.True);
 			Assert.That(steps, Is.EqualTo(2), "final loop end fires OnStepComplete too");
 		}
@@ -206,7 +206,7 @@ namespace PATween.Tests
 			sb.AppendCallback(() => calls++);
 			sb.Start();
 
-			PATweenRunner.ManualTick(2.0);
+			FeatherTweenRunner.ManualTick(2.0);
 			Assert.That(calls, Is.EqualTo(3), "AppendCallback re-arms per cycle");
 		}
 
@@ -220,19 +220,19 @@ namespace PATween.Tests
 			sb.Append(FloatTween(() => b, x => b = x, 1f, 1f));
 			var seq = sb.Start();
 
-			PATweenRunner.ManualTick(2.0);
+			FeatherTweenRunner.ManualTick(2.0);
 			Assert.That(a, Is.EqualTo(1f).Within(1e-3f));
 			Assert.That(b, Is.EqualTo(1f).Within(1e-3f), "cycle 0 complete");
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "yoyo: b rewinds first");
 			Assert.That(a, Is.EqualTo(1f).Within(1e-3f), "a untouched so far");
 
-			PATweenRunner.ManualTick(1.0);
+			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(b, Is.EqualTo(0f).Within(1e-3f), "b fully rewound");
 			Assert.That(a, Is.EqualTo(0.5f).Within(1e-3f), "a rewinding");
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(a, Is.EqualTo(0f).Within(1e-3f), "yoyo ends at start values");
 			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Completed).Or.EqualTo(TweenStatus.Disposed));
 		}
@@ -243,10 +243,10 @@ namespace PATween.Tests
 			var v = 0f;
 			var steps = 0;
 			var sb = ManualSequence().SetLoops(-1, LoopType.Restart);
-			sb.Append(global::PATween.PATween.FromTo(() => v, x => v = x, 0f, 1f, 1f));
+			sb.Append(global::Dyvoid.FeatherTween.FT.FromTo(() => v, x => v = x, 0f, 1f, 1f));
 			var seq = sb.Start().OnStepComplete(() => steps++);
 
-			PATweenRunner.ManualTick(5.5);
+			FeatherTweenRunner.ManualTick(5.5);
 			Assert.That(steps, Is.EqualTo(5));
 			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f));
 			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Playing));
@@ -264,15 +264,15 @@ namespace PATween.Tests
 			sb.Append(FloatTween(() => b, x => b = x, 1f, 1f));
 			var seq = sb.Start();
 
-			PATweenRunner.ManualTick(1.5);
+			FeatherTweenRunner.ManualTick(1.5);
 			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f));
 
 			seq.Reverse();
-			PATweenRunner.ManualTick(1.0);
+			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(b, Is.EqualTo(0f).Within(1e-3f), "b rewound");
 			Assert.That(a, Is.EqualTo(0.5f).Within(1e-3f), "a rewinding");
 
-			PATweenRunner.ManualTick(1.0);
+			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(a, Is.EqualTo(0f).Within(1e-3f), "clamped at sequence start");
 		}
 
@@ -290,7 +290,7 @@ namespace PATween.Tests
 			sb.Append(FloatTween(() => v, x => v = x, 2f, 1f).OnComplete(() => log.Add("child2")));
 			var seq = sb.Start();
 
-			PATweenRunner.ManualTick(0.25);
+			FeatherTweenRunner.ManualTick(0.25);
 			seq.Kill(complete: true);
 			Assert.That(v, Is.EqualTo(2f).Within(1e-3f), "walked to end value");
 			Assert.That(log, Does.Contain("mid"), "callback crossed");
@@ -307,7 +307,7 @@ namespace PATween.Tests
 			sb.Append(FloatTween(() => v, x => v = x, 1f, 1f));
 			var seq = sb.Start().OnKill(() => killed = true);
 
-			PATweenRunner.ManualTick(0.25);
+			FeatherTweenRunner.ManualTick(0.25);
 			seq.Kill();
 			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f), "value left where it was");
 			Assert.That(killed, Is.True);
@@ -325,13 +325,13 @@ namespace PATween.Tests
 			sb.Append(FloatTween(() => a, x => a = x, 1f, 2f));
 			var seq = sb.Start();
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			seq.Insert(1f, FloatTween(() => b, x => b = x, 1f, 1f).SetUpdate(UpdatePhase.Manual));
 
-			PATweenRunner.ManualTick(1.0);
+			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "inserted child mid-window");
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(b, Is.EqualTo(1f).Within(1e-3f));
 			Assert.That(a, Is.EqualTo(1f).Within(1e-3f));
 		}
@@ -348,8 +348,8 @@ namespace PATween.Tests
 			sb.AppendInterval(2f);
 			seq = sb.Start();
 
-			PATweenRunner.ManualTick(1.0); // completes child; insert deferred, no crash
-			PATweenRunner.ManualTick(1.0);
+			FeatherTweenRunner.ManualTick(1.0); // completes child; insert deferred, no crash
+			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "inserted child playing on later ticks");
 		}
 
@@ -363,8 +363,8 @@ namespace PATween.Tests
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			global::PATween.PATween.SetGlobalTimeScale(0.5f);
-			PATweenRunner.ManualTick(1.0);
+			global::Dyvoid.FeatherTween.FT.SetGlobalTimeScale(0.5f);
+			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f));
 		}
 
@@ -376,11 +376,11 @@ namespace PATween.Tests
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			global::PATween.PATween.SetGlobalTimeScale(0.5f);
-			global::PATween.PATween.SetTimeScale(UpdatePhase.Manual, 0.5f);
+			global::Dyvoid.FeatherTween.FT.SetGlobalTimeScale(0.5f);
+			global::Dyvoid.FeatherTween.FT.SetTimeScale(UpdatePhase.Manual, 0.5f);
 			t.SetTimeScale(2f);
 
-			PATweenRunner.ManualTick(1.0);
+			FeatherTweenRunner.ManualTick(1.0);
 			// 1.0 * 0.5 (global) * 0.5 (phase) * 2 (tween) = 0.5
 			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f));
 		}
@@ -394,7 +394,7 @@ namespace PATween.Tests
 			var seq = sb.Start();
 			seq.SetTimeScale(0.5f);
 
-			PATweenRunner.ManualTick(1.0);
+			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f), "sequence scale slows its children");
 		}
 
@@ -407,8 +407,8 @@ namespace PATween.Tests
 				.Start();
 
 			Assert.Throws<ArgumentOutOfRangeException>(() => t.SetTimeScale(-1f));
-			Assert.Throws<ArgumentOutOfRangeException>(() => global::PATween.PATween.SetGlobalTimeScale(-1f));
-			Assert.Throws<ArgumentOutOfRangeException>(() => global::PATween.PATween.SetTimeScale(UpdatePhase.Manual, -0.5f));
+			Assert.Throws<ArgumentOutOfRangeException>(() => global::Dyvoid.FeatherTween.FT.SetGlobalTimeScale(-1f));
+			Assert.Throws<ArgumentOutOfRangeException>(() => global::Dyvoid.FeatherTween.FT.SetTimeScale(UpdatePhase.Manual, -0.5f));
 		}
 
 		[Test]
@@ -421,8 +421,8 @@ namespace PATween.Tests
 				.SetUpdate(UpdatePhase.Manual, ignoreTimeScale: true)
 				.Start();
 
-			global::PATween.PATween.SetGlobalTimeScale(0.25f);
-			PATweenRunner.ManualTick(1.0);
+			global::Dyvoid.FeatherTween.FT.SetGlobalTimeScale(0.25f);
+			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f));
 		}
 	}

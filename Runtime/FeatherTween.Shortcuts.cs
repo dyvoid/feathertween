@@ -2,14 +2,14 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PATween
+namespace Dyvoid.FeatherTween
 {
 	// Typed shortcuts (phase 1.11). Each builds a lambda pair on the generic
 	// core, auto-sets the target so Kill(target)/IsTweening(target) reach the
 	// tween, and returns the ordinary builder for chaining (From, SetEase, ...).
 	// The per-creation delegate-pair allocation is the accepted lambda baseline;
 	// hand-written zero-alloc fast paths are an M2 deliverable.
-	public static partial class PATween
+	public static partial class FT
 	{
 		public static TweenBuilder<Vector3> Move(Transform target, Vector3 end, float duration)
 		{
@@ -95,7 +95,7 @@ namespace PATween
 		{
 			if (target == null)
 			{
-				throw new ArgumentNullException(nameof(target), "[PATween] Shortcut target is null or destroyed.");
+				throw new ArgumentNullException(nameof(target), "[FeatherTween] Shortcut target is null or destroyed.");
 			}
 		}
 	}

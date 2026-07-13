@@ -1,7 +1,7 @@
 using UnityEngine;
-using PATween;
+using Dyvoid.FeatherTween;
 
-namespace PATween.Samples.ComposedDemo
+namespace Dyvoid.FeatherTween.Samples.ComposedDemo
 {
 	// Attach to an empty GameObject and press Play.
 	//
@@ -20,7 +20,7 @@ namespace PATween.Samples.ComposedDemo
 	// The OnGUI panel drives the control surface at runtime: pause/resume all,
 	// reverse and seek on the hero sequence, global time scale, and a
 	// target-filtered kill of the wave.
-	public class PATweenComposedDemo : MonoBehaviour
+	public class FeatherTweenComposedDemo : MonoBehaviour
 	{
 		[Header("Timing")]
 		[Tooltip("Base duration (seconds) for the hero sequence steps.")]
@@ -63,8 +63,8 @@ namespace PATween.Samples.ComposedDemo
 		private void OnDestroy()
 		{
 			show.Kill();
-			global::PATween.PATween.Kill(WaveTag);
-			global::PATween.PATween.SetGlobalTimeScale(1f);
+			global::Dyvoid.FeatherTween.FT.Kill(WaveTag);
+			global::Dyvoid.FeatherTween.FT.SetGlobalTimeScale(1f);
 			foreach (var go in orbiters) DestroySpawned(go);
 			foreach (var go in pillars) DestroySpawned(go);
 			DestroySpawned(hero);
@@ -82,12 +82,12 @@ namespace PATween.Samples.ComposedDemo
 				var go = Spawn(PrimitiveType.Cube, new Vector3(-5f, 1.5f * i, -3f), UnityEngine.Color.cyan, $"Orbiter{i}");
 				orbiters[i] = go;
 
-				global::PATween.PATween.LocalRotate(go.transform, new Vector3(0f, 120f, 0f), stepDuration)
+				global::Dyvoid.FeatherTween.FT.LocalRotate(go.transform, new Vector3(0f, 120f, 0f), stepDuration)
 					.SetLoops(-1, LoopType.Incremental)
 					.SetEase(Easing.InOutSine())
 					.Start();
 
-				global::PATween.PATween.Scale(go.transform, 1.4f, stepDuration * 0.5f)
+				global::Dyvoid.FeatherTween.FT.Scale(go.transform, 1.4f, stepDuration * 0.5f)
 					.SetLoops(-1, LoopType.Yoyo)
 					.Start();
 			}
@@ -106,7 +106,7 @@ namespace PATween.Samples.ComposedDemo
 				pillars[i] = go;
 
 				var t = go.transform;
-				global::PATween.PATween.To(
+				global::Dyvoid.FeatherTween.FT.To(
 						() => t.localScale.y,
 						y => t.localScale = new Vector3(0.3f, y, 0.3f),
 						2f, stepDuration * 0.6f)
@@ -134,7 +134,7 @@ namespace PATween.Samples.ComposedDemo
 			var buddyT = buddy.transform;
 			var dropInT = dropIn.transform;
 
-			var sb = global::PATween.PATween.Sequence()
+			var sb = global::Dyvoid.FeatherTween.FT.Sequence()
 				.SetDefaults(ease: Easing.InOutQuad())
 				.SetAutoKill(false)
 				.OnStart(() => phaseLabel = "hero: moving out")
@@ -142,22 +142,22 @@ namespace PATween.Samples.ComposedDemo
 				.OnComplete(OnShowComplete);
 
 			// Append + Join: hero moves right while the buddy circles under it.
-			sb.Append(global::PATween.PATween.Move(heroT, new Vector3(4f, 0f, 0f), stepDuration));
-			sb.Join(global::PATween.PATween.Move(buddyT, new Vector3(4f, 0f, 1.5f), stepDuration));
+			sb.Append(global::Dyvoid.FeatherTween.FT.Move(heroT, new Vector3(4f, 0f, 0f), stepDuration));
+			sb.Join(global::Dyvoid.FeatherTween.FT.Move(buddyT, new Vector3(4f, 0f, 1.5f), stepDuration));
 
 			// Nested sub-sequence: a hop composed of up + spin, then down.
-			var hop = global::PATween.PATween.Sequence()
+			var hop = global::Dyvoid.FeatherTween.FT.Sequence()
 				.SetDefaults(ease: Easing.OutQuad());
 			hop.AppendCallback(() => phaseLabel = "hero: hop (nested sequence)");
-			hop.Append(global::PATween.PATween.Move(heroT, new Vector3(4f, 2f, 0f), stepDuration * 0.5f));
-			hop.Join(global::PATween.PATween.LocalRotate(heroT, new Vector3(0f, 180f, 0f), stepDuration * 0.5f));
-			hop.Append(global::PATween.PATween.Move(heroT, new Vector3(4f, 0f, 0f), stepDuration * 0.5f)
+			hop.Append(global::Dyvoid.FeatherTween.FT.Move(heroT, new Vector3(4f, 2f, 0f), stepDuration * 0.5f));
+			hop.Join(global::Dyvoid.FeatherTween.FT.LocalRotate(heroT, new Vector3(0f, 180f, 0f), stepDuration * 0.5f));
+			hop.Append(global::Dyvoid.FeatherTween.FT.Move(heroT, new Vector3(4f, 0f, 0f), stepDuration * 0.5f)
 				.SetEase(Easing.OutBounce()));
 			sb.Append(hop);
 
 			// Callback + material flash via a generic To on the material color.
 			sb.AppendCallback(() => phaseLabel = "hero: flash");
-			sb.Append(global::PATween.PATween.To(
+			sb.Append(global::Dyvoid.FeatherTween.FT.To(
 				() => heroRenderer.material.color,
 				c => heroRenderer.material.color = c,
 				UnityEngine.Color.red, stepDuration * 0.5f)
@@ -167,7 +167,7 @@ namespace PATween.Samples.ComposedDemo
 			// to its raised spot only when the playhead reaches the finale.
 			sb.Insert(
 				Position.AtLabel("finale"),
-				global::PATween.PATween.From(
+				global::Dyvoid.FeatherTween.FT.From(
 						() => dropInT.position, p => dropInT.position = p,
 						new Vector3(4f, 3f, 1.5f), stepDuration)
 					.SetEase(Easing.OutBounce()));
@@ -202,13 +202,13 @@ namespace PATween.Samples.ComposedDemo
 			// Fixed-height header: the phase label wraps to two lines at times,
 			// and without a reserved height that shoves the buttons around
 			// mid-click. Reserve two lines up front so the controls never move.
-			GUILayout.Label($"PATween ComposedDemo - {phaseLabel}", GUILayout.Height(36f));
+			GUILayout.Label($"FeatherTween ComposedDemo - {phaseLabel}", GUILayout.Height(36f));
 			GUILayout.Label($"hero status {show.Status} | progress {showProgress:P0}", GUILayout.Height(20f));
 
 			if (GUILayout.Button(paused ? "Resume all" : "Pause all"))
 			{
-				if (paused) global::PATween.PATween.ResumeAll();
-				else global::PATween.PATween.PauseAll();
+				if (paused) global::Dyvoid.FeatherTween.FT.ResumeAll();
+				else global::Dyvoid.FeatherTween.FT.PauseAll();
 				paused = !paused;
 			}
 
@@ -229,13 +229,13 @@ namespace PATween.Samples.ComposedDemo
 			if (!Mathf.Approximately(newScale, globalScale))
 			{
 				globalScale = newScale;
-				global::PATween.PATween.SetGlobalTimeScale(globalScale);
+				global::Dyvoid.FeatherTween.FT.SetGlobalTimeScale(globalScale);
 			}
 
 			GUI.enabled = waveAlive;
 			if (GUILayout.Button("Kill wave (filtered by target tag)"))
 			{
-				global::PATween.PATween.Kill(WaveTag);
+				global::Dyvoid.FeatherTween.FT.Kill(WaveTag);
 				waveAlive = false;
 			}
 			GUI.enabled = true;
@@ -246,7 +246,7 @@ namespace PATween.Samples.ComposedDemo
 		private GameObject Spawn(PrimitiveType type, Vector3 position, UnityEngine.Color color, string label)
 		{
 			var go = GameObject.CreatePrimitive(type);
-			go.name = $"PATweenComposedDemo_{label}";
+			go.name = $"FeatherTweenComposedDemo_{label}";
 			go.transform.SetParent(transform, worldPositionStays: true);
 			go.transform.position = position;
 			go.GetComponent<Renderer>().material.color = color;

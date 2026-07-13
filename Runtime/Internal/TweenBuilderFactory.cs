@@ -1,4 +1,4 @@
-namespace PATween.Internal
+namespace Dyvoid.FeatherTween.Internal
 {
 	internal static class TweenBuilderFactory
 	{

@@ -1,8 +1,8 @@
 {
-  "name": "PATween.Tests.Runtime",
-  "rootNamespace": "PATween.Tests",
+  "name": "FeatherTween.Tests.Runtime",
+  "rootNamespace": "Dyvoid.FeatherTween.Tests",
   "references": [
-    "PATween",
+    "FeatherTween",
     "UnityEngine.TestRunner"
   ],
   "includePlatforms": [],

@@ -1,7 +1,7 @@
 using System;
-using PATween.Internal;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween
+namespace Dyvoid.FeatherTween
 {
 	public struct SequenceBuilder
 	{
@@ -313,7 +313,7 @@ namespace PATween
 			}
 			if (buffer.TryResolveLabel(name, out _))
 			{
-				throw new ArgumentException($"[PATween] Label '{name}' is already defined.", nameof(name));
+				throw new ArgumentException($"[FeatherTween] Label '{name}' is already defined.", nameof(name));
 			}
 			buffer.DefineLabel(name, time);
 			return this;
@@ -325,14 +325,14 @@ namespace PATween
 			ValidateLabelName(name);
 			if (buffer.TryResolveLabel(name, out _))
 			{
-				throw new ArgumentException($"[PATween] Label '{name}' is already defined.", nameof(name));
+				throw new ArgumentException($"[FeatherTween] Label '{name}' is already defined.", nameof(name));
 			}
 			// Label positions resolve at definition time; referencing an
 			// undefined label here throws (only Insert/AddPause defer).
 			if (!TryResolvePosition(position, out var time))
 			{
 				throw new InvalidOperationException(
-					$"[PATween] AddLabel position references undefined label '{position.Label}'.");
+					$"[FeatherTween] AddLabel position references undefined label '{position.Label}'.");
 			}
 			if (time < 0d)
 			{
@@ -440,7 +440,7 @@ namespace PATween
 			if (childBuffer == null || childBuffer.Released || childBuffer.Generation != child.Generation)
 			{
 				throw new InvalidOperationException(
-					"[PATween] Child builder was already consumed (started or appended elsewhere).");
+					"[FeatherTween] Child builder was already consumed (started or appended elsewhere).");
 			}
 
 			if (!childBuffer.PhaseExplicit)
@@ -452,7 +452,7 @@ namespace PATween
 				var childPhase = childBuffer.Phase;
 				TweenBuilderBufferPool<T>.Return(childBuffer);
 				throw new ArgumentException(
-					$"[PATween] Child update phase {childPhase} does not match sequence phase {buffer.Phase}.");
+					$"[FeatherTween] Child update phase {childPhase} does not match sequence phase {buffer.Phase}.");
 			}
 
 			buffer.ApplyDefaults(childBuffer);
@@ -487,12 +487,12 @@ namespace PATween
 			if (childBuffer == null || childBuffer == buffer)
 			{
 				throw new InvalidOperationException(
-					"[PATween] Cannot nest a sequence builder into itself or pass an invalid builder.");
+					"[FeatherTween] Cannot nest a sequence builder into itself or pass an invalid builder.");
 			}
 			if (childBuffer.Released || childBuffer.Generation != child.Generation)
 			{
 				throw new InvalidOperationException(
-					"[PATween] Child sequence builder was already consumed (started or appended elsewhere).");
+					"[FeatherTween] Child sequence builder was already consumed (started or appended elsewhere).");
 			}
 
 			if (!childBuffer.PhaseExplicit)
@@ -505,7 +505,7 @@ namespace PATween
 				childBuffer.ClearEntries(clearLabels: true);
 				SequenceBuilderBufferPool.Return(childBuffer);
 				throw new ArgumentException(
-					$"[PATween] Child sequence phase {childPhase} does not match parent phase {buffer.Phase}.");
+					$"[FeatherTween] Child sequence phase {childPhase} does not match parent phase {buffer.Phase}.");
 			}
 
 			var data = childBuffer.Build();
@@ -542,7 +542,7 @@ namespace PATween
 			if (!IsValid())
 			{
 				throw new InvalidOperationException(
-					"[PATween] SequenceBuilder used after Start() or invalid alias.");
+					"[FeatherTween] SequenceBuilder used after Start() or invalid alias.");
 			}
 		}
 	}

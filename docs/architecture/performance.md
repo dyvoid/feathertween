@@ -1,6 +1,6 @@
 # Performance Plan
 
-How PATween stays allocation-free in the hot path and how performance is verified.
+How FeatherTween stays allocation-free in the hot path and how performance is verified.
 
 ## Allocation budget
 
@@ -20,7 +20,7 @@ Implemented in the `Tests/Performance` EditMode asmdef. Two separate concerns:
 
 ### Allocation guards (hard fail)
 
-Deterministic zero-managed-alloc assertions using `System.GC.GetAllocatedBytesForCurrentThread()` around a synchronous `PATweenRunner.ManualTick` loop. `ManualTick` avoids frame/thread noise, so the delta is exact and CI-safe.
+Deterministic zero-managed-alloc assertions using `System.GC.GetAllocatedBytesForCurrentThread()` around a synchronous `FeatherTweenRunner.ManualTick` loop. `ManualTick` avoids frame/thread noise, so the delta is exact and CI-safe.
 
 - Steady-state tick of 1k tweens after warmup: delta must be exactly 0 bytes.
 - Tick after a kill/realloc cycle: free-list reuse must not allocate.

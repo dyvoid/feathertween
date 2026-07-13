@@ -1,6 +1,6 @@
 using System;
 
-namespace PATween
+namespace Dyvoid.FeatherTween
 {
 	public readonly struct Position
 	{

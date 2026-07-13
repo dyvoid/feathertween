@@ -1,4 +1,4 @@
-namespace PATween.Internal
+namespace Dyvoid.FeatherTween.Internal
 {
 	// Shared control-surface cores used by both the Tween and Sequence handles
 	// and by the deferred-command queue. Callback firing follows the matrix in
@@ -136,7 +136,7 @@ namespace PATween.Internal
 			if (scale < 0f)
 			{
 				throw new System.ArgumentOutOfRangeException(
-					nameof(scale), "[PATween] SetTimeScale rejects negative values; use Reverse().");
+					nameof(scale), "[FeatherTween] SetTimeScale rejects negative values; use Reverse().");
 			}
 			var data = TweenStore.Get(id, gen);
 			if (data != null)

@@ -10,13 +10,13 @@ the real Unity runtime (PlayerLoop injection, PlayMode tests).
 
 ```sh
 # run the EditMode suite (excludes tests tagged RequiresUnity)
-dotnet run --project PATween.TestRunner.csproj -c Release -- --noresult --where "cat != RequiresUnity"
+dotnet run --project FeatherTween.TestRunner.csproj -c Release -- --noresult --where "cat != RequiresUnity"
 
 # release leg: safe mode compiled out (excludes RequiresSafeMode; compiles in ReleaseModeTests)
-dotnet run --project PATween.TestRunner.csproj -c Release -p:DefineConstants=PATWEEN_RELEASE -- --noresult --where "cat != RequiresUnity && cat != RequiresSafeMode"
+dotnet run --project FeatherTween.TestRunner.csproj -c Release -p:DefineConstants=FEATHERTWEEN_RELEASE -- --noresult --where "cat != RequiresUnity && cat != RequiresSafeMode"
 
 # compile-check Runtime + Samples only
-dotnet build PATween.CompileCheck.csproj
+dotnet build FeatherTween.CompileCheck.csproj
 ```
 
 Rules of the stub:

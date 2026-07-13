@@ -1,9 +1,9 @@
 {
-  "name": "PATween.Tests.Editor",
-  "rootNamespace": "PATween.Tests",
+  "name": "FeatherTween.Tests.Editor",
+  "rootNamespace": "Dyvoid.FeatherTween.Tests",
   "references": [
-    "PATween",
-    "PATween.Editor",
+    "FeatherTween",
+    "FeatherTween.Editor",
     "UnityEngine.UI",
     "UnityEngine.TestRunner",
     "UnityEditor.TestRunner"

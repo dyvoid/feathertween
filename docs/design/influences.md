@@ -1,6 +1,6 @@
 # Influences
 
-PATween is a synthesis of ideas from several existing tween engines.
+FeatherTween is a synthesis of ideas from several existing tween engines.
 
 - **DOTween**: pooled storage, three update phases + manual, safe-mode try/catch around plugin steps, `SetLink`/`LinkBehaviour`, filter-by-target/id, sequence insertion quirks (autoKill=false, infinite-loop clamp).
 - **GSAP**: universal parent-timeline data model with `_start`/`_end`/`_parent`/`_timeScale`, recursive composition of timeScale/pause/reverse/seek, position parameter semantics, `defaults` cascade, labels, `addPause`, `tweenTo(label)`, `recent()`, `invalidate()`.

@@ -2,20 +2,20 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using PATween.Internal;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween.Tests
+namespace Dyvoid.FeatherTween.Tests
 {
 	[TestFixture]
-	public class PATweenRunnerPlayModeTests
+	public class FeatherTweenRunnerPlayModeTests
 	{
 		[UnityTest]
 		public IEnumerator UpdateRoot_AdvancesEachFrame()
 		{
 			yield return null;
-			var before = PATweenRunner.RootUpdate.LocalTime;
+			var before = FeatherTweenRunner.RootUpdate.LocalTime;
 			yield return null;
-			var after = PATweenRunner.RootUpdate.LocalTime;
+			var after = FeatherTweenRunner.RootUpdate.LocalTime;
 			Assert.That(after, Is.GreaterThan(before));
 		}
 
@@ -23,9 +23,9 @@ namespace PATween.Tests
 		public IEnumerator LateRoot_AdvancesEachFrame()
 		{
 			yield return null;
-			var before = PATweenRunner.RootLate.LocalTime;
+			var before = FeatherTweenRunner.RootLate.LocalTime;
 			yield return null;
-			var after = PATweenRunner.RootLate.LocalTime;
+			var after = FeatherTweenRunner.RootLate.LocalTime;
 			Assert.That(after, Is.GreaterThan(before));
 		}
 
@@ -33,18 +33,18 @@ namespace PATween.Tests
 		public IEnumerator FixedRoot_Advances()
 		{
 			yield return new WaitForFixedUpdate();
-			var before = PATweenRunner.RootFixed.LocalTime;
+			var before = FeatherTweenRunner.RootFixed.LocalTime;
 			yield return new WaitForFixedUpdate();
 			yield return new WaitForFixedUpdate();
-			var after = PATweenRunner.RootFixed.LocalTime;
+			var after = FeatherTweenRunner.RootFixed.LocalTime;
 			Assert.That(after, Is.GreaterThan(before));
 		}
 
 		[UnityTest]
 		public IEnumerator AutoKill_FiresFrameAfter_ObjectDestroy()
 		{
-			var go = new GameObject("__patween_destroy_target__");
-			var t = global::PATween.PATween.To(() => 0f, _ => { }, 1f, 30f)
+			var go = new GameObject("__feathertween_destroy_target__");
+			var t = global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 30f)
 				.SetTarget(go)
 				.Start();
 
@@ -61,7 +61,7 @@ namespace PATween.Tests
 		[UnityTest]
 		public IEnumerator RunnerTicks_AfterScriptUpdate()
 		{
-			var go = new GameObject("PATweenProbe");
+			var go = new GameObject("FeatherTweenProbe");
 			var probe = go.AddComponent<UpdateOrderProbe>();
 
 			// Two frames: a newly added component's first Update can be
@@ -71,7 +71,7 @@ namespace PATween.Tests
 
 			Assert.That(probe.SawUpdate, Is.True);
 			Assert.That(probe.TickedBetweenUpdateAndLate, Is.True,
-				"PATween runner must tick after ScriptRunBehaviourUpdate.");
+				"FeatherTween runner must tick after ScriptRunBehaviourUpdate.");
 
 			Object.Destroy(go);
 		}
@@ -89,7 +89,7 @@ namespace PATween.Tests
 
 			private void Update()
 			{
-				rootTimeAtUpdate = PATweenRunner.RootUpdate.LocalTime;
+				rootTimeAtUpdate = FeatherTweenRunner.RootUpdate.LocalTime;
 				updateRanThisFrame = true;
 				SawUpdate = true;
 			}
@@ -97,7 +97,7 @@ namespace PATween.Tests
 			private void LateUpdate()
 			{
 				if (updateRanThisFrame
-					&& PATweenRunner.RootUpdate.LocalTime > rootTimeAtUpdate)
+					&& FeatherTweenRunner.RootUpdate.LocalTime > rootTimeAtUpdate)
 				{
 					TickedBetweenUpdateAndLate = true;
 				}

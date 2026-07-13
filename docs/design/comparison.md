@@ -1,15 +1,15 @@
 # Engine Comparison
 
-How PATween's design choices compare to DOTween, GSAP, PrimeTween, and LitMotion. Use this table to understand where PATween sits on the trade-off spectrum: static vs extension API, struct vs reference handles, managed vs Burst hot path, and so on.
+How FeatherTween's design choices compare to DOTween, GSAP, PrimeTween, and LitMotion. Use this table to understand where FeatherTween sits on the trade-off spectrum: static vs extension API, struct vs reference handles, managed vs Burst hot path, and so on.
 
-| Concern              | DOTween                  | GSAP                          | PrimeTween                          | LitMotion                                | PATween                                      |
+| Concern              | DOTween                  | GSAP                          | PrimeTween                          | LitMotion                                | FeatherTween                                      |
 |----------------------|--------------------------|-------------------------------|-------------------------------------|------------------------------------------|----------------------------------------------|
 | Public handle        | class reference          | object reference              | struct + isAlive                    | struct (StorageId,Index,Version)         | struct handle + generation                   |
 | Builder vs handle    | merged                   | merged                        | merged (config = args)              | split (MotionBuilder → MotionHandle)      | split (TweenBuilder → Tween, explicit Start) |
 | Storage              | pooled classes           | objects + linked list         | pooled (closed)                     | unmanaged[]+managed[] SoA, Burst         | pooled classes (SoA-ready, Burst in M5)      |
 | Runner               | hidden MonoBehaviour     | rAF + global timeline         | hidden MonoBehaviour                | PlayerLoop (8 phases) + editor mirror    | PlayerLoop (3+Manual) + editor mirror        |
 | Nested sequences     | sequences, flat root     | universal parent-timeline     | flat sequences with nesting         | sequence = tween + (time, child) list    | universal parent-sequence (from M1)        |
-| Shortcut style       | extensions on Unity types| n/a                           | static on `Tween`                   | none (just `LMotion.Create` + `Bind`)    | static on `PATween`                          |
+| Shortcut style       | extensions on Unity types| n/a                           | static on `Tween`                   | none (just `LMotion.Create` + `Bind`)    | static on `FeatherTween`                          |
 | Position param       | typed only               | string DSL + numeric          | typed (Group/Chain/Insert)          | typed (Append/Insert/Join)               | typed `Position` (M1), string parse (M4)   |
 | Reverse              | yes                      | yes                           | no (fire new tween)                 | no (use PlaybackSpeed)                   | yes (derived from sequence model)            |
 | Generic core         | lambda getter/setter     | string property names         | lambda + target-capture             | lambda + 0/1/2/3-state target-capture    | lambda + target-capture                      |
@@ -25,7 +25,7 @@ How PATween's design choices compare to DOTween, GSAP, PrimeTween, and LitMotion
 
 ## Naming and packaging
 
-- Asmdef: `PATween` (runtime), `PATween.Editor` (editor), `PATween.UniTask` (optional)
-- Root namespace: `PATween`
-- Unity package: `com.<vendor>.patween`
+- Asmdef: `FeatherTween` (runtime), `Dyvoid.FeatherTween.Editor` (editor), `FeatherTween.UniTask` (optional)
+- Root namespace: `FeatherTween`
+- Unity package: `com.<vendor>.feathertween`
 - Minimum Unity: 6000.3

@@ -1,6 +1,6 @@
 # Custom Value Types
 
-PATween can tween any value type for which you provide an `IInterpolator<T>`.
+FeatherTween can tween any value type for which you provide an `IInterpolator<T>`.
 
 ## `IInterpolator<T>`
 
@@ -18,7 +18,7 @@ Built-ins in M1: `float`, `Vector2`, `Vector3`, `Vector4`, `Color`, `Quaternion`
 ## Registration
 
 ```csharp
-PATween.RegisterInterpolator<T, TInterp>() where TInterp : struct, IInterpolator<T>;
+FT.RegisterInterpolator<T, TInterp>() where TInterp : struct, IInterpolator<T>;
 ```
 
 - Main-thread only; throws if called off-thread.
@@ -35,7 +35,7 @@ public struct RectInterpolator : IInterpolator<Rect>
     public Rect Subtract(Rect a, Rect b) => new(a.x - b.x, a.y - b.y, a.width - b.width, a.height - b.height);
 }
 
-PATween.RegisterInterpolator<Rect, RectInterpolator>();
+FT.RegisterInterpolator<Rect, RectInterpolator>();
 ```
 
 M5 adds `IBurstInterpolator<T>` with an `unmanaged` constraint for the Burst path. M1-registered managed interpolators continue to work unchanged.

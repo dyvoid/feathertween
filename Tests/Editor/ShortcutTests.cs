@@ -1,10 +1,10 @@
 using NUnit.Framework;
-using PATween;
-using PATween.Internal;
+using Dyvoid.FeatherTween;
+using Dyvoid.FeatherTween.Internal;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PATween.Tests
+namespace Dyvoid.FeatherTween.Tests
 {
 	// Phase 1.11: typed shortcuts on the lambda core. Each shortcut must move
 	// the right property of the right component, auto-set the target, and
@@ -18,7 +18,7 @@ namespace PATween.Tests
 		public void SetUp()
 		{
 			TweenStore.Reset();
-			PATweenRunner.Reset();
+			FeatherTweenRunner.Reset();
 			Interpolators.Reset();
 			go = new GameObject("shortcut-test");
 		}
@@ -37,16 +37,16 @@ namespace PATween.Tests
 		{
 			var t = go.transform;
 			t.position = Vector3.zero;
-			global::PATween.PATween.Move(t, new Vector3(2f, 4f, 6f), 1f)
+			global::Dyvoid.FeatherTween.FT.Move(t, new Vector3(2f, 4f, 6f), 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(t.position.x, Is.EqualTo(1f).Within(1e-3f));
 			Assert.That(t.position.y, Is.EqualTo(2f).Within(1e-3f));
 			Assert.That(t.position.z, Is.EqualTo(3f).Within(1e-3f));
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(t.position.x, Is.EqualTo(2f).Within(1e-3f));
 		}
 
@@ -56,11 +56,11 @@ namespace PATween.Tests
 			var t = go.transform;
 			t.position = new Vector3(9f, 9f, 9f);
 			t.localPosition = Vector3.zero;
-			global::PATween.PATween.LocalMove(t, Vector3.right * 2f, 1f)
+			global::Dyvoid.FeatherTween.FT.LocalMove(t, Vector3.right * 2f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(t.localPosition.x, Is.EqualTo(1f).Within(1e-3f));
 		}
 
@@ -69,11 +69,11 @@ namespace PATween.Tests
 		{
 			var t = go.transform;
 			t.localScale = Vector3.one;
-			global::PATween.PATween.Scale(t, 3f, 1f)
+			global::Dyvoid.FeatherTween.FT.Scale(t, 3f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(t.localScale.x, Is.EqualTo(2f).Within(1e-3f));
 			Assert.That(t.localScale.y, Is.EqualTo(2f).Within(1e-3f));
 			Assert.That(t.localScale.z, Is.EqualTo(2f).Within(1e-3f));
@@ -84,11 +84,11 @@ namespace PATween.Tests
 		{
 			var t = go.transform;
 			t.rotation = Quaternion.identity;
-			global::PATween.PATween.Rotate(t, new Vector3(0f, 90f, 0f), 1f)
+			global::Dyvoid.FeatherTween.FT.Rotate(t, new Vector3(0f, 90f, 0f), 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			PATweenRunner.ManualTick(1.0);
+			FeatherTweenRunner.ManualTick(1.0);
 			var expected = Quaternion.Euler(0f, 90f, 0f);
 			Assert.That(Mathf.Abs(Quaternion.Dot(t.rotation, expected)), Is.EqualTo(1f).Within(1e-3f),
 				"end rotation matches Euler(0,90,0)");
@@ -99,11 +99,11 @@ namespace PATween.Tests
 		{
 			var t = go.transform;
 			t.localRotation = Quaternion.identity;
-			global::PATween.PATween.LocalRotate(t, new Vector3(0f, 0f, 180f), 1f)
+			global::Dyvoid.FeatherTween.FT.LocalRotate(t, new Vector3(0f, 0f, 180f), 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			PATweenRunner.ManualTick(1.0);
+			FeatherTweenRunner.ManualTick(1.0);
 			var expected = Quaternion.Euler(0f, 0f, 180f);
 			Assert.That(Mathf.Abs(Quaternion.Dot(t.localRotation, expected)), Is.EqualTo(1f).Within(1e-3f));
 		}
@@ -113,11 +113,11 @@ namespace PATween.Tests
 		{
 			var cg = go.AddComponent<CanvasGroup>();
 			cg.alpha = 1f;
-			global::PATween.PATween.Fade(cg, 0f, 1f)
+			global::Dyvoid.FeatherTween.FT.Fade(cg, 0f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			PATweenRunner.ManualTick(0.75);
+			FeatherTweenRunner.ManualTick(0.75);
 			Assert.That(cg.alpha, Is.EqualTo(0.25f).Within(1e-3f));
 		}
 
@@ -126,11 +126,11 @@ namespace PATween.Tests
 		{
 			var img = go.AddComponent<Image>();
 			img.color = new Color(0f, 0f, 0f, 1f);
-			global::PATween.PATween.Color(img, new Color(1f, 0.5f, 0f, 1f), 1f)
+			global::Dyvoid.FeatherTween.FT.Color(img, new Color(1f, 0.5f, 0f, 1f), 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(img.color.r, Is.EqualTo(0.5f).Within(1e-3f));
 			Assert.That(img.color.g, Is.EqualTo(0.25f).Within(1e-3f));
 			Assert.That(img.color.a, Is.EqualTo(1f).Within(1e-3f));
@@ -141,11 +141,11 @@ namespace PATween.Tests
 		{
 			var img = go.AddComponent<Image>();
 			img.color = new Color(0.2f, 0.4f, 0.6f, 1f);
-			global::PATween.PATween.Fade(img, 0f, 1f)
+			global::Dyvoid.FeatherTween.FT.Fade(img, 0f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(img.color.a, Is.EqualTo(0.5f).Within(1e-3f));
 			Assert.That(img.color.r, Is.EqualTo(0.2f).Within(1e-3f), "rgb untouched");
 		}
@@ -155,11 +155,11 @@ namespace PATween.Tests
 		{
 			var img = go.AddComponent<Image>();
 			img.fillAmount = 0f;
-			global::PATween.PATween.FillAmount(img, 1f, 1f)
+			global::Dyvoid.FeatherTween.FT.FillAmount(img, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			PATweenRunner.ManualTick(0.25);
+			FeatherTweenRunner.ManualTick(0.25);
 			Assert.That(img.fillAmount, Is.EqualTo(0.25f).Within(1e-3f));
 		}
 
@@ -168,14 +168,14 @@ namespace PATween.Tests
 		{
 			var t = go.transform;
 			t.position = new Vector3(5f, 0f, 0f);
-			global::PATween.PATween.Move(t, new Vector3(1f, 0f, 0f), 1f)
+			global::Dyvoid.FeatherTween.FT.Move(t, new Vector3(1f, 0f, 0f), 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.From()
 				.Start();
 
 			Assert.That(t.position.x, Is.EqualTo(1f).Within(1e-3f), "From snaps position to the given value");
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(t.position.x, Is.EqualTo(3f).Within(1e-3f), "moves back toward the captured 5");
 		}
 
@@ -183,7 +183,7 @@ namespace PATween.Tests
 		public void Shortcut_AutoSetsTarget()
 		{
 			var t = go.transform;
-			var tween = global::PATween.PATween.Move(t, Vector3.one, 1f)
+			var tween = global::Dyvoid.FeatherTween.FT.Move(t, Vector3.one, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -197,15 +197,15 @@ namespace PATween.Tests
 		{
 			var t = go.transform;
 			var killed = false;
-			global::PATween.PATween.Move(t, Vector3.one, 1f)
+			global::Dyvoid.FeatherTween.FT.Move(t, Vector3.one, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start()
 				.OnKill(() => killed = true);
 
-			PATweenRunner.ManualTick(0.25);
+			FeatherTweenRunner.ManualTick(0.25);
 			Object.DestroyImmediate(go);
 			go = null;
-			PATweenRunner.ManualTick(0.25);
+			FeatherTweenRunner.ManualTick(0.25);
 			Assert.That(killed, Is.True, "destroyed Unity target auto-kills the tween");
 		}
 
@@ -213,9 +213,9 @@ namespace PATween.Tests
 		public void Shortcut_NullTarget_Throws()
 		{
 			Assert.Throws<System.ArgumentNullException>(
-				() => global::PATween.PATween.Move(null, Vector3.one, 1f));
+				() => global::Dyvoid.FeatherTween.FT.Move(null, Vector3.one, 1f));
 			Assert.Throws<System.ArgumentNullException>(
-				() => global::PATween.PATween.Fade((CanvasGroup)null, 0f, 1f));
+				() => global::Dyvoid.FeatherTween.FT.Fade((CanvasGroup)null, 0f, 1f));
 		}
 	}
 }

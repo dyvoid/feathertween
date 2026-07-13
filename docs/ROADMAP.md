@@ -11,7 +11,7 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Storage and handle scaffold | Done | Pooled `TweenData` slots, generation ids, free list, per-phase active lists | — |
 | PlayerLoop runner and root scheduler | Done | PlayerLoop injection for `Update` / `LateUpdate` / `FixedUpdate`, Editor mirror | 0004 |
 | Builder/handle split and lifecycle | Done | `TweenBuilder<T>` + pooled backing, `.Start()` consumes buffer, leak detection | 0002, 0003 |
-| Generic tween core | Done | `PATween.To<T>`, `IInterpolator<T>` registry, linear ease, auto-kill | — |
+| Generic tween core | Done | `FT.To<T>`, `IInterpolator<T>` registry, linear ease, auto-kill | — |
 | Full ease system | Done | `EaseRef`, `Easing.X` factories, parametric eases, static eval table | 0005 |
 | From / FromTo with deferred snap | Done | `From()` / `FromTo()` builder methods, snap semantics | 0007 |
 | Loops, delays, direction, reverse | Done | `SetLoops`, `SetDelay`, `Reverse()`, yoyo/incremental/rewind | 0009 |
@@ -44,9 +44,9 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 |---------|--------|-------------|
 | Editor preview window | Candidate | Scrubber = 1.10 `Seek` + existing editor ticking |
 | UniTask integration | Candidate | Weakened case (M2 awaitables use native `Awaitable`); only if a consumer needs it |
-| Stagger helpers | Candidate | `PATween.Stagger(targets, ...)` |
-| Speed-based tweens | Candidate | `PATween.PositionAtSpeed`, etc. |
-| Path tweens | Candidate | Linear / CatmullRom paths, `LookAt` modes; separate `PATween.Paths` asmdef |
+| Stagger helpers | Candidate | `FT.Stagger(targets, ...)` |
+| Speed-based tweens | Candidate | `FT.PositionAtSpeed`, etc. |
+| Path tweens | Candidate | Linear / CatmullRom paths, `LookAt` modes; separate `FeatherTween.Paths` asmdef |
 | Blendable tweens | Candidate | Additive composition; **needs ADR first** (multiple writers per property vs storage model) |
 | `TweenAssetSO` | Candidate | Shared preset ScriptableObjects |
 

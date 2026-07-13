@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PATween.Internal
+namespace Dyvoid.FeatherTween.Internal
 {
 	// Reentrancy guard: structural mutation (Kill / Complete / Restart /
 	// Reverse) issued from inside a callback is deferred and executed either
@@ -121,7 +121,7 @@ namespace PATween.Internal
 					if (++executed > DrainCap)
 					{
 						Debug.LogError(
-							"[PATween] Deferred-command drain exceeded 65536 commands; " +
+							"[FeatherTween] Deferred-command drain exceeded 65536 commands; " +
 							"likely a callback cycle (e.g. OnComplete restarting itself " +
 							"and completing synchronously). Remaining commands dropped.");
 						break;

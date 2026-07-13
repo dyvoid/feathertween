@@ -37,7 +37,7 @@ Target-capture overloads only avoid allocation when the lambda body does not cap
 
 ```csharp
 // Zero alloc: static lambda, only the supplied state parameter is used.
-PATween.To(this, () => x.value, (s, v) => s.x.value = v, 10f, 1f)
+FT.To(this, () => x.value, (s, v) => s.x.value = v, 10f, 1f)
     .OnComplete(this, s => s.HandleDone())
     .Start();
 ```

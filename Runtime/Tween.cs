@@ -1,7 +1,7 @@
 using System;
-using PATween.Internal;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween
+namespace Dyvoid.FeatherTween
 {
 	public readonly struct Tween : IEquatable<Tween>
 	{

@@ -1,8 +1,8 @@
 using NUnit.Framework;
-using PATween;
-using PATween.Internal;
+using Dyvoid.FeatherTween;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween.Tests
+namespace Dyvoid.FeatherTween.Tests
 {
 	[TestFixture]
 	public class LifecycleTests
@@ -11,7 +11,7 @@ namespace PATween.Tests
 		public void SetUp()
 		{
 			TweenStore.Reset();
-			PATweenRunner.Reset();
+			FeatherTweenRunner.Reset();
 			Interpolators.Reset();
 		}
 
@@ -19,18 +19,18 @@ namespace PATween.Tests
 		public void Restart_AfterCompletion_ReplaysFromZero()
 		{
 			var v = 0f;
-			var t = global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
+			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.Start();
 
-			PATweenRunner.ManualTick(1.1);
+			FeatherTweenRunner.ManualTick(1.1);
 			Assert.That(t.Status, Is.EqualTo(TweenStatus.Completed));
 
 			t.Restart();
 			Assert.That(t.Status, Is.EqualTo(TweenStatus.Playing));
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f), "replays from zero, not stuck at end");
 		}
 
@@ -38,16 +38,16 @@ namespace PATween.Tests
 		public void Play_AfterCompletion_ReplaysFromZero()
 		{
 			var v = 0f;
-			var t = global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
+			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.Start();
 
-			PATweenRunner.ManualTick(1.1);
+			FeatherTweenRunner.ManualTick(1.1);
 			Assert.That(t.Status, Is.EqualTo(TweenStatus.Completed));
 
 			t.Play();
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f));
 		}
 
@@ -55,22 +55,22 @@ namespace PATween.Tests
 		public void Restart_DuringDelay_ReappliesDelay()
 		{
 			var v = 0f;
-			var t = global::PATween.PATween.To(() => v, x => v = x, 1f, 1f)
+			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.SetDelay(0.5f, DelayType.FirstLoop)
 				.Start();
 
-			PATweenRunner.ManualTick(0.75);
+			FeatherTweenRunner.ManualTick(0.75);
 			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f), "0.25 into animation after delay");
 
 			t.Restart();
 			Assert.That(t.Status, Is.EqualTo(TweenStatus.Delayed), "delay reapplied");
 
-			PATweenRunner.ManualTick(0.25);
+			FeatherTweenRunner.ManualTick(0.25);
 			Assert.That(t.Status, Is.EqualTo(TweenStatus.Delayed), "still inside reapplied delay");
 
-			PATweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
 			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f), "interpolating again after delay");
 		}
 
@@ -78,12 +78,12 @@ namespace PATween.Tests
 		public void Complete_SnapsPropertyToEndValue()
 		{
 			var v = 0f;
-			var t = global::PATween.PATween.To(() => v, x => v = x, 10f, 1f)
+			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 10f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.Start();
 
-			PATweenRunner.ManualTick(0.3);
+			FeatherTweenRunner.ManualTick(0.3);
 			Assert.That(v, Is.EqualTo(3f).Within(1e-3f));
 
 			t.Complete();
@@ -95,13 +95,13 @@ namespace PATween.Tests
 		public void Complete_Yoyo_SnapsToFinalCycleValue()
 		{
 			var v = 0f;
-			var t = global::PATween.PATween.To(() => v, x => v = x, 10f, 1f)
+			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 10f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.SetLoops(2, LoopType.Yoyo)
 				.Start();
 
-			PATweenRunner.ManualTick(0.3);
+			FeatherTweenRunner.ManualTick(0.3);
 			t.Complete();
 			Assert.That(v, Is.EqualTo(0f).Within(1e-6f), "2-cycle yoyo ends back at start value");
 		}
@@ -110,11 +110,11 @@ namespace PATween.Tests
 		public void Kill_Complete_SnapsToEndValue()
 		{
 			var v = 0f;
-			var t = global::PATween.PATween.To(() => v, x => v = x, 10f, 1f)
+			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 10f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			PATweenRunner.ManualTick(0.3);
+			FeatherTweenRunner.ManualTick(0.3);
 			Assert.That(v, Is.EqualTo(3f).Within(1e-3f));
 
 			t.Kill(complete: true);
@@ -131,23 +131,23 @@ namespace PATween.Tests
 
 			var killTarget = default(Tween);
 
-			global::PATween.PATween.To(() => a, x => a = x, 1f, 0.5f)
+			global::Dyvoid.FeatherTween.FT.To(() => a, x => a = x, 1f, 0.5f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.OnComplete(() => killTarget.Kill())
 				.Start();
 
-			killTarget = global::PATween.PATween.To(() => b, x => b = x, 1f, 10f)
+			killTarget = global::Dyvoid.FeatherTween.FT.To(() => b, x => b = x, 1f, 10f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.Start();
 
-			global::PATween.PATween.To(() => c, x => c = x, 1f, 10f)
+			global::Dyvoid.FeatherTween.FT.To(() => c, x => c = x, 1f, 10f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.Start();
 
-			PATweenRunner.ManualTick(0.6);
+			FeatherTweenRunner.ManualTick(0.6);
 
 			Assert.That(killTarget.IsAlive, Is.False, "B killed from A's completion callback");
 			Assert.That(c, Is.GreaterThan(0f), "C (after B in the active list) must still tick this frame");

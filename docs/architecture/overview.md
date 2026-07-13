@@ -2,7 +2,7 @@
 
 ## What this is
 
-PATween is a Unity tween engine with a static-method API, struct handles, pooled internal storage, and a PlayerLoop-based runner. No MonoBehaviour.
+FeatherTween is a Unity tween engine with a static-method API, struct handles, pooled internal storage, and a PlayerLoop-based runner. No MonoBehaviour.
 
 ## Shape
 
@@ -57,7 +57,7 @@ internal static class TweenStore
 
 `Tween` handle = `(int id, uint generation)`. All public ops do a generation check first; mismatched generations no-op safely.
 
-**Pool exhaustion**: when `_free` is empty and the pool is at capacity, `TweenStore` grows by doubling the backing arrays (same strategy as `List<T>`). This is an allocation, but it is bounded to startup / burst-creation periods. A `Debug.LogWarning` is emitted in Editor when growth occurs, so the developer can pre-size via `PATween.SetCapacity` instead. There is no eviction and no hard ceiling in v1; refusing to create would be a silent correctness failure worse than the alloc.
+**Pool exhaustion**: when `_free` is empty and the pool is at capacity, `TweenStore` grows by doubling the backing arrays (same strategy as `List<T>`). This is an allocation, but it is bounded to startup / burst-creation periods. A `Debug.LogWarning` is emitted in Editor when growth occurs, so the developer can pre-size via `FT.SetCapacity` instead. There is no eviction and no hard ceiling in v1; refusing to create would be a silent correctness failure worse than the alloc.
 
 `TweenData<T>` layout groups blittable scalars (`start, end, duration, localTime, timeScale, easeParamA, easeParamB`) at the top of the base class so the M5 SoA split is mechanical.
 
@@ -79,9 +79,9 @@ static void InstallRunner()
 
 - **Insertion position**: after the standard script update for each phase, so MonoBehaviour code sees pre-tween state in its own update and tweens drive end-of-phase values.
 - **Time source** per phase: `Update` uses `Time.deltaTime` for time-scaled tweens, `Time.unscaledDeltaTime` for `ignoreTimeScale = true`; `LateUpdate` same; `FixedUpdate` uses `Time.fixedDeltaTime` (and `Time.fixedUnscaledDeltaTime` for unscaled). `Manual` uses caller-provided delta. Unity's built-in `maximumDeltaTime` clamp applies to `Time.deltaTime` automatically.
-- **Thread safety**: handles are read-safe across threads (struct value, generation check on read), but every mutating control method is main-thread only and asserts in safe mode. `PATween.X(...)` builders and registration calls are likewise main-thread only. Awaiter continuations are posted to the next PlayerLoop tick on the main thread regardless of capture context, so `await tween;` from any thread always resumes on the main thread.
+- **Thread safety**: handles are read-safe across threads (struct value, generation check on read), but every mutating control method is main-thread only and asserts in safe mode. `FT.X(...)` builders and registration calls are likewise main-thread only. Awaiter continuations are posted to the next PlayerLoop tick on the main thread regardless of capture context, so `await tween;` from any thread always resumes on the main thread.
 - **Editor**: a second hookup via `EditorApplication.update` ticks an editor-only runner.
-- **Manual**: `PATweenRunner.ManualTick(deltaTime)` advances only the `Manual` root.
+- **Manual**: `FeatherTweenRunner.ManualTick(deltaTime)` advances only the `Manual` root.
 - **Domain reload / Fast Enter Play Mode**: `TweenStore.Reset()` runs at `SubsystemRegistration` time. Editor uses `[InitializeOnLoad]` to also reset on assembly reload. Both cases drop all tweens cleanly so generation ids stay coherent.
 - **Debug visibility**: the M4 EditorWindow reads active tweens directly from `TweenStore`. No scene-side proxy needed.
 
@@ -132,13 +132,13 @@ Snap timing matches the design anchor:
 
 ### Safe mode
 
-A try/catch wrapper around `setter(...)` and each callback invocation, compiled out entirely under the `PATWEEN_RELEASE` define (`#if`-style; verified by the release CI leg). Costs one try/catch per tween per frame when enabled. Default on in Editor, off in player builds. Toggleable per tween via `.SetSafeMode(bool)`; `SetCancelOnError(bool)` refines what happens on error.
+A try/catch wrapper around `setter(...)` and each callback invocation, compiled out entirely under the `FEATHERTWEEN_RELEASE` define (`#if`-style; verified by the release CI leg). Costs one try/catch per tween per frame when enabled. Default on in Editor, off in player builds. Toggleable per tween via `.SetSafeMode(bool)`; `SetCancelOnError(bool)` refines what happens on error.
 
 Semantics (phase 1.13):
 
 - **Setter exception** — the value write failed mid-step, so the animation contract is broken: the tween is killed and its slot freed. With `CancelOnError(true)` the kill is silent and fires `OnKill`; without it the exception is logged and the tween is disposed without `OnKill` (see the firing matrix in `docs/api/handles.md`). Other tweens in the same tick are unaffected. A `From`/`FromTo` snap that throws inside `.Start()` returns a dead handle.
 - **Callback exception** — a user-code side effect: always logged, remaining callbacks in the same list still run. With `CancelOnError(true)` the tween is additionally cancelled (deferred — the error surfaces inside a callback scope) and `OnKill` fires. A sequence entry callback (`AppendCallback`/`AddPause`) with `CancelOnError(true)` kills the sequence mid-walk using the same unwind path as child auto-kill.
-- **Off-thread assertions** (`TweenStore` access, runner ticks, `.Start()`) are part of the same debug layer and are compiled out under `PATWEEN_RELEASE`.
+- **Off-thread assertions** (`TweenStore` access, runner ticks, `.Start()`) are part of the same debug layer and are compiled out under `FEATHERTWEEN_RELEASE`.
 
 A sequence's flags cover its own callbacks and entry callbacks; children carry their own flags (set on the child builder before appending).
 

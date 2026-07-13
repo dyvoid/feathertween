@@ -1,6 +1,6 @@
 using System;
 
-namespace PATween.Internal
+namespace Dyvoid.FeatherTween.Internal
 {
 	internal class TweenData<T> : TweenData
 	{
@@ -132,10 +132,10 @@ namespace PATween.Internal
 		// All value writes funnel through here. Safe mode wraps the setter in a
 		// try/catch; a throw kills the tween (CancelFromError) and the caller
 		// must stop touching it. Returns false when the tween killed itself.
-		// PATWEEN_RELEASE compiles the wrapper out to a bare call.
+		// FEATHERTWEEN_RELEASE compiles the wrapper out to a bare call.
 		private bool ApplySetter(T value)
 		{
-#if !PATWEEN_RELEASE
+#if !FEATHERTWEEN_RELEASE
 			if (SafeMode)
 			{
 				try

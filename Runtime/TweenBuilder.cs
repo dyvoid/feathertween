@@ -1,7 +1,7 @@
 using System;
-using PATween.Internal;
+using Dyvoid.FeatherTween.Internal;
 
-namespace PATween
+namespace Dyvoid.FeatherTween
 {
 	public struct TweenBuilder<T>
 	{
@@ -52,7 +52,7 @@ namespace PATween
 		}
 
 		// Try/catch around setter and callback invocations. Default on in the
-		// Editor, off in player builds; PATWEEN_RELEASE compiles the wrapper out
+		// Editor, off in player builds; FEATHERTWEEN_RELEASE compiles the wrapper out
 		// entirely (docs/architecture/overview.md "Safe mode").
 		public TweenBuilder<T> SetSafeMode(bool value)
 		{
@@ -239,7 +239,7 @@ namespace PATween
 			if (!IsValid())
 			{
 				throw new InvalidOperationException(
-					"[PATween] TweenBuilder used after Start() or invalid alias.");
+					"[FeatherTween] TweenBuilder used after Start() or invalid alias.");
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-# PATween — Agent Guide
+# FeatherTween — Agent Guide
 
 Single source of truth for AI agents working on this codebase.
 
@@ -15,8 +15,8 @@ Single source of truth for AI agents working on this codebase.
 ## Package Structure
 
 ```text
-Runtime/              -- PATween.asmdef (core, Editor references allowed for EditMode)
-Editor/               -- PATween.Editor.asmdef (drawers, debugger)
+Runtime/              -- FeatherTween.asmdef (core, Editor references allowed for EditMode)
+Editor/               -- FeatherTween.Editor.asmdef (drawers, debugger)
 Tests/
   Editor/             -- EditMode tests asmdef
   Runtime/            -- PlayMode tests asmdef
@@ -30,8 +30,8 @@ When writing Unity C# for this project, apply the **unity dev skill**.
 
 ## Architecture Summary
 
-- **Static-method API**: `PATween.Move(transform, ...)` — not extension methods on Unity types. One discoverable entry point; avoids namespace pollution.
-- **Builder/handle split**: `PATween.X(...)` returns a mutable `TweenBuilder<T>` struct (aliases share a pooled backing record). `.Start()` returns an immutable `Tween` handle (`id, generation`). After `.Start()`, builder aliases are invalid.
+- **Static-method API**: `FT.Move(transform, ...)` — not extension methods on Unity types. One discoverable entry point; avoids namespace pollution.
+- **Builder/handle split**: `FT.X(...)` returns a mutable `TweenBuilder<T>` struct (aliases share a pooled backing record). `.Start()` returns an immutable `Tween` handle (`id, generation`). After `.Start()`, builder aliases are invalid.
 - **Pooled internal storage**: backing classes are pooled in v1; public handles insulate users from the swap.
 - **PlayerLoop runner**: no `MonoBehaviour`. Injection into `Update`, `LateUpdate`, `FixedUpdate`. Edit-mode via `EditorApplication.update`.
 - **Parent-sequence model**: every animation has `_start`, `_end`, `_timeScale`, `_parent`. A hidden root sequence owns top-level tweens. `Sequence` is the public type.
@@ -49,7 +49,7 @@ Full design and locked anchors: `docs/architecture/design.md` and `docs/architec
 5. Pooled backing classes must have a finalizer that enqueues a leak-detection id; runner drains on main thread.
 6. Safe mode (try/catch around step and callbacks) stays in core, default `true` in Editor, `false` in release.
 7. The repo root IS the UPM package — Unity imports every file and DLL in it. Anything Unity must not see (dev tooling, .NET projects, build output) lives in a `~`-suffixed folder (like `Samples~`, `tools~`) or a dot-folder (like `.github`). Never generate or commit DLLs/`bin`/`obj` in a Unity-visible path.
-8. Samples and docs must call the static API as `PATween.To(...)`, `PATween.Sequence(...)`, etc. Never use `using static PATween.PATween;`; it shadows Unity built-in types such as `Color` and `Image` and produces `CS0119` errors.
+8. Samples and docs must call the static API as `FT.To(...)`, `FT.Sequence(...)`, etc. Never use `using static Dyvoid.FeatherTween.FT;`; it shadows Unity built-in types such as `Color` and `Image` and produces `CS0119` errors.
 
 ## AI Instructions
 
@@ -81,7 +81,7 @@ Apply the unity dev skill (see above). Canonical written conventions: `docs/guid
 - **New `IInterpolator<T>`**: implement `IInterpolator<T>`, register in core bootstrap. Must be blittable-friendly.
 - **New ease**: add factory to `Easing`, return `EaseRef`. No plumbing changes.
 - **New builder method**: extend `TweenBuilder<T>`, return `this`. Keep alias semantics (mutate shared backing record).
-- **New shortcut**: add static method on `PATween`. Follow existing overload pattern with zero-alloc target-capture variants.
+- **New shortcut**: add static method on `FT`. Follow existing overload pattern with zero-alloc target-capture variants.
 
 ## Testing
 
