@@ -19,7 +19,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void RootFrom_SnapsPropertySynchronouslyInsideStart()
 		{
 			var v = 5f;
-			global::Dyvoid.FeatherTween.FT.From(() => v, x => v = x, 0f, 1f)
+			FT.From(() => v, x => v = x, 0f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -31,7 +31,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void RootFrom_AnimatesFromSuppliedValue_ToCurrentValueAtStart()
 		{
 			var v = 10f;
-			global::Dyvoid.FeatherTween.FT.From(() => v, x => v = x, 0f, 1f)
+			FT.From(() => v, x => v = x, 0f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -48,7 +48,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void ToThenFrom_BehavesAsFrom()
 		{
 			var v = 3f;
-			global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 9f, 1f)
+			FT.To(() => v, x => v = x, 9f, 1f)
 				.From()
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
@@ -63,7 +63,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void FromTo_InvokesSetterWithFromAtSnapTime()
 		{
 			var v = 42f;
-			global::Dyvoid.FeatherTween.FT.FromTo(() => v, x => v = x, -1f, 100f, 1f)
+			FT.FromTo(() => v, x => v = x, -1f, 100f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -81,7 +81,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var v = 1f;
 			var calls = 0;
-			var builder = global::Dyvoid.FeatherTween.FT.From(
+			var builder = FT.From(
 				() => { calls++; return v; },
 				x => v = x,
 				0f,
@@ -98,7 +98,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void From_GetterRead_AfterModification_CapturesPostModificationValue()
 		{
 			var v = 1f;
-			var builder = global::Dyvoid.FeatherTween.FT.From(() => v, x => v = x, 0f, 1f)
+			var builder = FT.From(() => v, x => v = x, 0f, 1f)
 				.SetUpdate(UpdatePhase.Manual);
 
 			v = 50f;
@@ -116,7 +116,7 @@ namespace Dyvoid.FeatherTween.Tests
 			var v = 0f;
 			Assert.DoesNotThrow(() =>
 			{
-				global::Dyvoid.FeatherTween.FT.FromTo<float>(null, x => v = x, 0f, 1f, 1f)
+				FT.FromTo<float>(null, x => v = x, 0f, 1f, 1f)
 					.SetUpdate(UpdatePhase.Manual)
 					.Start();
 			});

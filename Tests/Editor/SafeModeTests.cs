@@ -32,7 +32,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void SetterThrows_CancelOnError_KillsTweenAndFiresOnKill()
 		{
 			var killed = false;
-			var t = global::Dyvoid.FeatherTween.FT.To(
+			var t = FT.To(
 					() => 0f,
 					_ => throw new InvalidOperationException("boom"),
 					1f, 1f)
@@ -54,7 +54,7 @@ namespace Dyvoid.FeatherTween.Tests
 			LogAssert.Expect(LogType.Exception, new Regex("boom"));
 
 			var killed = false;
-			var t = global::Dyvoid.FeatherTween.FT.To(
+			var t = FT.To(
 					() => 0f,
 					_ => throw new InvalidOperationException("boom"),
 					1f, 1f)
@@ -73,7 +73,7 @@ namespace Dyvoid.FeatherTween.Tests
 		[Test]
 		public void SetterThrows_SafeModeOff_Propagates()
 		{
-			global::Dyvoid.FeatherTween.FT.To(
+			FT.To(
 					() => 0f,
 					_ => throw new InvalidOperationException("boom"),
 					1f, 1f)
@@ -88,7 +88,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void SetterThrows_OtherTweensInTickSurvive()
 		{
 			var other = 0f;
-			global::Dyvoid.FeatherTween.FT.To(
+			FT.To(
 					() => 0f,
 					_ => throw new InvalidOperationException("boom"),
 					1f, 1f)
@@ -96,7 +96,7 @@ namespace Dyvoid.FeatherTween.Tests
 				.SetSafeMode(true)
 				.SetCancelOnError(true)
 				.Start();
-			global::Dyvoid.FeatherTween.FT.To(() => other, v => other = v, 1f, 1f)
+			FT.To(() => other, v => other = v, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -113,7 +113,7 @@ namespace Dyvoid.FeatherTween.Tests
 
 			var v = 0f;
 			var laterCallbackRan = false;
-			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetSafeMode(true)
 				.SetCancelOnError(false)
@@ -135,7 +135,7 @@ namespace Dyvoid.FeatherTween.Tests
 			LogAssert.Expect(LogType.Exception, new Regex("cb-boom"));
 
 			var killed = false;
-			var t = global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 1f)
+			var t = FT.To(() => 0f, _ => { }, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetSafeMode(true)
 				.SetCancelOnError(true)
@@ -152,7 +152,7 @@ namespace Dyvoid.FeatherTween.Tests
 		[Test]
 		public void FromSnapSetterThrows_AtStart_ReturnsDeadHandle()
 		{
-			var t = global::Dyvoid.FeatherTween.FT.FromTo(
+			var t = FT.FromTo(
 					() => 0f,
 					_ => throw new InvalidOperationException("snap-boom"),
 					0f, 1f, 1f)
@@ -169,7 +169,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var killed = false;
 			var completed = false;
-			var t = global::Dyvoid.FeatherTween.FT.To(
+			var t = FT.To(
 					() => 0f,
 					_ => throw new InvalidOperationException("boom"),
 					1f, 1f)
@@ -194,11 +194,11 @@ namespace Dyvoid.FeatherTween.Tests
 
 			var killed = false;
 			var v = 0f;
-			var s = global::Dyvoid.FeatherTween.FT.Sequence()
+			var s = FT.Sequence()
 				.SetUpdate(UpdatePhase.Manual)
 				.SetSafeMode(true)
 				.SetCancelOnError(true)
-				.Append(global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f))
+				.Append(FT.To(() => v, x => v = x, 1f, 1f))
 				.AppendCallback(() => throw new InvalidOperationException("seq-boom"))
 				.OnKill(() => killed = true)
 				.Start();
@@ -214,15 +214,15 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var completed = false;
 			var v = 0f;
-			var s = global::Dyvoid.FeatherTween.FT.Sequence()
+			var s = FT.Sequence()
 				.SetUpdate(UpdatePhase.Manual)
-				.Append(global::Dyvoid.FeatherTween.FT.To(
+				.Append(FT.To(
 						() => 0f,
 						_ => throw new InvalidOperationException("child-boom"),
 						1f, 1f)
 					.SetSafeMode(true)
 					.SetCancelOnError(true))
-				.Append(global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f))
+				.Append(FT.To(() => v, x => v = x, 1f, 1f))
 				.OnComplete(() => completed = true)
 				.Start();
 
@@ -241,7 +241,7 @@ namespace Dyvoid.FeatherTween.Tests
 			{
 				try
 				{
-					global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 1f).Start();
+					FT.To(() => 0f, _ => { }, 1f, 1f).Start();
 				}
 				catch (Exception e)
 				{

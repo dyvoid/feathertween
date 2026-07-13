@@ -21,14 +21,14 @@ namespace Dyvoid.FeatherTween.Tests.Performance
 			TweenStore.Reset();
 			FeatherTweenRunner.Reset();
 			Interpolators.Reset();
-			global::Dyvoid.FeatherTween.FT.SetCapacity(200_000, 0);
+			FT.SetCapacity(200_000, 0);
 		}
 
 		private static void SpawnManualTweens(int count)
 		{
 			for (var i = 0; i < count; i++)
 			{
-				global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f)
+				FT.To(zeroGetter, noopSetter, 1f, 100_000f)
 					.SetUpdate(UpdatePhase.Manual)
 					.SetAutoKill(false)
 					.Start();
@@ -68,13 +68,13 @@ namespace Dyvoid.FeatherTween.Tests.Performance
 		{
 			for (var i = 0; i < count; i++)
 			{
-				global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f)
+				FT.To(zeroGetter, noopSetter, 1f, 100_000f)
 					.SetUpdate(UpdatePhase.Manual)
 					.SetAutoKill(false)
 					.Start();
 			}
 			FeatherTweenRunner.ManualTick(0.016);
-			global::Dyvoid.FeatherTween.FT.KillAll();
+			FT.KillAll();
 			FeatherTweenRunner.ManualTick(0.016); // drain pool returns
 		}
 
@@ -122,7 +122,7 @@ namespace Dyvoid.FeatherTween.Tests.Performance
 			var sink = 0f;
 			for (var i = 0; i < 100; i++)
 			{
-				global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 1f)
+				FT.To(zeroGetter, noopSetter, 1f, 1f)
 					.SetUpdate(UpdatePhase.Manual)
 					.SetLoops(-1, LoopType.Restart)
 					.OnUpdate(t => sink = t)
@@ -147,12 +147,12 @@ namespace Dyvoid.FeatherTween.Tests.Performance
 		{
 			for (var i = 0; i < 100; i++)
 			{
-				var sb = global::Dyvoid.FeatherTween.FT.Sequence()
+				var sb = FT.Sequence()
 					.SetUpdate(UpdatePhase.Manual)
 					.SetAutoKill(false);
-				sb.Append(global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f));
-				sb.Join(global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f));
-				sb.Append(global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f));
+				sb.Append(FT.To(zeroGetter, noopSetter, 1f, 100_000f));
+				sb.Join(FT.To(zeroGetter, noopSetter, 1f, 100_000f));
+				sb.Append(FT.To(zeroGetter, noopSetter, 1f, 100_000f));
 				sb.Start();
 			}
 			Warmup(120);
@@ -208,15 +208,15 @@ namespace Dyvoid.FeatherTween.Tests.Performance
 		{
 			for (var i = 0; i < count; i++)
 			{
-				var sb = global::Dyvoid.FeatherTween.FT.Sequence()
+				var sb = FT.Sequence()
 					.SetUpdate(UpdatePhase.Manual)
 					.SetAutoKill(false);
 				for (var c = 0; c < 5; c++)
 				{
 					// 5 appended + 5 joined = 10 children, half overlapping so
 					// several windows are active on any given tick.
-					sb.Append(global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f));
-					sb.Join(global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f));
+					sb.Append(FT.To(zeroGetter, noopSetter, 1f, 100_000f));
+					sb.Join(FT.To(zeroGetter, noopSetter, 1f, 100_000f));
 				}
 				sb.Start();
 			}
@@ -265,7 +265,7 @@ namespace Dyvoid.FeatherTween.Tests.Performance
 
 			Measure.Method(() =>
 				{
-					global::Dyvoid.FeatherTween.FT.To(zeroGetter, noopSetter, 1f, 100_000f)
+					FT.To(zeroGetter, noopSetter, 1f, 100_000f)
 						.SetUpdate(UpdatePhase.Manual)
 						.SetAutoKill(false)
 						.Start();

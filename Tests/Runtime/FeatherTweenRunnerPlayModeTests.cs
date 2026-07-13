@@ -44,7 +44,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public IEnumerator AutoKill_FiresFrameAfter_ObjectDestroy()
 		{
 			var go = new GameObject("__feathertween_destroy_target__");
-			var t = global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 30f)
+			var t = FT.To(() => 0f, _ => { }, 1f, 30f)
 				.SetTarget(go)
 				.Start();
 

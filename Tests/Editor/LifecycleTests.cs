@@ -19,7 +19,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Restart_AfterCompletion_ReplaysFromZero()
 		{
 			var v = 0f;
-			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.Start();
@@ -38,7 +38,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Play_AfterCompletion_ReplaysFromZero()
 		{
 			var v = 0f;
-			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.Start();
@@ -55,7 +55,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Restart_DuringDelay_ReappliesDelay()
 		{
 			var v = 0f;
-			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.SetDelay(0.5f, DelayType.FirstLoop)
@@ -78,7 +78,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Complete_SnapsPropertyToEndValue()
 		{
 			var v = 0f;
-			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 10f, 1f)
+			var t = FT.To(() => v, x => v = x, 10f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.Start();
@@ -95,7 +95,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Complete_Yoyo_SnapsToFinalCycleValue()
 		{
 			var v = 0f;
-			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 10f, 1f)
+			var t = FT.To(() => v, x => v = x, 10f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.SetLoops(2, LoopType.Yoyo)
@@ -110,7 +110,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Kill_Complete_SnapsToEndValue()
 		{
 			var v = 0f;
-			var t = global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 10f, 1f)
+			var t = FT.To(() => v, x => v = x, 10f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -131,18 +131,18 @@ namespace Dyvoid.FeatherTween.Tests
 
 			var killTarget = default(Tween);
 
-			global::Dyvoid.FeatherTween.FT.To(() => a, x => a = x, 1f, 0.5f)
+			FT.To(() => a, x => a = x, 1f, 0.5f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.OnComplete(() => killTarget.Kill())
 				.Start();
 
-			killTarget = global::Dyvoid.FeatherTween.FT.To(() => b, x => b = x, 1f, 10f)
+			killTarget = FT.To(() => b, x => b = x, 1f, 10f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.Start();
 
-			global::Dyvoid.FeatherTween.FT.To(() => c, x => c = x, 1f, 10f)
+			FT.To(() => c, x => c = x, 1f, 10f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.Start();

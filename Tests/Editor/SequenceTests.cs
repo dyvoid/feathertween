@@ -20,12 +20,12 @@ namespace Dyvoid.FeatherTween.Tests
 
 		private static TweenBuilder<float> FloatTween(Func<float> getter, Action<float> setter, float end, float duration)
 		{
-			return global::Dyvoid.FeatherTween.FT.To(getter, setter, end, duration);
+			return FT.To(getter, setter, end, duration);
 		}
 
 		private static SequenceBuilder ManualSequence()
 		{
-			return global::Dyvoid.FeatherTween.FT.Sequence().SetUpdate(UpdatePhase.Manual);
+			return FT.Sequence().SetUpdate(UpdatePhase.Manual);
 		}
 
 		[Test]
@@ -231,7 +231,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var v = 5f;
 			var sb = ManualSequence();
-			sb.Insert(2f, global::Dyvoid.FeatherTween.FT.From(() => v, x => v = x, 0f, 1f));
+			sb.Insert(2f, FT.From(() => v, x => v = x, 0f, 1f));
 			sb.Start();
 
 			FeatherTweenRunner.ManualTick(1.0);
@@ -357,7 +357,7 @@ namespace Dyvoid.FeatherTween.Tests
 			var b = 0f;
 			var completed = false;
 			var inner = ManualSequence().SetLoops(2);
-			inner.Append(global::Dyvoid.FeatherTween.FT.FromTo(() => b, v => b = v, 0f, 1f, 1f));
+			inner.Append(FT.FromTo(() => b, v => b = v, 0f, 1f, 1f));
 
 			var outer = ManualSequence();
 			outer.Append(FloatTween(() => a, v => a = v, 1f, 1f));
@@ -385,7 +385,7 @@ namespace Dyvoid.FeatherTween.Tests
 			var a = 0f;
 			var b = 0f;
 			var inner = ManualSequence().SetLoops(-1);
-			inner.Append(global::Dyvoid.FeatherTween.FT.FromTo(() => b, v => b = v, 0f, 1f, 0.5f));
+			inner.Append(FT.FromTo(() => b, v => b = v, 0f, 1f, 0.5f));
 
 			var outer = ManualSequence();
 			outer.Insert(0f, inner);
@@ -410,7 +410,7 @@ namespace Dyvoid.FeatherTween.Tests
 			var v3 = Vector3.zero;
 			var sb = ManualSequence();
 			sb.Append(FloatTween(() => f, v => f = v, 1f, 1f));
-			sb.Append(global::Dyvoid.FeatherTween.FT.To(() => v3, v => v3 = v, Vector3.one, 1f));
+			sb.Append(FT.To(() => v3, v => v3 = v, Vector3.one, 1f));
 			sb.Start();
 
 			Assert.That(TweenStore.HasLiveOfType<float>(), Is.True);
@@ -453,7 +453,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var v = 5f;
 			var sb = ManualSequence().SetAutoKill(false);
-			sb.Append(global::Dyvoid.FeatherTween.FT.From(() => v, x => v = x, 0f, 1f));
+			sb.Append(FT.From(() => v, x => v = x, 0f, 1f));
 			var seq = sb.Start();
 
 			FeatherTweenRunner.ManualTick(2.0);
