@@ -20,8 +20,9 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Seek and remaining control surface | Done | `Seek`, `Restart`, `Complete`, `Kill(complete)`, mid-play `Insert`, sequence `SetLoops`, global/per-phase time scale | — |
 | Typed shortcuts (lambda) | Done | `Move`, `Rotate`, `Scale`, `Fade`, `Color` — lambda baseline | — |
 | Filters and bulk ops | Done | Target-indexed multimap, `Kill(target)`, `IsTweening`, `KillAll` | — |
-| Safe mode and assertions | Planned | Try/catch wrapper, off-thread assertions, release-build skip | — |
-| M1 acceptance (production cut) | Planned | Composed demo, all suites green, zero-alloc verified; LICENSE, CHANGELOG, XML docs; v0.1 tag | — |
+| Safe mode and assertions | Done | Try/catch wrapper, off-thread assertions, release-build skip | — |
+| M1 dev acceptance | Done | Composed demo, all suites green, zero-alloc verified | — |
+| Release hygiene and documentation (1.15) | In flight | Hardening pass (test sweep + code review), then LICENSE, CHANGELOG, XML docs; v0.1 tag | — |
 
 ## M2 — Polish and ecosystem
 

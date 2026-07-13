@@ -21,7 +21,7 @@ Tests/
   Editor/             -- EditMode tests asmdef
   Runtime/            -- PlayMode tests asmdef
   Performance/        -- EditMode allocation guards + throughput asmdef
-Samples~/             -- importable package samples (BasicUsage demo)
+Samples~/             -- importable package samples (BasicUsage, SequenceDemo, ComposedDemo)
 ```
 
 ## AI Skill Reference

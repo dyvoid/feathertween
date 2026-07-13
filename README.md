@@ -9,7 +9,7 @@ A robust, minimal C# tween engine for Unity. Compositional sequences, static-met
 
 ## Status
 
-Early development — M1 (Core) is in progress. Phases 1.1–1.12 are complete (through filters, bulk ops, and storage surgery); 1.13–1.14 remain (safe mode and acceptance). Expect breaking changes until M1 ships.
+Early development — M1 (Core) dev work is complete through phase 1.14 (safe mode, filters/bulk ops, and the composed acceptance demo). A hardening pass (full test sweep + code review) is underway before phase 1.15 (release hygiene: LICENSE, CHANGELOG, XML docs) tags v0.1. Expect breaking changes until M1 ships.
 
 ## Getting Started
 
@@ -17,7 +17,7 @@ FeatherTween is distributed as a UPM package.
 
 1. Add the repository as an embedded or scoped-registry package in your Unity project.
 2. Install the `com.unity.test-framework.performance` package if you want to run the performance benchmarks (test-only dependency).
-3. Open `Window > Package Manager > FeatherTween > Samples` and import **Basic Usage** (tween features) or **Sequence Demo** (sequence choreography) for a quick demo.
+3. Open `Window > Package Manager > FeatherTween > Samples` and import **Basic Usage** (tween features), **Sequence Demo** (sequence choreography), or **Composed Demo** (the M1 acceptance demo: infinite loops, staggered tweens, nested sequences, and a runtime control panel) for a quick demo.
 
 See [`docs/guides/testing.md`](docs/guides/testing.md) for consumer-project setup details.
 
@@ -55,7 +55,7 @@ Tests/
   Editor/             EditMode correctness tests
   Runtime/            PlayMode tests
   Performance/        Allocation guards + throughput benchmarks
-Samples~/             Importable package samples (BasicUsage and SequenceDemo)
+Samples~/             Importable package samples (BasicUsage, SequenceDemo, ComposedDemo)
 docs/                 Architecture, decisions, and guides
 AGENTS.md             AI agent instructions and conventions
 PICKUP.md             Where the last session left off — active work only, not the backlog
