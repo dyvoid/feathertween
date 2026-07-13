@@ -35,6 +35,8 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Typed shortcuts expansion | Candidate | `RectTransform`, `Material`, `SpriteRenderer`, `Camera`, `Light`, `AudioSource` |
 | Shake / Punch shortcuts | Candidate | `ShakePosition`, `ShakeRotation`, `ShakeScale`, `PunchPosition` |
 | Extension method asmdef | Candidate | Optional `transform.PAMove(...)` wrappers |
+| Value modifiers | Planned | Optional `Func<T,T>` post-processor applied to the eased value before the setter: snap-to-grid, rounding, angle wrap, clamp |
+| `yoyoEase` | Planned | Separate optional `EaseRef` for the return leg of a Yoyo cycle |
 | Awaitables | Planned | `TweenAwaiter` on Unity 6 native `Awaitable`, `WaitForCompletion`, `WaitForKill`, `WaitForPosition` |
 | Improved safe-mode reporting | Candidate | Collected per-frame diagnostics |
 
@@ -49,6 +51,9 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Path tweens | Candidate | Linear / CatmullRom paths, `LookAt` modes; separate `PATween.Paths` asmdef |
 | Blendable tweens | Candidate | Additive composition; **needs ADR first** (multiple writers per property vs storage model) |
 | `TweenAssetSO` | Candidate | Shared preset ScriptableObjects |
+| Keyframe tweens | Candidate | Single tween through multiple values (`A → B → C`) with per-segment ease; one slot, one handle; stays a pure function of time so Seek/Reverse/yoyo compose for free; **needs ADR first** (keyframe storage vs pooled record layout) |
+| Text / string tweening | Candidate | Typewriter reveal and number counters (TMP); needs a dedicated alloc-conscious path — `string` doesn't fit the blittable `IInterpolator<T>` core |
+| Runtime retargeting + `quickTo` | Candidate | `ChangeEndValue`/`ChangeStartValue` mid-flight (tween stays seekable) plus a GSAP `quickTo`-style reusable retargetable tween; covers follow-a-moving-target without simulation state; distinct from `invalidate` (M4), which re-reads start values |
 
 ## M4 — GSAP parity sugar
 
