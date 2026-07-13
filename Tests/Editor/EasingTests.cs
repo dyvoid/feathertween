@@ -169,7 +169,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void SetEase_AppliedDuringStep()
 		{
 			var v = 0f;
-			global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
+			FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetEase(Easing.InQuad())
 				.Start();
@@ -183,7 +183,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var curve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 			var v = 0f;
-			global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
+			FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetEase(curve)
 				.Start();

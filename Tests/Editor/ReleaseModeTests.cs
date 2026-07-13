@@ -23,7 +23,7 @@ namespace Dyvoid.FeatherTween.Tests
 		[Test]
 		public void Release_SetterThrows_PropagatesDespiteSafeMode()
 		{
-			global::Dyvoid.FeatherTween.FT.To(
+			FT.To(
 					() => 0f,
 					_ => throw new InvalidOperationException("boom"),
 					1f, 1f)

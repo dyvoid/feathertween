@@ -21,12 +21,12 @@ namespace Dyvoid.FeatherTween.Tests
 
 		private static TweenBuilder<float> FloatTween(Func<float> getter, Action<float> setter, float end, float duration)
 		{
-			return global::Dyvoid.FeatherTween.FT.To(getter, setter, end, duration);
+			return FT.To(getter, setter, end, duration);
 		}
 
 		private static SequenceBuilder ManualSequence()
 		{
-			return global::Dyvoid.FeatherTween.FT.Sequence().SetUpdate(UpdatePhase.Manual);
+			return FT.Sequence().SetUpdate(UpdatePhase.Manual);
 		}
 
 		// --- Tween Seek ---
@@ -154,7 +154,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var v = 5f;
 			var sb = ManualSequence();
-			sb.Append(global::Dyvoid.FeatherTween.FT.From(() => v, x => v = x, 0f, 1f));
+			sb.Append(FT.From(() => v, x => v = x, 0f, 1f));
 			var seq = sb.Start();
 
 			FeatherTweenRunner.ManualTick(0.5);
@@ -180,7 +180,7 @@ namespace Dyvoid.FeatherTween.Tests
 			// re-snaps from its current value on loop wrap by deferred-snap
 			// design, which would make cycle 1 a constant hold at the end value.)
 			var sb = ManualSequence().SetLoops(2, LoopType.Restart);
-			sb.Append(global::Dyvoid.FeatherTween.FT.FromTo(() => v, x => v = x, 0f, 1f, 1f));
+			sb.Append(FT.FromTo(() => v, x => v = x, 0f, 1f, 1f));
 			var seq = sb.Start().OnStepComplete(() => steps++);
 			seq.OnComplete(() => completed = true);
 
@@ -243,7 +243,7 @@ namespace Dyvoid.FeatherTween.Tests
 			var v = 0f;
 			var steps = 0;
 			var sb = ManualSequence().SetLoops(-1, LoopType.Restart);
-			sb.Append(global::Dyvoid.FeatherTween.FT.FromTo(() => v, x => v = x, 0f, 1f, 1f));
+			sb.Append(FT.FromTo(() => v, x => v = x, 0f, 1f, 1f));
 			var seq = sb.Start().OnStepComplete(() => steps++);
 
 			FeatherTweenRunner.ManualTick(5.5);
@@ -363,7 +363,7 @@ namespace Dyvoid.FeatherTween.Tests
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			global::Dyvoid.FeatherTween.FT.SetGlobalTimeScale(0.5f);
+			FT.SetGlobalTimeScale(0.5f);
 			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f));
 		}
@@ -376,8 +376,8 @@ namespace Dyvoid.FeatherTween.Tests
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			global::Dyvoid.FeatherTween.FT.SetGlobalTimeScale(0.5f);
-			global::Dyvoid.FeatherTween.FT.SetTimeScale(UpdatePhase.Manual, 0.5f);
+			FT.SetGlobalTimeScale(0.5f);
+			FT.SetTimeScale(UpdatePhase.Manual, 0.5f);
 			t.SetTimeScale(2f);
 
 			FeatherTweenRunner.ManualTick(1.0);
@@ -407,8 +407,8 @@ namespace Dyvoid.FeatherTween.Tests
 				.Start();
 
 			Assert.Throws<ArgumentOutOfRangeException>(() => t.SetTimeScale(-1f));
-			Assert.Throws<ArgumentOutOfRangeException>(() => global::Dyvoid.FeatherTween.FT.SetGlobalTimeScale(-1f));
-			Assert.Throws<ArgumentOutOfRangeException>(() => global::Dyvoid.FeatherTween.FT.SetTimeScale(UpdatePhase.Manual, -0.5f));
+			Assert.Throws<ArgumentOutOfRangeException>(() => FT.SetGlobalTimeScale(-1f));
+			Assert.Throws<ArgumentOutOfRangeException>(() => FT.SetTimeScale(UpdatePhase.Manual, -0.5f));
 		}
 
 		[Test]
@@ -421,7 +421,7 @@ namespace Dyvoid.FeatherTween.Tests
 				.SetUpdate(UpdatePhase.Manual, ignoreTimeScale: true)
 				.Start();
 
-			global::Dyvoid.FeatherTween.FT.SetGlobalTimeScale(0.25f);
+			FT.SetGlobalTimeScale(0.25f);
 			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f));
 		}

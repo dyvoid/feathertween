@@ -21,7 +21,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Tween_LinearFloat_SamplesMidwayAtHalfDuration()
 		{
 			var v = 0f;
-			global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
+			FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -33,7 +33,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Tween_LinearFloat_ReachesEndAtDuration()
 		{
 			var v = 0f;
-			global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 10f, 1f)
+			FT.To(() => v, x => v = x, 10f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -45,7 +45,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Setter_InvokedExactlyOncePerTick()
 		{
 			var calls = 0;
-			global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => calls++, 1f, 1f)
+			FT.To(() => 0f, _ => calls++, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -62,7 +62,7 @@ namespace Dyvoid.FeatherTween.Tests
 		[Test]
 		public void Tween_AutoKillsAfterCompletion()
 		{
-			var t = global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 1f)
+			var t = FT.To(() => 0f, _ => { }, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -73,7 +73,7 @@ namespace Dyvoid.FeatherTween.Tests
 		[Test]
 		public void Tween_AutoKillOff_StaysAliveAtCompleted()
 		{
-			var t = global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 1f)
+			var t = FT.To(() => 0f, _ => { }, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.Start();
@@ -87,7 +87,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void DestroyedUnityObjectTarget_TriggersAutoKill()
 		{
 			var go = new GameObject("__feathertween_test__");
-			var t = global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 10f)
+			var t = FT.To(() => 0f, _ => { }, 1f, 10f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetTarget(go)
 				.Start();
@@ -103,7 +103,7 @@ namespace Dyvoid.FeatherTween.Tests
 		[Test]
 		public void Interpolators_Reregister_WithLiveTweenOfT_Throws()
 		{
-			var t = global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 1f)
+			var t = FT.To(() => 0f, _ => { }, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -117,7 +117,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Relative_AddsEndValueToCapturedStart()
 		{
 			var v = 5f;
-			global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 3f, 1f)
+			FT.To(() => v, x => v = x, 3f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetRelative(true)
 				.Start();
@@ -130,7 +130,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void IgnoreTimeScale_UsesUnscaledDelta()
 		{
 			var v = 0f;
-			global::Dyvoid.FeatherTween.FT.To(() => v, x => v = x, 1f, 1f)
+			FT.To(() => v, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual, ignoreTimeScale: true)
 				.Start();
 
@@ -142,7 +142,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void OnComplete_FiresAtCompletion()
 		{
 			var fired = 0;
-			global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 1f)
+			FT.To(() => 0f, _ => { }, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.OnComplete(() => fired++)
 				.Start();
@@ -161,7 +161,7 @@ namespace Dyvoid.FeatherTween.Tests
 			for (var i = 0; i < 100; i++)
 			{
 				var idx = i;
-				global::Dyvoid.FeatherTween.FT.To(() => 0f, x => values[idx] = x, 1f, 1f)
+				FT.To(() => 0f, x => values[idx] = x, 1f, 1f)
 					.SetUpdate(UpdatePhase.Manual)
 					.Start();
 			}
@@ -176,11 +176,11 @@ namespace Dyvoid.FeatherTween.Tests
 		[Test]
 		public void Alloc_SteadyState1kTweens_BoundedDelta()
 		{
-			global::Dyvoid.FeatherTween.FT.SetCapacity(2048, 0);
+			FT.SetCapacity(2048, 0);
 
 			for (var i = 0; i < 1000; i++)
 			{
-				global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 600f)
+				FT.To(() => 0f, _ => { }, 1f, 600f)
 					.SetUpdate(UpdatePhase.Manual)
 					.Start();
 			}

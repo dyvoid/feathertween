@@ -19,7 +19,7 @@ namespace Dyvoid.FeatherTween.Tests
 
 		private static TweenBuilder<float> ManualTween(Action<float> setter, float duration = 1f)
 		{
-			return global::Dyvoid.FeatherTween.FT.To(() => 0f, setter, 1f, duration)
+			return FT.To(() => 0f, setter, 1f, duration)
 				.SetUpdate(UpdatePhase.Manual);
 		}
 
@@ -106,7 +106,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void ZeroDuration_FiresStartUpdateCompleteInOrder()
 		{
 			var log = new List<string>();
-			global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 0f)
+			FT.To(() => 0f, _ => { }, 1f, 0f)
 				.SetUpdate(UpdatePhase.Manual)
 				.OnStart(() => log.Add("start"))
 				.OnUpdate(t => log.Add($"update:{t:0.#}"))
@@ -253,7 +253,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void KillOtherTween_FromOnComplete_DeferredToEndOfTick()
 		{
 			var bValue = 0f;
-			var b = global::Dyvoid.FeatherTween.FT.To(() => bValue, v => bValue = v, 1f, 10f)
+			var b = FT.To(() => bValue, v => bValue = v, 1f, 10f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -299,7 +299,7 @@ namespace Dyvoid.FeatherTween.Tests
 			var completes = 0;
 			var v = 0f;
 			Tween t = default;
-			t = global::Dyvoid.FeatherTween.FT.To(() => 0f, x => v = x, 1f, 1f)
+			t = FT.To(() => 0f, x => v = x, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.SetAutoKill(false)
 				.OnComplete(() =>
@@ -354,8 +354,8 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var log = new List<string>();
 			var v = 0f;
-			var sb = global::Dyvoid.FeatherTween.FT.Sequence().SetUpdate(UpdatePhase.Manual);
-			sb.Append(global::Dyvoid.FeatherTween.FT.To(() => 0f, x => v = x, 1f, 1f)
+			var sb = FT.Sequence().SetUpdate(UpdatePhase.Manual);
+			sb.Append(FT.To(() => 0f, x => v = x, 1f, 1f)
 				.OnKill(() => log.Add("child-kill")));
 			sb.OnComplete(() => log.Add("complete"));
 			sb.OnKill(() => log.Add("kill"));
@@ -370,8 +370,8 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Sequence_KillFalse_ChildrenGetOnKill()
 		{
 			var log = new List<string>();
-			var sb = global::Dyvoid.FeatherTween.FT.Sequence().SetUpdate(UpdatePhase.Manual);
-			sb.Append(global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 1f)
+			var sb = FT.Sequence().SetUpdate(UpdatePhase.Manual);
+			sb.Append(FT.To(() => 0f, _ => { }, 1f, 1f)
 				.OnKill(() => log.Add("child-kill")));
 			sb.OnKill(() => log.Add("seq-kill"));
 			var seq = sb.Start();
@@ -387,10 +387,10 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			Sequence seq = default;
 			var secondChildTicked = false;
-			var sb = global::Dyvoid.FeatherTween.FT.Sequence().SetUpdate(UpdatePhase.Manual);
-			sb.Append(global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 1f)
+			var sb = FT.Sequence().SetUpdate(UpdatePhase.Manual);
+			sb.Append(FT.To(() => 0f, _ => { }, 1f, 1f)
 				.OnComplete(() => seq.Kill()));
-			sb.Append(global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => secondChildTicked = true, 1f, 1f));
+			sb.Append(FT.To(() => 0f, _ => secondChildTicked = true, 1f, 1f));
 			seq = sb.Start();
 
 			Assert.DoesNotThrow(() => FeatherTweenRunner.ManualTick(1.5));
@@ -404,8 +404,8 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var started = false;
 			var lastT = -1f;
-			var sb = global::Dyvoid.FeatherTween.FT.Sequence().SetUpdate(UpdatePhase.Manual);
-			sb.Append(global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 2f));
+			var sb = FT.Sequence().SetUpdate(UpdatePhase.Manual);
+			sb.Append(FT.To(() => 0f, _ => { }, 1f, 2f));
 			sb.OnStart(() => started = true);
 			sb.OnUpdate(t => lastT = t);
 			sb.Start();
@@ -419,8 +419,8 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Sequence_PauseEntry_FiresOnPause()
 		{
 			var pauses = 0;
-			var sb = global::Dyvoid.FeatherTween.FT.Sequence().SetUpdate(UpdatePhase.Manual);
-			sb.Append(global::Dyvoid.FeatherTween.FT.To(() => 0f, _ => { }, 1f, 1f));
+			var sb = FT.Sequence().SetUpdate(UpdatePhase.Manual);
+			sb.Append(FT.To(() => 0f, _ => { }, 1f, 1f));
 			sb.AddPause(0.5f);
 			sb.OnPause(() => pauses++);
 			sb.Start();

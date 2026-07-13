@@ -63,8 +63,8 @@ namespace Dyvoid.FeatherTween.Samples.ComposedDemo
 		private void OnDestroy()
 		{
 			show.Kill();
-			global::Dyvoid.FeatherTween.FT.Kill(WaveTag);
-			global::Dyvoid.FeatherTween.FT.SetGlobalTimeScale(1f);
+			FT.Kill(WaveTag);
+			FT.SetGlobalTimeScale(1f);
 			foreach (var go in orbiters) DestroySpawned(go);
 			foreach (var go in pillars) DestroySpawned(go);
 			DestroySpawned(hero);
@@ -82,12 +82,12 @@ namespace Dyvoid.FeatherTween.Samples.ComposedDemo
 				var go = Spawn(PrimitiveType.Cube, new Vector3(-5f, 1.5f * i, -3f), UnityEngine.Color.cyan, $"Orbiter{i}");
 				orbiters[i] = go;
 
-				global::Dyvoid.FeatherTween.FT.LocalRotate(go.transform, new Vector3(0f, 120f, 0f), stepDuration)
+				FT.LocalRotate(go.transform, new Vector3(0f, 120f, 0f), stepDuration)
 					.SetLoops(-1, LoopType.Incremental)
 					.SetEase(Easing.InOutSine())
 					.Start();
 
-				global::Dyvoid.FeatherTween.FT.Scale(go.transform, 1.4f, stepDuration * 0.5f)
+				FT.Scale(go.transform, 1.4f, stepDuration * 0.5f)
 					.SetLoops(-1, LoopType.Yoyo)
 					.Start();
 			}
@@ -106,7 +106,7 @@ namespace Dyvoid.FeatherTween.Samples.ComposedDemo
 				pillars[i] = go;
 
 				var t = go.transform;
-				global::Dyvoid.FeatherTween.FT.To(
+				FT.To(
 						() => t.localScale.y,
 						y => t.localScale = new Vector3(0.3f, y, 0.3f),
 						2f, stepDuration * 0.6f)
@@ -134,7 +134,7 @@ namespace Dyvoid.FeatherTween.Samples.ComposedDemo
 			var buddyT = buddy.transform;
 			var dropInT = dropIn.transform;
 
-			var sb = global::Dyvoid.FeatherTween.FT.Sequence()
+			var sb = FT.Sequence()
 				.SetDefaults(ease: Easing.InOutQuad())
 				.SetAutoKill(false)
 				.OnStart(() => phaseLabel = "hero: moving out")
@@ -142,22 +142,22 @@ namespace Dyvoid.FeatherTween.Samples.ComposedDemo
 				.OnComplete(OnShowComplete);
 
 			// Append + Join: hero moves right while the buddy circles under it.
-			sb.Append(global::Dyvoid.FeatherTween.FT.Move(heroT, new Vector3(4f, 0f, 0f), stepDuration));
-			sb.Join(global::Dyvoid.FeatherTween.FT.Move(buddyT, new Vector3(4f, 0f, 1.5f), stepDuration));
+			sb.Append(FT.Move(heroT, new Vector3(4f, 0f, 0f), stepDuration));
+			sb.Join(FT.Move(buddyT, new Vector3(4f, 0f, 1.5f), stepDuration));
 
 			// Nested sub-sequence: a hop composed of up + spin, then down.
-			var hop = global::Dyvoid.FeatherTween.FT.Sequence()
+			var hop = FT.Sequence()
 				.SetDefaults(ease: Easing.OutQuad());
 			hop.AppendCallback(() => phaseLabel = "hero: hop (nested sequence)");
-			hop.Append(global::Dyvoid.FeatherTween.FT.Move(heroT, new Vector3(4f, 2f, 0f), stepDuration * 0.5f));
-			hop.Join(global::Dyvoid.FeatherTween.FT.LocalRotate(heroT, new Vector3(0f, 180f, 0f), stepDuration * 0.5f));
-			hop.Append(global::Dyvoid.FeatherTween.FT.Move(heroT, new Vector3(4f, 0f, 0f), stepDuration * 0.5f)
+			hop.Append(FT.Move(heroT, new Vector3(4f, 2f, 0f), stepDuration * 0.5f));
+			hop.Join(FT.LocalRotate(heroT, new Vector3(0f, 180f, 0f), stepDuration * 0.5f));
+			hop.Append(FT.Move(heroT, new Vector3(4f, 0f, 0f), stepDuration * 0.5f)
 				.SetEase(Easing.OutBounce()));
 			sb.Append(hop);
 
 			// Callback + material flash via a generic To on the material color.
 			sb.AppendCallback(() => phaseLabel = "hero: flash");
-			sb.Append(global::Dyvoid.FeatherTween.FT.To(
+			sb.Append(FT.To(
 				() => heroRenderer.material.color,
 				c => heroRenderer.material.color = c,
 				UnityEngine.Color.red, stepDuration * 0.5f)
@@ -167,7 +167,7 @@ namespace Dyvoid.FeatherTween.Samples.ComposedDemo
 			// to its raised spot only when the playhead reaches the finale.
 			sb.Insert(
 				Position.AtLabel("finale"),
-				global::Dyvoid.FeatherTween.FT.From(
+				FT.From(
 						() => dropInT.position, p => dropInT.position = p,
 						new Vector3(4f, 3f, 1.5f), stepDuration)
 					.SetEase(Easing.OutBounce()));
@@ -207,8 +207,8 @@ namespace Dyvoid.FeatherTween.Samples.ComposedDemo
 
 			if (GUILayout.Button(paused ? "Resume all" : "Pause all"))
 			{
-				if (paused) global::Dyvoid.FeatherTween.FT.ResumeAll();
-				else global::Dyvoid.FeatherTween.FT.PauseAll();
+				if (paused) FT.ResumeAll();
+				else FT.PauseAll();
 				paused = !paused;
 			}
 
@@ -229,13 +229,13 @@ namespace Dyvoid.FeatherTween.Samples.ComposedDemo
 			if (!Mathf.Approximately(newScale, globalScale))
 			{
 				globalScale = newScale;
-				global::Dyvoid.FeatherTween.FT.SetGlobalTimeScale(globalScale);
+				FT.SetGlobalTimeScale(globalScale);
 			}
 
 			GUI.enabled = waveAlive;
 			if (GUILayout.Button("Kill wave (filtered by target tag)"))
 			{
-				global::Dyvoid.FeatherTween.FT.Kill(WaveTag);
+				FT.Kill(WaveTag);
 				waveAlive = false;
 			}
 			GUI.enabled = true;

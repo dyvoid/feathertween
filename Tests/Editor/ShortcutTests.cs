@@ -37,7 +37,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var t = go.transform;
 			t.position = Vector3.zero;
-			global::Dyvoid.FeatherTween.FT.Move(t, new Vector3(2f, 4f, 6f), 1f)
+			FT.Move(t, new Vector3(2f, 4f, 6f), 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -56,7 +56,7 @@ namespace Dyvoid.FeatherTween.Tests
 			var t = go.transform;
 			t.position = new Vector3(9f, 9f, 9f);
 			t.localPosition = Vector3.zero;
-			global::Dyvoid.FeatherTween.FT.LocalMove(t, Vector3.right * 2f, 1f)
+			FT.LocalMove(t, Vector3.right * 2f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -69,7 +69,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var t = go.transform;
 			t.localScale = Vector3.one;
-			global::Dyvoid.FeatherTween.FT.Scale(t, 3f, 1f)
+			FT.Scale(t, 3f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -84,7 +84,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var t = go.transform;
 			t.rotation = Quaternion.identity;
-			global::Dyvoid.FeatherTween.FT.Rotate(t, new Vector3(0f, 90f, 0f), 1f)
+			FT.Rotate(t, new Vector3(0f, 90f, 0f), 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -99,7 +99,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var t = go.transform;
 			t.localRotation = Quaternion.identity;
-			global::Dyvoid.FeatherTween.FT.LocalRotate(t, new Vector3(0f, 0f, 180f), 1f)
+			FT.LocalRotate(t, new Vector3(0f, 0f, 180f), 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -113,7 +113,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var cg = go.AddComponent<CanvasGroup>();
 			cg.alpha = 1f;
-			global::Dyvoid.FeatherTween.FT.Fade(cg, 0f, 1f)
+			FT.Fade(cg, 0f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -126,7 +126,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var img = go.AddComponent<Image>();
 			img.color = new Color(0f, 0f, 0f, 1f);
-			global::Dyvoid.FeatherTween.FT.Color(img, new Color(1f, 0.5f, 0f, 1f), 1f)
+			FT.Color(img, new Color(1f, 0.5f, 0f, 1f), 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -141,7 +141,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var img = go.AddComponent<Image>();
 			img.color = new Color(0.2f, 0.4f, 0.6f, 1f);
-			global::Dyvoid.FeatherTween.FT.Fade(img, 0f, 1f)
+			FT.Fade(img, 0f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -155,7 +155,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var img = go.AddComponent<Image>();
 			img.fillAmount = 0f;
-			global::Dyvoid.FeatherTween.FT.FillAmount(img, 1f, 1f)
+			FT.FillAmount(img, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -168,7 +168,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var t = go.transform;
 			t.position = new Vector3(5f, 0f, 0f);
-			global::Dyvoid.FeatherTween.FT.Move(t, new Vector3(1f, 0f, 0f), 1f)
+			FT.Move(t, new Vector3(1f, 0f, 0f), 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.From()
 				.Start();
@@ -183,7 +183,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Shortcut_AutoSetsTarget()
 		{
 			var t = go.transform;
-			var tween = global::Dyvoid.FeatherTween.FT.Move(t, Vector3.one, 1f)
+			var tween = FT.Move(t, Vector3.one, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -197,7 +197,7 @@ namespace Dyvoid.FeatherTween.Tests
 		{
 			var t = go.transform;
 			var killed = false;
-			global::Dyvoid.FeatherTween.FT.Move(t, Vector3.one, 1f)
+			FT.Move(t, Vector3.one, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start()
 				.OnKill(() => killed = true);
@@ -213,9 +213,9 @@ namespace Dyvoid.FeatherTween.Tests
 		public void Shortcut_NullTarget_Throws()
 		{
 			Assert.Throws<System.ArgumentNullException>(
-				() => global::Dyvoid.FeatherTween.FT.Move(null, Vector3.one, 1f));
+				() => FT.Move(null, Vector3.one, 1f));
 			Assert.Throws<System.ArgumentNullException>(
-				() => global::Dyvoid.FeatherTween.FT.Fade((CanvasGroup)null, 0f, 1f));
+				() => FT.Fade((CanvasGroup)null, 0f, 1f));
 		}
 	}
 }
