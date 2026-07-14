@@ -9,15 +9,15 @@ public readonly struct Tween : IEquatable<Tween>
 {
     public TweenStatus Status { get; }
     public bool IsAlive { get; }
-    public float Progress { get; }
-    public float TotalProgress { get; }
+    public float TotalProgress { get; }   // across all loops [0,1]; infinite: within current cycle
+    public float Duration { get; }        // one cycle in seconds, excluding delays
 
     public void Play();    // unpause if paused; restart from 0 if completed; no-op if playing
     public void Pause();
     public void Resume();
     public void Reverse();
     public void Restart();
-    public void Seek(float seconds, bool fireCallbacks = false);  // preserves play/pause state
+    public void Seek(float time, bool fireCallbacks = false);  // preserves play/pause state
     public void SetTimeScale(float scale);
     public void SetRemainingCycles(int cycles);
     public void SetRemainingCycles(bool stopAtEndValue);
@@ -29,7 +29,7 @@ public readonly struct Tween : IEquatable<Tween>
     public Tween OnKill(Action cb);              // multicast
     public Tween OnStepComplete(Action cb);      // multicast
 
-    public TweenAwaiter GetAwaiter();
+    // M2 (planned): TweenAwaiter GetAwaiter() for `await tween`.
 }
 ```
 
@@ -42,30 +42,29 @@ public readonly struct Sequence : IEquatable<Sequence>
 {
     public TweenStatus Status { get; }
     public bool IsAlive { get; }
-    public float Progress { get; }
-    public float TotalProgress { get; }
-    public float Duration { get; }
+    public float TotalProgress { get; }   // across all loops [0,1]; infinite: within current cycle
+    public float Duration { get; }        // one cycle in seconds, excluding the initial delay
 
     public void Play();
     public void Pause();
     public void Resume();
     public void Reverse();
     public void Restart();
-    public void Seek(float seconds, bool fireCallbacks = false);
+    public void Seek(float time, bool fireCallbacks = false);
     public void SetTimeScale(float scale);
+    public void SetRemainingCycles(int cycles);
+    public void SetRemainingCycles(bool stopAtEndValue);
     public void Kill(bool complete = false);
     public void Complete();
 
     // Mid-play modification
     public void Insert<T>(float time, TweenBuilder<T> child);
-    public void Insert<T>(Position position, TweenBuilder<T> child);
-    public void Insert(float time, SequenceBuilder child);
-    public void AddLabel(string name, float time);
 
     public Sequence OnComplete(Action cb);       // multicast
     public Sequence OnKill(Action cb);           // multicast
+    public Sequence OnStepComplete(Action cb);   // multicast
 
-    public TweenAwaiter GetAwaiter();
+    // M2 (planned): TweenAwaiter GetAwaiter() for `await sequence`.
 }
 ```
 
@@ -144,11 +143,11 @@ A zero-duration tween completes on the first tick after `.Start()`. `OnStart`, `
 
 ### Reentrancy
 
-Structural mutation invoked from inside a callback (`Kill`, `Complete`, sequence `Insert`, `AddLabel`, `Restart`, `Reverse` on another tween or self) is **deferred** to a per-tick command buffer drained at the end of the tick. Setter calls remain synchronous so values written in callbacks land in the same frame. Reading state (`Status`, `Progress`, etc.) inside a callback is allowed and reflects current state.
+Structural mutation invoked from inside a callback (`Kill`, `Complete`, sequence `Insert`, `AddLabel`, `Restart`, `Reverse` on another tween or self) is **deferred** to a per-tick command buffer drained at the end of the tick. Setter calls remain synchronous so values written in callbacks land in the same frame. Reading state (`Status`, `TotalProgress`, etc.) inside a callback is allowed and reflects current state.
 
 ## Seek
 
-`Seek(seconds, fireCallbacks = false)`:
+`Seek(time, fireCallbacks = false)`:
 
 - **`fireCallbacks = false` (default)**: jumps the playhead to the target time and renders a single sample at that position. Intermediate loops are not simulated. `AppendCallback` and `AddPause` between current and target time do not fire.
 - **`fireCallbacks = true`**: walks loop boundaries between current and target time, in temporal order (forward seek issues `OnStepComplete` per crossed boundary; backward seek issues `OnRewind`). `AppendCallback` and `AddPause` are crossed in order; `AddPause` halts the seek at the pause and leaves the playhead there.

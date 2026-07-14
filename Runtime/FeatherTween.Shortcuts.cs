@@ -11,65 +11,65 @@ namespace Dyvoid.FeatherTween
 	// hand-written zero-alloc fast paths are an M2 deliverable.
 	public static partial class FT
 	{
-		public static TweenBuilder<Vector3> Move(Transform target, Vector3 end, float duration)
+		public static TweenBuilder<Vector3> Move(Transform target, Vector3 to, float duration)
 		{
 			RequireTarget(target);
-			return To(() => target.position, v => target.position = v, end, duration)
+			return To(() => target.position, v => target.position = v, to, duration)
 				.SetTarget(target);
 		}
 
-		public static TweenBuilder<Vector3> LocalMove(Transform target, Vector3 end, float duration)
+		public static TweenBuilder<Vector3> LocalMove(Transform target, Vector3 to, float duration)
 		{
 			RequireTarget(target);
-			return To(() => target.localPosition, v => target.localPosition = v, end, duration)
+			return To(() => target.localPosition, v => target.localPosition = v, to, duration)
 				.SetTarget(target);
 		}
 
-		public static TweenBuilder<Vector3> Scale(Transform target, Vector3 end, float duration)
+		public static TweenBuilder<Vector3> Scale(Transform target, Vector3 to, float duration)
 		{
 			RequireTarget(target);
-			return To(() => target.localScale, v => target.localScale = v, end, duration)
+			return To(() => target.localScale, v => target.localScale = v, to, duration)
 				.SetTarget(target);
 		}
 
-		public static TweenBuilder<Vector3> Scale(Transform target, float uniformEnd, float duration)
-			=> Scale(target, new Vector3(uniformEnd, uniformEnd, uniformEnd), duration);
+		public static TweenBuilder<Vector3> Scale(Transform target, float uniformTo, float duration)
+			=> Scale(target, new Vector3(uniformTo, uniformTo, uniformTo), duration);
 
-		public static TweenBuilder<Quaternion> Rotate(Transform target, Quaternion end, float duration)
+		public static TweenBuilder<Quaternion> Rotate(Transform target, Quaternion to, float duration)
 		{
 			RequireTarget(target);
-			return To(() => target.rotation, v => target.rotation = v, end, duration)
+			return To(() => target.rotation, v => target.rotation = v, to, duration)
 				.SetTarget(target);
 		}
 
 		public static TweenBuilder<Quaternion> Rotate(Transform target, Vector3 eulerAngles, float duration)
 			=> Rotate(target, Quaternion.Euler(eulerAngles.x, eulerAngles.y, eulerAngles.z), duration);
 
-		public static TweenBuilder<Quaternion> LocalRotate(Transform target, Quaternion end, float duration)
+		public static TweenBuilder<Quaternion> LocalRotate(Transform target, Quaternion to, float duration)
 		{
 			RequireTarget(target);
-			return To(() => target.localRotation, v => target.localRotation = v, end, duration)
+			return To(() => target.localRotation, v => target.localRotation = v, to, duration)
 				.SetTarget(target);
 		}
 
 		public static TweenBuilder<Quaternion> LocalRotate(Transform target, Vector3 eulerAngles, float duration)
 			=> LocalRotate(target, Quaternion.Euler(eulerAngles.x, eulerAngles.y, eulerAngles.z), duration);
 
-		public static TweenBuilder<float> Fade(CanvasGroup target, float endAlpha, float duration)
+		public static TweenBuilder<float> Fade(CanvasGroup target, float toAlpha, float duration)
 		{
 			RequireTarget(target);
-			return To(() => target.alpha, v => target.alpha = v, endAlpha, duration)
+			return To(() => target.alpha, v => target.alpha = v, toAlpha, duration)
 				.SetTarget(target);
 		}
 
-		public static TweenBuilder<UnityEngine.Color> Color(Image target, UnityEngine.Color end, float duration)
+		public static TweenBuilder<UnityEngine.Color> Color(Image target, UnityEngine.Color to, float duration)
 		{
 			RequireTarget(target);
-			return To(() => target.color, v => target.color = v, end, duration)
+			return To(() => target.color, v => target.color = v, to, duration)
 				.SetTarget(target);
 		}
 
-		public static TweenBuilder<float> Fade(Image target, float endAlpha, float duration)
+		public static TweenBuilder<float> Fade(Image target, float toAlpha, float duration)
 		{
 			RequireTarget(target);
 			return To(
@@ -80,14 +80,14 @@ namespace Dyvoid.FeatherTween
 						c.a = v;
 						target.color = c;
 					},
-					endAlpha, duration)
+					toAlpha, duration)
 				.SetTarget(target);
 		}
 
-		public static TweenBuilder<float> FillAmount(Image target, float end, float duration)
+		public static TweenBuilder<float> FillAmount(Image target, float to, float duration)
 		{
 			RequireTarget(target);
-			return To(() => target.fillAmount, v => target.fillAmount = v, end, duration)
+			return To(() => target.fillAmount, v => target.fillAmount = v, to, duration)
 				.SetTarget(target);
 		}
 

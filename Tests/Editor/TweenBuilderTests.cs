@@ -19,6 +19,18 @@ namespace Dyvoid.FeatherTween.Tests
 		}
 
 		[Test]
+		public void SetDelay_Negative_Throws_BuilderStaysValid()
+		{
+			var v = 0f;
+			var b = FT.To(() => v, x => v = x, 1f, 1f).SetUpdate(UpdatePhase.Manual);
+			Assert.Throws<ArgumentOutOfRangeException>(() => b.SetDelay(-0.1f));
+
+			// The throw must not consume the builder.
+			var t = b.Start();
+			Assert.That(t.IsAlive, Is.True);
+		}
+
+		[Test]
 		public void Start_ProducesLiveHandle()
 		{
 			var b = TweenBuilderFactory.Create<float>();

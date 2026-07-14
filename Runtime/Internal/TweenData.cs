@@ -52,6 +52,14 @@ namespace Dyvoid.FeatherTween.Internal
 		public virtual void SetRemainingCyclesAbsolute(int cycles) { }
 		public virtual void SetStopAtNextBoundary(bool stopAtEndValue) { }
 
+		// One cycle of content in seconds, excluding delays; 0 when the record
+		// has no timeline of its own.
+		public virtual double CycleDuration => 0d;
+
+		// Progress across all loops [0,1]; an infinite loop reports progress
+		// within its current cycle.
+		public virtual float TotalProgress => 0f;
+
 		public virtual void ResetPlayhead()
 		{
 			startFired = false;

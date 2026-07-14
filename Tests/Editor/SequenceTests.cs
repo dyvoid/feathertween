@@ -351,13 +351,71 @@ namespace Dyvoid.FeatherTween.Tests
 		}
 
 		[Test]
+		public void Join_SequenceChild_RunsParallelWithPrevious()
+		{
+			var a = 0f;
+			var b = 0f;
+			var inner = ManualSequence();
+			inner.Append(FT.FromTo(v => b = v, 0f, 1f, 1f));
+
+			var outer = ManualSequence();
+			outer.Append(FloatTween(() => a, v => a = v, 1f, 1f));
+			outer.Join(inner);
+			var seq = outer.Start();
+
+			Assert.That(seq.Duration, Is.EqualTo(1f).Within(1e-4f),
+				"joined child shares the previous child's window");
+
+			FeatherTweenRunner.ManualTick(0.5);
+			Assert.That(a, Is.EqualTo(0.5f).Within(1e-3f));
+			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "nested sequence runs in parallel");
+		}
+
+		[Test]
+		public void Prepend_SequenceChild_ShiftsExistingAndPlaysFirst()
+		{
+			var a = 0f;
+			var b = 0f;
+			var inner = ManualSequence();
+			inner.Append(FT.FromTo(v => b = v, 0f, 1f, 1f));
+
+			var outer = ManualSequence();
+			outer.Append(FloatTween(() => a, v => a = v, 1f, 1f));
+			outer.Prepend(inner);
+			var seq = outer.Start();
+
+			Assert.That(seq.Duration, Is.EqualTo(2f).Within(1e-4f));
+
+			FeatherTweenRunner.ManualTick(0.5);
+			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "prepended sequence plays first");
+			Assert.That(a, Is.EqualTo(0f).Within(1e-3f), "original child shifted after it");
+
+			FeatherTweenRunner.ManualTick(1.0);
+			Assert.That(b, Is.EqualTo(1f).Within(1e-3f));
+			Assert.That(a, Is.EqualTo(0.5f).Within(1e-3f));
+		}
+
+		[Test]
+		public void SetDelay_Negative_Throws_BuilderStaysValid()
+		{
+			var a = 0f;
+			var sb = ManualSequence();
+			Assert.Throws<ArgumentOutOfRangeException>(() => sb.SetDelay(-0.1f));
+
+			// The throw must not consume the builder.
+			sb.Append(FloatTween(() => a, v => a = v, 1f, 1f));
+			var seq = sb.Start();
+			Assert.That(seq.IsAlive, Is.True);
+		}
+
+		[Test]
 		public void NestedSequence_WithLoops_PlaysAllCycles()
 		{
 			var a = 0f;
 			var b = 0f;
 			var completed = false;
 			var inner = ManualSequence().SetLoops(2);
-			inner.Append(FT.FromTo(() => b, v => b = v, 0f, 1f, 1f));
+			inner.Append(FT.FromTo(v => b = v, 0f, 1f, 1f));
 
 			var outer = ManualSequence();
 			outer.Append(FloatTween(() => a, v => a = v, 1f, 1f));
@@ -385,7 +443,7 @@ namespace Dyvoid.FeatherTween.Tests
 			var a = 0f;
 			var b = 0f;
 			var inner = ManualSequence().SetLoops(-1);
-			inner.Append(FT.FromTo(() => b, v => b = v, 0f, 1f, 0.5f));
+			inner.Append(FT.FromTo(v => b = v, 0f, 1f, 0.5f));
 
 			var outer = ManualSequence();
 			outer.Insert(0f, inner);

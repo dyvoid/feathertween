@@ -10,14 +10,15 @@ All signatures accept builders, never started handles.
 - `Append(SequenceBuilder)` — nested
 - `AppendInterval(seconds)`
 - `AppendCallback(Action)`
-- `Insert(float time, TweenBuilder<T>)` / `Insert(Position, TweenBuilder<T>)`
-- `Join(TweenBuilder<T>)` / `Group(TweenBuilder<T>)` — parallel with most-recently-appended child: child `_start` = previous child's `_start` (same start time, not same end time). If the previous child was itself a `Join`'d child, both share the original appended child's `_start`. (aliases)
-- `Chain(TweenBuilder<T>)` — alias of `Append`
-- `Prepend(TweenBuilder<T>)` / `PrependInterval` / `PrependCallback`
+- `Insert(float time, child)` / `Insert(Position, child)` — child is a `TweenBuilder<T>` or `SequenceBuilder`
+- `Join(child)` — parallel with most-recently-appended child: child `_start` = previous child's `_start` (same start time, not same end time). If the previous child was itself a `Join`'d child, both share the original appended child's `_start`. Accepts `TweenBuilder<T>` or `SequenceBuilder`.
+- `Prepend(child)` / `PrependInterval` / `PrependCallback` — `Prepend` accepts `TweenBuilder<T>` or `SequenceBuilder`
 - `AddLabel(string, float)` / `AddLabel(string, Position)`
-- `AddPause(Position, Action? onPause = null)` — zero-duration child with `isPause` flag, halts playhead when reached
+- `AddPause(float time | Position, Action? onPause = null)` — zero-duration child with `isPause` flag, halts playhead when reached
 - `Clear(bool labels = false)`
-- `SetLoops(int count, LoopType type)` — sequence-level looping (ships in phase 1.10 with the `AdvanceTo` boundary walk; loop wrap is a boundary crossing)
+- `SetLoops(int count, LoopType loopType)` — sequence-level looping (ships in phase 1.10 with the `AdvanceTo` boundary walk; loop wrap is a boundary crossing)
+
+There are no alias names (former `Chain`/`Group` were removed in the ADR 0011 consistency pass): one operation, one name.
 
 ## Sequence invariants
 

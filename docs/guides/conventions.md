@@ -18,6 +18,16 @@ Canonical C# style for FT. AI agents additionally apply the project's Unity dev 
 - Boolean names use affirmative/negative phrasing (`isAlive`, `hasAmmo`).
 - File and folder names PascalCase, English, no spaces.
 
+## Public API shape rules
+
+These are API-design invariants (ADR 0011), not just style:
+
+- **Creation methods are subject-first**: the thing being animated comes first (a typed target like `transform`, or the getter/setter pair — shrinking to a lone setter when the engine never reads the value), then endpoint value(s), then duration. Endpoint parameters are named `from` / `to` (with a qualifying suffix where the value needs one, e.g. `toAlpha`).
+- **Sequence composition methods are position-first**: `(position, child)`, as in `Insert(time, child)`; `Append`/`Join`/`Prepend` derive the position. Every child-taking method accepts both `TweenBuilder<T>` and `SequenceBuilder`. One name per operation — no aliases.
+- **Timeline positions are named `time`; spans/durations are named `seconds`** (`Insert(time, …)`, `Seek(time)`, `AppendInterval(seconds)`, `SetDelay(seconds)`).
+- **Enum parameters are named after their type** in camelCase (`loopType`, `delayType`).
+- **Negative time inputs throw** (`ArgumentOutOfRangeException`); nothing silently clamps.
+
 ## Static API usage in samples and docs
 
 The public entry point is the static class `FT`. Call it as `FT.To(...)`, `FT.Sequence(...)`, `FT.Move(...)`, etc.

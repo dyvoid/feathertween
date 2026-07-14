@@ -37,10 +37,12 @@ Target-capture overloads only avoid allocation when the lambda body does not cap
 
 ```csharp
 // Zero alloc: static lambda, only the supplied state parameter is used.
-FT.To(this, () => x.value, (s, v) => s.x.value = v, 10f, 1f)
+FT.To(() => x.value, v => x.value = v, 10f, 1f)
     .OnComplete(this, s => s.HandleDone())
     .Start();
 ```
+
+Target-capture applies to `OnComplete`/`OnKill` today; creation-side state passing (a getter/setter pair that receives the state) is an M2 candidate.
 
 If you reference `this`, a local, or any field outside the supplied state parameter, the C# compiler emits a closure-allocating delegate and the zero-alloc benefit is lost. Use `static` lambdas where possible. An optional Roslyn analyzer (M2) can enforce this.
 

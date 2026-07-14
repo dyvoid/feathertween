@@ -27,17 +27,18 @@ namespace Dyvoid.FeatherTween
 		{
 			get
 			{
-				var data = TweenStore.Get(id, generation) as SequenceData;
+				var data = TweenStore.Get(id, generation);
 				return data == null ? 0f : data.TotalProgress;
 			}
 		}
 
+		/// One cycle in seconds, excluding the initial delay.
 		public float Duration
 		{
 			get
 			{
-				var data = TweenStore.Get(id, generation) as SequenceData;
-				return data == null ? 0f : (float)data.Duration;
+				var data = TweenStore.Get(id, generation);
+				return data == null ? 0f : (float)data.CycleDuration;
 			}
 		}
 
@@ -62,18 +63,35 @@ namespace Dyvoid.FeatherTween
 		/// Repositions the playhead in post-delay sequence time, spanning all
 		/// loops. Preserves play/pause state; with fireCallbacks a crossed
 		/// AddPause halts the seek there (docs/api/handles.md).
-		public void Seek(float seconds, bool fireCallbacks = false) => TweenOps.Seek(id, generation, seconds, fireCallbacks);
+		public void Seek(float time, bool fireCallbacks = false) => TweenOps.Seek(id, generation, time, fireCallbacks);
 
 		public void Reverse() => TweenOps.Reverse(id, generation);
+
+		/// Absolute remaining cycle count, counting the in-progress cycle as
+		/// the first; negative means loop forever.
+		public void SetRemainingCycles(int cycles)
+		{
+			var data = TweenStore.Get(id, generation);
+			data?.SetRemainingCyclesAbsolute(cycles);
+		}
+
+		/// Graceful stop for looping sequences: complete at the next cycle
+		/// boundary in the travel direction (true stops going forward, false
+		/// stops on a backward/reversed crossing).
+		public void SetRemainingCycles(bool stopAtEndValue)
+		{
+			var data = TweenStore.Get(id, generation);
+			data?.SetStopAtNextBoundary(stopAtEndValue);
+		}
 
 		/// Mid-play insertion of a tween at an absolute sequence time. The
 		/// builder is consumed. Structural mutation: deferred to end of tick when
 		/// called from inside a callback (docs/api/handles.md).
-		public void Insert<T>(float atTime, TweenBuilder<T> tween)
+		public void Insert<T>(float time, TweenBuilder<T> tween)
 		{
-			if (atTime < 0f)
+			if (time < 0f)
 			{
-				throw new ArgumentOutOfRangeException(nameof(atTime));
+				throw new ArgumentOutOfRangeException(nameof(time), "Insert time cannot be negative.");
 			}
 			var data = TweenStore.Get(id, generation) as SequenceData;
 			if (data == null)
@@ -103,7 +121,7 @@ namespace Dyvoid.FeatherTween
 			var childData = childBuffer.Build();
 			childData.AutoKill = false;
 
-			double start = atTime;
+			double start = time;
 			if (childData.DelayType == DelayType.FirstLoop && childData.Delay > 0f)
 			{
 				// Absorb the first-loop delay into the window start, matching

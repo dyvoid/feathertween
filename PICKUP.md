@@ -3,7 +3,7 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-07-08 (hardening pass: full Runtime/ review, 3 bugs fixed + 2 nested-loop tests; open semantics decisions logged below)
+Last updated: 2026-07-14 (API consistency pass, ADR 0011: getter-less FromTo, From(value), subject-first param naming, handle symmetry; on branch `claude/feathertween-api-simplify-o17c3b`)
 
 ## Current position
 
@@ -23,7 +23,15 @@ Last updated: 2026-07-08 (hardening pass: full Runtime/ review, 3 bugs fixed + 2
 
 ## In flight
 
-- Nothing half-built. M1 dev work (1.1–1.14) is complete and merged.
+- **API consistency pass (2026-07-14, branch `claude/feathertween-api-simplify-o17c3b`, ADR 0011)** — user-driven ergonomics/consistency sweep of the whole public surface, done before 1.15 locks the docs. Breaking (pre-v0.1, so free):
+  - `FT.FromTo(setter, from, to, duration)` — getter removed (it was dead: `SnapMode.FromTo` never read it). One lambda instead of two.
+  - `TweenBuilder<T>.From(T value)` — explicit start on any builder; `FT.Fade(cg, 1f, .5f).From(0f)` is a lambda-free FromTo on shortcuts.
+  - Param renames: endpoints are `from`/`to` (`toAlpha`, `uniformTo` on shortcuts); enum params named after type (`loopType`, `delayType`); timeline positions `time`, spans `seconds` (`Seek(time)`, `Sequence.Insert(time, …)`, `Position.AtTime(time)`).
+  - `SetDelay` now throws on negatives (was: silent clamp) on both builders.
+  - `Chain`/`Group` aliases removed; `Join(SequenceBuilder)` + `Prepend(SequenceBuilder)` added (nested sequences now first-class in all composition methods).
+  - Handle symmetry: `Tween.Duration`/`Tween.TotalProgress` (mirror Sequence semantics), `Sequence.SetRemainingCycles(int|bool)` (SequenceData grew boundary-stop mirroring `TweenData<T>`; loopCount no longer readonly).
+  - Docs: api pages updated to the new signatures; drift fixed where touched (`endValue:`→`to:`, `SetEase(Easing.OutCubic())` parens, nonexistent creation-side target-capture overload + awaitables marked M2-planned, phantom `Progress`/`SetId` removed); conventions.md gained "Public API shape rules"; ADR 0011 records the decision incl. the rejected subject-last ordering.
+  - Tests: 197 + 185 (release leg) green on the compile-check harness. **Not yet run in real Unity** — needs the usual Editor/PlayMode sweep before merge.
 
 ## Next up
 

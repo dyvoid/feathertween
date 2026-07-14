@@ -63,7 +63,7 @@ namespace Dyvoid.FeatherTween.Tests
 		public void FromTo_InvokesSetterWithFromAtSnapTime()
 		{
 			var v = 42f;
-			FT.FromTo(() => v, x => v = x, -1f, 100f, 1f)
+			FT.FromTo(x => v = x, -1f, 100f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
@@ -111,15 +111,44 @@ namespace Dyvoid.FeatherTween.Tests
 		}
 
 		[Test]
-		public void FromTo_NullGetter_Allowed()
+		public void FromTo_NullSetter_Throws()
+		{
+			Assert.Throws<System.ArgumentNullException>(
+				() => FT.FromTo<float>(null, 0f, 1f, 1f));
+		}
+
+		[Test]
+		public void BuilderFromValue_PlaysFromValueToCreationEnd()
+		{
+			var v = 5f;
+			FT.To(() => v, x => v = x, 10f, 1f)
+				.From(0f)
+				.SetUpdate(UpdatePhase.Manual)
+				.Start();
+
+			Assert.That(v, Is.EqualTo(0f).Within(1e-6f),
+				"From(value) snaps setter(value) at Start, like FromTo.");
+
+			FeatherTweenRunner.ManualTick(0.5);
+			Assert.That(v, Is.EqualTo(5f).Within(1e-3f), "midpoint between explicit 0 and creation end 10");
+
+			FeatherTweenRunner.ManualTick(0.5);
+			Assert.That(v, Is.EqualTo(10f).Within(1e-3f));
+		}
+
+		[Test]
+		public void BuilderFromValue_GetterNeverRead()
 		{
 			var v = 0f;
-			Assert.DoesNotThrow(() =>
-			{
-				FT.FromTo<float>(null, x => v = x, 0f, 1f, 1f)
-					.SetUpdate(UpdatePhase.Manual)
-					.Start();
-			});
+			var calls = 0;
+			FT.To(() => { calls++; return v; }, x => v = x, 1f, 1f)
+				.From(0.5f)
+				.SetUpdate(UpdatePhase.Manual)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(1.0);
+			Assert.That(calls, Is.Zero, "explicit endpoints: the getter must never be sampled");
+			Assert.That(v, Is.EqualTo(1f).Within(1e-3f));
 		}
 	}
 }

@@ -180,6 +180,25 @@ namespace Dyvoid.FeatherTween.Tests
 		}
 
 		[Test]
+		public void Shortcut_FromValue_PlaysExplicitFromToEnd()
+		{
+			var t = go.transform;
+			t.position = new Vector3(99f, 0f, 0f); // current value must be ignored
+			FT.Move(t, new Vector3(10f, 0f, 0f), 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.From(new Vector3(0f, 0f, 0f))
+				.Start();
+
+			Assert.That(t.position.x, Is.EqualTo(0f).Within(1e-3f), "From(value) snaps to the explicit start");
+
+			FeatherTweenRunner.ManualTick(0.5);
+			Assert.That(t.position.x, Is.EqualTo(5f).Within(1e-3f), "midpoint between explicit 0 and end 10");
+
+			FeatherTweenRunner.ManualTick(0.5);
+			Assert.That(t.position.x, Is.EqualTo(10f).Within(1e-3f));
+		}
+
+		[Test]
 		public void Shortcut_AutoSetsTarget()
 		{
 			var t = go.transform;
