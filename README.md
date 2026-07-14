@@ -29,7 +29,8 @@ static class `FT`:
 ```csharp
 using Dyvoid.FeatherTween;
 
-FT.To(() => value, v => value = v, target: 10f, duration: 1f).Start();
+FT.To(() => value, v => value = v, to: 10f, duration: 1f).Start();
+FT.FromTo(v => value = v, 0f, 10f, 1f).Start();   // both endpoints known: setter only
 FT.Move(transform, new Vector3(4f, 0f, 0f), 1f).Start();
 ```
 

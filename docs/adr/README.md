@@ -12,3 +12,4 @@
 | [0008](0008-interpolator-add-subtract.md) | `IInterpolator<T>` carries `Add` and `Subtract` | Accepted |
 | [0009](0009-infinite-loop-reverse-wrap.md) | Infinite-loop `Reverse()` wraps instead of clamping | Accepted |
 | [0010](0010-no-duration-default-cascade.md) | No duration in the `SetDefaults` cascade | Accepted |
+| [0011](0011-api-consistency-pass.md) | API consistency pass (subject-first creation, getter-less `FromTo`) | Accepted |

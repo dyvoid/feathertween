@@ -2,32 +2,38 @@
 
 ## Generic tween creation
 
-The lambda core is the most flexible form. You supply a getter, a setter, an end value, and a duration.
+Every creation method follows one shape: **subject first** (the thing being animated), then endpoint value(s), then duration. For generic tweens the subject is a getter/setter pair — or just a setter when the engine never needs to read the value.
 
 ```csharp
 Tween t = FT.To(
     () => obj.value,
     v  => obj.value = v,
-    endValue: 10f,
+    to: 10f,
     duration: 1f
 )
-.SetEase(Easing.OutCubic)
+.SetEase(Easing.OutCubic())
 .SetLoops(2, LoopType.Yoyo)
 .OnComplete(() => Debug.Log("done"))
 .Start();
 ```
 
-Supported value types in M1: `float`, `Vector2`, `Vector3`, `Vector4`, `Color`, `Quaternion`, `int` (snapping). Custom blittable types via `IInterpolator<T>`.
-
-### Zero-alloc target-capture variant
+When both endpoints are explicit, no getter exists — `FromTo` takes only the setter:
 
 ```csharp
-FT.To(this, () => x.value, (s, v) => s.x.value = v, 10f, 1f)
+FT.FromTo(v => obj.value = v, 0f, 10f, 1f).Start();
+```
+
+Supported value types in M1: `float`, `Vector2`, `Vector3`, `Vector4`, `Color`, `Quaternion`, `int` (snapping). Custom blittable types via `IInterpolator<T>`.
+
+### Zero-alloc target-capture callbacks
+
+```csharp
+FT.To(() => x.value, v => x.value = v, 10f, 1f)
     .OnComplete(this, s => s.HandleDone())
     .Start();
 ```
 
-Target-capture overloads avoid closure allocation when the lambda body does not capture any outer variables. If you reference `this`, a local, or any field outside the supplied state parameter, the C# compiler emits a closure-allocating delegate and the benefit is lost. Use `static` lambdas where possible.
+`OnComplete`/`OnKill` target-capture overloads avoid closure allocation when the lambda body does not capture any outer variables. If you reference `this`, a local, or any field outside the supplied state parameter, the C# compiler emits a closure-allocating delegate and the benefit is lost. Use `static` lambdas where possible. Target-capture overloads for tween *creation* (state passed alongside the getter/setter pair) are an M2 candidate and do not exist yet.
 
 ## Typed shortcuts
 
@@ -61,9 +67,10 @@ A started shortcut behaves exactly like a generic tween: it exposes the full han
 See [builders.md](builders.md#from--fromto) for the full builder methods. The short version:
 
 ```csharp
-FT.Move(transform, target.position, 1f).From().Start();
-FT.From(() => x, v => x = v, startValue, 1f).Start();
-FT.FromTo(() => x, v => x = v, from, to, 1f).Start();
+FT.Move(transform, dest, 1f).From().Start();          // swap: end value is the start
+FT.Move(transform, dest, 1f).From(spawnPos).Start();  // explicit start, no lambdas at all
+FT.From(() => x, v => x = v, from, 1f).Start();
+FT.FromTo(v => x = v, from, to, 1f).Start();
 ```
 
-Root tweens snap at `.Start()`; sequenced children snap when the parent playhead first crosses their start time.
+Root tweens snap at `.Start()`; sequenced children snap when the parent playhead first crosses their start time. `To` and `From` read the getter lazily at snap time; `FromTo` and `From(value)` have both endpoints explicit, so their values are captured when the creation call runs — inside a sequence, a mutation between build and playback is picked up by the getter forms but not by the explicit forms.

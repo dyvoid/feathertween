@@ -129,6 +129,33 @@ namespace Dyvoid.FeatherTween.Internal
 			set => snapPending = value;
 		}
 
+		public override double CycleDuration => duration;
+
+		public override float TotalProgress
+		{
+			get
+			{
+				if (duration <= 0f)
+				{
+					return 1f;
+				}
+				// Same slot math as Step: EveryLoop delays live inside the
+				// cycle slot, a FirstLoop delay sits before cycle 0.
+				var everyLoop = delayType == DelayType.EveryLoop && delay > 0f;
+				double cycleSlot = everyLoop ? (delay + (double)duration) : duration;
+				double firstDelayOffset = everyLoop ? 0d : delay;
+				var active = localTime - firstDelayOffset;
+				if (active < 0d)
+				{
+					active = 0d;
+				}
+				var p = loopCount < 0
+					? (active % cycleSlot) / cycleSlot
+					: active / (cycleSlot * loopCount);
+				return (float)(p > 1d ? 1d : (p < 0d ? 0d : p));
+			}
+		}
+
 		// All value writes funnel through here. Safe mode wraps the setter in a
 		// try/catch; a throw kills the tween (CancelFromError) and the caller
 		// must stop touching it. Returns false when the tween killed itself.

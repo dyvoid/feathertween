@@ -180,7 +180,7 @@ namespace Dyvoid.FeatherTween.Tests
 			// re-snaps from its current value on loop wrap by deferred-snap
 			// design, which would make cycle 1 a constant hold at the end value.)
 			var sb = ManualSequence().SetLoops(2, LoopType.Restart);
-			sb.Append(FT.FromTo(() => v, x => v = x, 0f, 1f, 1f));
+			sb.Append(FT.FromTo(x => v = x, 0f, 1f, 1f));
 			var seq = sb.Start().OnStepComplete(() => steps++);
 			seq.OnComplete(() => completed = true);
 
@@ -243,13 +243,91 @@ namespace Dyvoid.FeatherTween.Tests
 			var v = 0f;
 			var steps = 0;
 			var sb = ManualSequence().SetLoops(-1, LoopType.Restart);
-			sb.Append(FT.FromTo(() => v, x => v = x, 0f, 1f, 1f));
+			sb.Append(FT.FromTo(x => v = x, 0f, 1f, 1f));
 			var seq = sb.Start().OnStepComplete(() => steps++);
 
 			FeatherTweenRunner.ManualTick(5.5);
 			Assert.That(steps, Is.EqualTo(5));
 			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f));
 			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Playing));
+		}
+
+		[Test]
+		public void SequenceSetRemainingCycles_StopAtNextEnd_Completes()
+		{
+			var v = 0f;
+			var completed = false;
+			var sb = ManualSequence().SetLoops(-1, LoopType.Restart);
+			sb.Append(FT.FromTo(x => v = x, 0f, 1f, 1f));
+			var seq = sb.Start();
+			seq.OnComplete(() => completed = true);
+
+			FeatherTweenRunner.ManualTick(0.5);
+			seq.SetRemainingCycles(true);
+
+			FeatherTweenRunner.ManualTick(0.6);
+			Assert.That(completed, Is.True, "infinite sequence completes at the next cycle boundary");
+			Assert.That(v, Is.EqualTo(1f).Within(1e-3f), "stopped at the cycle end value");
+		}
+
+		[Test]
+		public void SequenceSetRemainingCycles_Absolute_CompletesAfterCount()
+		{
+			var v = 0f;
+			var steps = 0;
+			var completed = false;
+			var sb = ManualSequence().SetLoops(-1, LoopType.Restart);
+			sb.Append(FT.FromTo(x => v = x, 0f, 1f, 1f));
+			var seq = sb.Start().OnStepComplete(() => steps++);
+			seq.OnComplete(() => completed = true);
+
+			FeatherTweenRunner.ManualTick(0.5);
+			seq.SetRemainingCycles(2); // in-progress cycle counts as the first
+
+			FeatherTweenRunner.ManualTick(1.0);
+			Assert.That(completed, Is.False, "mid second (final) cycle");
+
+			FeatherTweenRunner.ManualTick(0.6);
+			Assert.That(steps, Is.EqualTo(2));
+			Assert.That(completed, Is.True);
+		}
+
+		// --- Tween handle Duration / TotalProgress (mirror the Sequence members) ---
+
+		[Test]
+		public void TweenHandle_Duration_And_TotalProgress()
+		{
+			var v = 0f;
+			var t = FloatTween(() => v, x => v = x, 1f, 2f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(2, LoopType.Restart)
+				.SetAutoKill(false)
+				.Start();
+
+			Assert.That(t.Duration, Is.EqualTo(2f).Within(1e-4f), "Duration reports a single cycle");
+
+			FeatherTweenRunner.ManualTick(1.0);
+			Assert.That(t.TotalProgress, Is.EqualTo(0.25f).Within(1e-3f), "TotalProgress spans all loops");
+
+			FeatherTweenRunner.ManualTick(2.0);
+			Assert.That(t.TotalProgress, Is.EqualTo(0.75f).Within(1e-3f));
+
+			FeatherTweenRunner.ManualTick(1.0);
+			Assert.That(t.TotalProgress, Is.EqualTo(1f).Within(1e-3f));
+		}
+
+		[Test]
+		public void TweenHandle_TotalProgress_InfiniteLoops_ReportsCycleProgress()
+		{
+			var v = 0f;
+			var t = FloatTween(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(-1)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(2.25);
+			Assert.That(t.TotalProgress, Is.EqualTo(0.25f).Within(1e-3f),
+				"infinite loop reports progress within the current cycle");
 		}
 
 		// --- Sequence Reverse ---

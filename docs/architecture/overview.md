@@ -121,7 +121,7 @@ Snap timing matches the design anchor:
 - **Root tween**: snap fires synchronously inside `.Start()`. The tween's own `SetDelay(...)` defers interpolation but not the snap.
 - **Sequenced child** with parent-imposed offset `> 0`: snap is deferred. The child carries a `_snapPending` flag set at append time. The flag is consumed on the first parent tick where the playhead crosses `child._start` in the forward direction. Backward seek past `child._start` re-arms the flag.
 - `From`: at snap time, read current value via getter; that becomes `end`. The supplied argument is `start`. Invoke `setter(start)`.
-- `FromTo`: arguments are `start` and `end` directly. Invoke `setter(start)` at snap time.
+- `FromTo` (and builder `From(value)`): both endpoints are supplied directly, so there is no getter; `FT.FromTo` takes only the setter (ADR 0011). Invoke `setter(start)` at snap time.
 
 `invalidate()` (M4) re-arms the snap on a live handle.
 

@@ -30,13 +30,13 @@ namespace Dyvoid.FeatherTween
 
 		public static Position End => new Position(PositionKind.End, 0f, null);
 
-		public static Position AtTime(float seconds)
+		public static Position AtTime(float time)
 		{
-			if (seconds < 0f)
+			if (time < 0f)
 			{
-				throw new ArgumentOutOfRangeException(nameof(seconds), "Position time cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(time), "Position time cannot be negative.");
 			}
-			return new Position(PositionKind.Time, seconds, null);
+			return new Position(PositionKind.Time, time, null);
 		}
 
 		public static Position AtLabel(string label, float offset = 0f)

@@ -10,7 +10,7 @@ namespace Dyvoid.FeatherTween.Internal
 		private double duration;
 		private readonly float delay;
 		private readonly SequenceCancelBehavior cancelBehavior;
-		private readonly int loopCount;
+		private int loopCount; // mutable: SetRemainingCyclesAbsolute rewrites it
 		private readonly LoopType loopType;
 
 		// Post-delay position spanning all cycles: [0, duration * loopCount].
@@ -18,11 +18,16 @@ namespace Dyvoid.FeatherTween.Internal
 		private double delayRemaining;
 		private int orderCounter;
 
-		public double Duration => duration;
+		// SetRemainingCycles(bool): stop at the next cycle boundary in the
+		// travel direction (mirrors TweenData<T>).
+		private bool stopAtNextBoundary;
+		private bool stopAtStartBoundary;
+
+		public override double CycleDuration => duration;
 
 		// Progress across all loops [0,1]; an infinite loop reports progress
 		// within its current cycle.
-		public float TotalProgress
+		public override float TotalProgress
 		{
 			get
 			{
@@ -71,6 +76,24 @@ namespace Dyvoid.FeatherTween.Internal
 
 		public override bool StartsDelayed() => delay > 0f;
 
+		public override void SetRemainingCyclesAbsolute(int cycles)
+		{
+			if (cycles < 0)
+			{
+				loopCount = -1;
+				return;
+			}
+			// Mirrors TweenData<T>: the in-progress cycle counts as the first
+			// of the remaining ones.
+			loopCount = CurrentCycle(forward: true) + cycles;
+		}
+
+		public override void SetStopAtNextBoundary(bool stopAtEndValue)
+		{
+			stopAtNextBoundary = stopAtEndValue;
+			stopAtStartBoundary = !stopAtEndValue;
+		}
+
 		public override void Step(double scaledDelta, double unscaledDelta)
 		{
 			if (Status != TweenStatus.Playing && Status != TweenStatus.Delayed)
@@ -99,6 +122,34 @@ namespace Dyvoid.FeatherTween.Internal
 			FireStartIfPending();
 
 			var target = playheadTotal + dt;
+
+			// SetRemainingCycles(bool): clamp the walk at the next cycle
+			// boundary in the travel direction and complete there.
+			var stoppedAtBoundary = false;
+			var stoppedForward = false;
+			if (duration > 0d)
+			{
+				if (dt > 0d && stopAtNextBoundary)
+				{
+					var boundary = (CurrentCycle(forward: true) + 1) * duration;
+					if (target >= boundary)
+					{
+						target = boundary;
+						stoppedAtBoundary = true;
+						stoppedForward = true;
+					}
+				}
+				else if (dt < 0d && stopAtStartBoundary)
+				{
+					var boundary = CurrentCycle(forward: false) * duration;
+					if (target <= boundary)
+					{
+						target = boundary;
+						stoppedAtBoundary = true;
+					}
+				}
+			}
+
 			if (!AdvanceTo(target, fire: true, haltOnPause: true, out var paused))
 			{
 				return; // sequence killed itself mid-walk
@@ -110,6 +161,23 @@ namespace Dyvoid.FeatherTween.Internal
 			{
 				Status = TweenStatus.Paused;
 				InvokeOnPause();
+				return;
+			}
+
+			if (stoppedAtBoundary)
+			{
+				// The clamp targets the nearest boundary, so the walk crossed
+				// no intermediate ones; fire this boundary's callback here.
+				if (stoppedForward)
+				{
+					InvokeOnStepComplete();
+				}
+				else
+				{
+					InvokeOnRewind();
+				}
+				Status = TweenStatus.Completed;
+				InvokeOnComplete();
 				return;
 			}
 
@@ -637,6 +705,8 @@ namespace Dyvoid.FeatherTween.Internal
 			base.ResetPlayhead();
 			playheadTotal = 0d;
 			delayRemaining = delay;
+			stopAtNextBoundary = false;
+			stopAtStartBoundary = false;
 			RearmEntries();
 		}
 

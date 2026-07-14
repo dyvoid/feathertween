@@ -147,7 +147,13 @@ namespace Dyvoid.FeatherTween
 			return new SequenceBuilder(buf);
 		}
 
-		public static TweenBuilder<T> To<T>(Func<T> getter, Action<T> setter, T end, float duration)
+		// Creation methods follow one shape: subject first (the thing being
+		// animated — a getter/setter pair, a setter, or a typed target), then
+		// endpoint value(s), then duration (docs/guides/conventions.md).
+
+		/// Animates from the current value (read via `getter` when playback
+		/// begins) to `to`.
+		public static TweenBuilder<T> To<T>(Func<T> getter, Action<T> setter, T to, float duration)
 		{
 			if (getter == null)
 			{
@@ -165,12 +171,14 @@ namespace Dyvoid.FeatherTween
 			var buf = TweenBuilderBufferPool<T>.Rent();
 			buf.Getter = getter;
 			buf.Setter = setter;
-			buf.EndValue = end;
+			buf.EndValue = to;
 			buf.Duration = duration;
 			return new TweenBuilder<T>(buf);
 		}
 
-		public static TweenBuilder<T> From<T>(Func<T> getter, Action<T> setter, T fromValue, float duration)
+		/// Animates from `from` to the current value (read via `getter` at snap
+		/// time; ADR 0007).
+		public static TweenBuilder<T> From<T>(Func<T> getter, Action<T> setter, T from, float duration)
 		{
 			if (getter == null)
 			{
@@ -182,19 +190,22 @@ namespace Dyvoid.FeatherTween
 			}
 			if (duration < 0f)
 			{
-				throw new ArgumentOutOfRangeException(nameof(duration));
+				throw new ArgumentOutOfRangeException(nameof(duration), "Duration cannot be negative.");
 			}
 
 			var buf = TweenBuilderBufferPool<T>.Rent();
 			buf.Getter = getter;
 			buf.Setter = setter;
-			buf.EndValue = fromValue;
+			buf.EndValue = from;
 			buf.Duration = duration;
 			buf.SnapMode = SnapMode.From;
 			return new TweenBuilder<T>(buf);
 		}
 
-		public static TweenBuilder<T> FromTo<T>(Func<T> getter, Action<T> setter, T from, T to, float duration)
+		/// Animates from `from` to `to`. Both endpoints are explicit, so no
+		/// getter exists: the values are captured at this call, not at playback
+		/// (unlike To/From, which sample the getter lazily).
+		public static TweenBuilder<T> FromTo<T>(Action<T> setter, T from, T to, float duration)
 		{
 			if (setter == null)
 			{
@@ -202,11 +213,10 @@ namespace Dyvoid.FeatherTween
 			}
 			if (duration < 0f)
 			{
-				throw new ArgumentOutOfRangeException(nameof(duration));
+				throw new ArgumentOutOfRangeException(nameof(duration), "Duration cannot be negative.");
 			}
 
 			var buf = TweenBuilderBufferPool<T>.Rent();
-			buf.Getter = getter;
 			buf.Setter = setter;
 			buf.FromValue = from;
 			buf.EndValue = to;

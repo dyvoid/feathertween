@@ -91,6 +91,8 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// Swap mode: the creation method's end value becomes the start, and the
+		/// tween plays to the value the getter reads at snap time (ADR 0007).
 		public TweenBuilder<T> From()
 		{
 			ValidateOrThrow();
@@ -98,23 +100,35 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		public TweenBuilder<T> SetLoops(int count, LoopType type = LoopType.Restart)
+		/// Explicit start value: the tween plays from `value` to the creation
+		/// method's end value. The getter is never read — both endpoints are
+		/// known at this call, exactly like FT.FromTo. Applies SnapMode.FromTo,
+		/// so SetRelative (which only affects lazily-sampled tweens) is ignored.
+		public TweenBuilder<T> From(T value)
 		{
 			ValidateOrThrow();
-			buffer.LoopCount = count < 0 ? -1 : count;
-			buffer.LoopType = type;
+			buffer.FromValue = value;
+			buffer.SnapMode = SnapMode.FromTo;
 			return this;
 		}
 
-		public TweenBuilder<T> SetDelay(float seconds, DelayType type = DelayType.FirstLoop)
+		public TweenBuilder<T> SetLoops(int count, LoopType loopType = LoopType.Restart)
+		{
+			ValidateOrThrow();
+			buffer.LoopCount = count < 0 ? -1 : count;
+			buffer.LoopType = loopType;
+			return this;
+		}
+
+		public TweenBuilder<T> SetDelay(float seconds, DelayType delayType = DelayType.FirstLoop)
 		{
 			ValidateOrThrow();
 			if (seconds < 0f)
 			{
-				seconds = 0f;
+				throw new ArgumentOutOfRangeException(nameof(seconds), "Delay cannot be negative.");
 			}
 			buffer.Delay = seconds;
-			buffer.DelayType = type;
+			buffer.DelayType = delayType;
 			return this;
 		}
 

@@ -42,7 +42,11 @@ namespace Dyvoid.FeatherTween
 		public SequenceBuilder SetDelay(float seconds)
 		{
 			ValidateOrThrow();
-			buffer.Delay = seconds < 0f ? 0f : seconds;
+			if (seconds < 0f)
+			{
+				throw new ArgumentOutOfRangeException(nameof(seconds), "Delay cannot be negative.");
+			}
+			buffer.Delay = seconds;
 			return this;
 		}
 
@@ -183,8 +187,6 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		public SequenceBuilder Chain<T>(TweenBuilder<T> child) => Append(child);
-
 		public SequenceBuilder Append(SequenceBuilder child)
 		{
 			ValidateOrThrow();
@@ -204,7 +206,14 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		public SequenceBuilder Group<T>(TweenBuilder<T> child) => Join(child);
+		public SequenceBuilder Join(SequenceBuilder child)
+		{
+			ValidateOrThrow();
+			var (id, gen, length, infinite) = ConsumeSequence(child);
+			var start = buffer.JoinAnchor;
+			buffer.AddEntry(id, gen, start, length, infinite, SequenceChildKind.Tween, -1);
+			return this;
+		}
 
 		public SequenceBuilder Insert<T>(float time, TweenBuilder<T> child)
 		{
@@ -277,6 +286,17 @@ namespace Dyvoid.FeatherTween
 			var (id, gen, absorb, length, infinite) = ConsumeTween(child);
 			buffer.ShiftAll(absorb + (infinite ? 0d : length));
 			buffer.AddEntry(id, gen, absorb, length, infinite, SequenceChildKind.Tween, -1);
+			return this;
+		}
+
+		public SequenceBuilder Prepend(SequenceBuilder child)
+		{
+			ValidateOrThrow();
+			var (id, gen, length, infinite) = ConsumeSequence(child);
+			// The child's own delay lives inside its window (ConsumeSequence
+			// folds it into length), so there is no absorb component here.
+			buffer.ShiftAll(infinite ? 0d : length);
+			buffer.AddEntry(id, gen, 0d, length, infinite, SequenceChildKind.Tween, -1);
 			return this;
 		}
 
@@ -515,7 +535,7 @@ namespace Dyvoid.FeatherTween
 			var infinite = childBuffer.Loops < 0;
 			var length = infinite
 				? 0d
-				: childBuffer.Delay + data.Duration * childBuffer.Loops;
+				: childBuffer.Delay + data.CycleDuration * childBuffer.Loops;
 
 			var (id, gen) = TweenStore.Allocate();
 			TweenStore.SetDataDetached(id, data);

@@ -11,13 +11,16 @@ using Dyvoid.FeatherTween;
 Tween t = FT.To(
     () => transform.position.x,
     v  => transform.position = transform.position with { x = v },
-    endValue: 10f,
+    to: 10f,
     duration: 1f
 )
-.SetEase(Easing.OutCubic)
+.SetEase(Easing.OutCubic())
 .SetLoops(2, LoopType.Yoyo)
 .OnComplete(() => Debug.Log("done"))
 .Start();
+
+// Both endpoints known? Skip the getter.
+FT.FromTo(v => alpha = v, 0f, 1f, 0.3f).Start();
 
 // Or use a typed shortcut
 FT.Move(transform, new Vector3(2, 3, 4), 1f)
@@ -33,7 +36,7 @@ Sequence seq = FT.Sequence()
     .Start();
 
 // Await a tween
-await FT.Fade(canvasGroup, 0f, 0.5f);
+await FT.Fade(canvasGroup, 0f, 0.5f); // M2 (planned): awaitable handles
 ```
 
 ## API map

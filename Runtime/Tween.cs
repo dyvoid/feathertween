@@ -22,6 +22,27 @@ namespace Dyvoid.FeatherTween
 			}
 		}
 
+		/// Progress across all loops [0,1]; an infinite loop reports progress
+		/// within its current cycle. Mirrors Sequence.TotalProgress.
+		public float TotalProgress
+		{
+			get
+			{
+				var data = TweenStore.Get(id, generation);
+				return data == null ? 0f : data.TotalProgress;
+			}
+		}
+
+		/// One cycle in seconds, excluding delays. Mirrors Sequence.Duration.
+		public float Duration
+		{
+			get
+			{
+				var data = TweenStore.Get(id, generation);
+				return data == null ? 0f : (float)data.CycleDuration;
+			}
+		}
+
 		internal Tween(int id, uint generation)
 		{
 			this.id = id;
@@ -44,7 +65,7 @@ namespace Dyvoid.FeatherTween
 
 		/// Repositions the playhead on the tween's local timeline (the initial
 		/// delay occupies [0, delay)). Preserves play/pause state (docs/api/handles.md).
-		public void Seek(float seconds, bool fireCallbacks = false) => TweenOps.Seek(id, generation, seconds, fireCallbacks);
+		public void Seek(float time, bool fireCallbacks = false) => TweenOps.Seek(id, generation, time, fireCallbacks);
 
 		public void Kill(bool complete = false) => TweenOps.Kill(id, generation, complete);
 

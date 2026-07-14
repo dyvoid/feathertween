@@ -152,8 +152,7 @@ namespace Dyvoid.FeatherTween.Tests
 		[Test]
 		public void FromSnapSetterThrows_AtStart_ReturnsDeadHandle()
 		{
-			var t = FT.FromTo(
-					() => 0f,
+			var t = FT.FromTo<float>(
 					_ => throw new InvalidOperationException("snap-boom"),
 					0f, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
