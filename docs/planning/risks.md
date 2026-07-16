@@ -10,9 +10,11 @@
 - **Safe mode in release**: people will leave it on and complain about cost, or turn it off and complain about silent failures. Default split (on in Editor, off in Release) is a reasonable compromise; document loudly.
 - **Builder GC without consumption**: forgetting `.Start()` is a silent no-op at runtime. The pooled backing record's finalizer enqueues the leak id onto a lock-free `ConcurrentQueue<int>`; the next PlayerLoop tick drains the queue on the main thread and emits `Debug.LogWarning`. No Unity API calls from the finalizer thread. Best-effort Editor diagnostic only; the Roslyn analyzer (optional, M2) is the hard guarantee. Release builds skip both.
 
-## Open questions (not blocking M1)
+## Open questions
 
-1. `globalTimeScale` knob on `FeatherTween` (slow-mo everything)? Trivial to add; deferred until requested.
-2. Quaternion tweens: shortest-path vs. euler-additive? DOTween offers `RotateMode.Fast`, `FastBeyond360`, etc. Pick a sane default and a single alternative for M2.
-3. Should `Tween.SetUpdate(Manual)` allow per-tween manual ticking (`tween.Tick(dt)`) or only via the global `Manual` root? Lean toward the latter for API minimalism.
-4. Should `Append(Action)` exist as sugar for `AppendCallback(Action)`? Cheap convenience, possible ambiguity with `Append(Tween)`. Defer.
+_All resolved (2026-07-16, user decisions; documented in 1.16 alongside the rest of the contract):_
+
+1. ~~`globalTimeScale` knob?~~ Shipped in 1.10: `FT.SetGlobalTimeScale` / `SetTimeScale(phase, scale)` / per-handle `SetTimeScale`.
+2. ~~Quaternion default?~~ **Decided**: shortest-path slerp (`Quaternion.SlerpUnclamped`) is the contract; euler overloads convert via `Quaternion.Euler`. A `RotateMode` alternative (e.g. beyond-360) is additive, M2+ if requested. Doc note for 1.16: shortest-path + yoyo/`Incremental` over rotations ≥180° takes the short way round, which can surprise.
+3. ~~Per-tween manual ticking?~~ **Decided**: global `Manual` root only (`FT.ManualTick`); no `tween.Tick(dt)`. Adding it later would be additive.
+4. ~~`Append(Action)` sugar?~~ **Decided**: no — `AppendCallback(Action)` stays the only spelling; the overload would ambiguate with `Append(Tween)`/`Append(SequenceBuilder)` composition. Recorded in `docs/guides/conventions.md` API shape rules.

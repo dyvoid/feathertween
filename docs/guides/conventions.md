@@ -27,6 +27,9 @@ These are API-design invariants (ADR 0011), not just style:
 - **Timeline positions are named `time`; spans/durations are named `seconds`** (`Insert(time, …)`, `Seek(time)`, `AppendInterval(seconds)`, `SetDelay(seconds)`).
 - **Enum parameters are named after their type** in camelCase (`loopType`, `delayType`).
 - **Negative time inputs throw** (`ArgumentOutOfRangeException`); nothing silently clamps.
+- **Callbacks keep the `Callback` suffix in sequence composition**: `AppendCallback(Action)` is the only spelling — no `Append(Action)` sugar, which would ambiguate with `Append(TweenBuilder<T>)`/`Append(SequenceBuilder)` composition (decided 2026-07-16).
+- **Rotation default is shortest-path slerp** (`Quaternion.SlerpUnclamped`); euler overloads are pure conversions. Any alternative rotate mode is a new additive parameter, never a change to the default.
+- **Manual ticking is global-only**: `FT.ManualTick(dt)` drives the `Manual` phase; there is no per-tween `Tick`.
 
 ## Static API usage in samples and docs
 

@@ -8,7 +8,7 @@ Last updated: 2026-07-16 (phase restructure: new 1.15 = API finalization, docs/h
 ## Current position
 
 - **Milestone**: M1 (Core), production cut. See `docs/planning/phases.md`.
-- **Done through**: Phase 1.14 (dev acceptance) merged to `main`. Unity run 2026-07-07: 196 tests green including the new 10k-tween and 1k×10-child-sequence zero-alloc guards. **Composed demo visual pass**: confirm it has been eyeballed in Play mode; if not, it is the one open 1.14 exit item.
+- **Done through**: Phase 1.14 (dev acceptance) merged to `main`, all exit items closed. Unity run 2026-07-07: 196 tests green including the new 10k-tween and 1k×10-child-sequence zero-alloc guards. Composed demo visual pass confirmed by user 2026-07-16.
 - **Phase restructure (user decision, 2026-07-16)**: new **1.15 — API finalization** (implement the pending semantics decisions so the surface is frozen); release hygiene/docs moved to **1.16**, which now carries the v0.1 tag. Rationale: 1.16 documents contracts, so the contracts must be final first.
 - **Remaining M1**: 1.15 (API finalization) → 1.16 (hygiene + docs, v0.1 tag).
 - **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
@@ -39,7 +39,7 @@ _Nothing in flight._
 
 ## Next up
 
-1. **Phase 1.15 — API finalization**: implement the decided semantics (full list with rationale in `docs/planning/phases.md` 1.15): reverse-through-delay, dead-handle `OnKill` no-op, throw on `duration <= 0` + infinite loops, `IntInterpolator` round-to-nearest, `ForceComplete` playhead sync, manual-phase cleanup doc note, ADR 0008 `Subtract` guard verification, `AddLabel` doc note. Exit: "Open questions / decisions pending" below is empty; API final for v0.1.
+1. **Phase 1.15 — API finalization**: implement the decided semantics (full list with rationale in `docs/planning/phases.md` 1.15): reverse-through-delay, dead-handle `OnKill` no-op, throw on `duration <= 0` + infinite loops, `IntInterpolator` round-to-nearest, `ForceComplete` playhead sync, manual-phase cleanup doc note, ADR 0008 `Subtract` guard verification, `AddLabel` doc note. Plus the **fast-path freeze check** (design-only: confirm M2 fast paths fit inside `TweenBuilder<T>` so shortcut signatures freeze safely). Exit: "Open questions / decisions pending" below is empty; API final for v0.1.
 2. **Phase 1.16 — Release hygiene and documentation**: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs, v0.1 tag.
 
 ## Infra (2026-07-02)
@@ -56,7 +56,7 @@ _None. All semantics decisions from the 2026-07-08 review were taken by the user
 ## Known issues / tech debt
 
 - Performance tests require the consuming project to install `com.unity.test-framework.performance` (test-only dependency).
-- An abandoned (never-started) `SequenceBuilder` leaks its already-allocated child store slots until the next `TweenStore.Reset()`; the LeakDetector warns via finalizer.
+- An abandoned (never-started) `SequenceBuilder` leaks its already-allocated child store slots until the next `TweenStore.Reset()`; the LeakDetector warns via finalizer. **Decided 2026-07-16: documented behavior, not a bug** — the warning is the mitigation; 1.16 documents it as a known limitation.
 
 ### From code review (2026-07-06, verified + triaged 2026-07-07)
 
