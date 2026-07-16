@@ -331,6 +331,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 				BuildShortcutChapter());
 
 			BuildPlaygroundChapter(master);
+			BuildGroupParking(master);
 
 			showcase = master.Start();
 		}
@@ -691,14 +692,50 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 			master.Append(slideIn);
 			totalDuration += SlideDuration;
 
-			master.Insert(0f, FT.Move(group, new Vector3(OffscreenX, 0f, 0f), 0.05f)
-				.From(new Vector3(OffscreenX, 0f, 0f)));
-
 			master.AddPause(totalDuration);
 			// Padding after the pause keeps the park inside the timeline instead
 			// of racing the sequence's own completion at the exact end.
 			master.AppendInterval(0.5f);
 			totalDuration += 0.5f;
+		}
+
+		// A silent Seek renders only the tweens whose window contains the target
+		// time, so a chapter group is only positioned while one of its slide
+		// tweens is active. These zero-motion "hold" tweens cover every gap —
+		// parked off-screen before the chapter, pinned on-stage during it,
+		// parked off-screen after it — so ANY seek (chapter jumps, Restart,
+		// erratic scrubbing) lands every group exactly where it belongs.
+		private void BuildGroupParking(SequenceBuilder master)
+		{
+			var off = new Vector3(OffscreenX, 0f, 0f);
+			var exited = new Vector3(-OffscreenX, 0f, 0f);
+			var onStage = new Vector3(0f, 0f, 0f);
+
+			for (var i = 0; i < groups.Length; i++)
+			{
+				var start = chapters[i].Start;
+				// The last chapter (playground) slides in and stays; the others
+				// slide out half a second before the next chapter's label.
+				var last = i == groups.Length - 1;
+				var end = last ? totalDuration : chapters[i + 1].Start;
+
+				if (start > 0f)
+				{
+					master.Insert(0f, Hold(groups[i], off, start));
+				}
+				var stageStart = start + SlideDuration;
+				var stageEnd = last ? totalDuration : end - SlideDuration;
+				master.Insert(stageStart, Hold(groups[i], onStage, stageEnd - stageStart));
+				if (!last)
+				{
+					master.Insert(end, Hold(groups[i], exited, totalDuration - end));
+				}
+			}
+		}
+
+		private TweenBuilder<Vector3> Hold(Transform group, Vector3 position, float duration)
+		{
+			return FT.Move(group, position, duration).From(position);
 		}
 
 		// ---- player UI ----------------------------------------------------------
