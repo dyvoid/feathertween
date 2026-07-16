@@ -75,33 +75,36 @@ namespace Dyvoid.FeatherTween
 			data?.SetRemainingCyclesAbsolute(cycles);
 		}
 
-		public void SetRemainingCycles(bool stopAtEndValue)
+		/// Graceful stop for looping tweens: complete at the next cycle boundary
+		/// going forward, settling on the end value.
+		public void CompleteAtCycleEnd()
 		{
 			var data = TweenStore.Get(id, generation);
-			data?.SetStopAtNextBoundary(stopAtEndValue);
+			data?.SetStopAtNextBoundary(true);
 		}
 
+		/// Graceful stop for looping tweens: complete on a backward/reversed
+		/// cycle crossing, settling on the start value.
+		public void CompleteAtCycleStart()
+		{
+			var data = TweenStore.Get(id, generation);
+			data?.SetStopAtNextBoundary(false);
+		}
+
+		// Late subscriptions on a dead handle are no-ops: the handle cannot know
+		// whether its record completed or was killed, so firing either callback
+		// would be a guess (phase 1.15; docs/api/handles.md).
 		public Tween OnComplete(Action cb)
 		{
 			var data = TweenStore.Get(id, generation);
-			if (data == null)
-			{
-				cb?.Invoke();
-				return this;
-			}
-			data.AddOnComplete(cb);
+			data?.AddOnComplete(cb);
 			return this;
 		}
 
 		public Tween OnKill(Action cb)
 		{
 			var data = TweenStore.Get(id, generation);
-			if (data == null)
-			{
-				cb?.Invoke();
-				return this;
-			}
-			data.AddOnKill(cb);
+			data?.AddOnKill(cb);
 			return this;
 		}
 

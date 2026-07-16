@@ -105,12 +105,22 @@ namespace Dyvoid.FeatherTween.Internal
 
 			if (delayRemaining > 0d)
 			{
+				if (dt < 0d)
+				{
+					// Reversed inside the delay: the delay is part of the timeline
+					// (phase 1.15), so it counts back toward playhead 0 (a fully
+					// restored delay) instead of stalling.
+					delayRemaining -= dt;
+					if (delayRemaining > delay)
+					{
+						delayRemaining = delay;
+					}
+					Status = TweenStatus.Delayed;
+					return;
+				}
 				if (dt <= delayRemaining)
 				{
-					if (dt > 0d)
-					{
-						delayRemaining -= dt;
-					}
+					delayRemaining -= dt;
 					Status = TweenStatus.Delayed;
 					return;
 				}
@@ -150,12 +160,25 @@ namespace Dyvoid.FeatherTween.Internal
 				}
 			}
 
+			// Reversed past playhead 0: the walk clamps there and the overshoot
+			// re-enters the initial delay, counting it back up (phase 1.15).
+			if (target < 0d && delay > 0f)
+			{
+				delayRemaining = Math.Min(delay, -target);
+			}
+
 			if (!AdvanceTo(target, fire: true, haltOnPause: true, out var paused))
 			{
 				return; // sequence killed itself mid-walk
 			}
 
 			InvokeOnUpdate(CycleProgress());
+
+			if (delayRemaining > 0d)
+			{
+				Status = TweenStatus.Delayed;
+				return;
+			}
 
 			if (paused)
 			{

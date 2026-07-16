@@ -5,29 +5,33 @@ namespace Dyvoid.FeatherTween
 {
 	public static partial class FT
 	{
-		public static void SetCapacity(int tweens, int sequences)
+		/// Pre-sizes the shared store (tweens and sequences live in one pool).
+		/// Grows only; a smaller value than the current capacity is a no-op.
+		public static void SetCapacity(int capacity)
 		{
-			TweenStore.EnsureCapacity(tweens + sequences);
+			TweenStore.EnsureCapacity(capacity);
 		}
 
 		/// Engine-side global playback rate, applied at the hidden root of every
 		/// phase. Composes multiplicatively with per-phase and per-tween scales.
 		/// Distinct from Unity's Time.timeScale: it also governs tweens using
-		/// SetUpdate(..., ignoreTimeScale: true).
-		public static void SetGlobalTimeScale(float scale)
+		/// SetUpdate(..., ignoreTimeScale: true). Negative values throw.
+		public static float GlobalTimeScale
 		{
-			if (scale < 0f)
+			get
 			{
-				throw new ArgumentOutOfRangeException(nameof(scale), "[FeatherTween] Global time scale cannot be negative.");
+				FeatherTweenRunner.EnsureInitialized();
+				return FeatherTweenRunner.GlobalTimeScale;
 			}
-			FeatherTweenRunner.EnsureInitialized();
-			FeatherTweenRunner.GlobalTimeScale = scale;
-		}
-
-		public static float GetGlobalTimeScale()
-		{
-			FeatherTweenRunner.EnsureInitialized();
-			return FeatherTweenRunner.GlobalTimeScale;
+			set
+			{
+				if (value < 0f)
+				{
+					throw new ArgumentOutOfRangeException(nameof(value), "[FeatherTween] Global time scale cannot be negative.");
+				}
+				FeatherTweenRunner.EnsureInitialized();
+				FeatherTweenRunner.GlobalTimeScale = value;
+			}
 		}
 
 		/// Per-phase playback rate; composes with the global scale.

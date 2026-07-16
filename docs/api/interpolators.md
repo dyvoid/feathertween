@@ -15,6 +15,9 @@ public interface IInterpolator<T>
 
 Built-ins in M1: `float`, `Vector2`, `Vector3`, `Vector4`, `Color`, `Quaternion`, `int`.
 
+- `int` lerps by rounding to nearest (symmetric across 0), not truncating.
+- All three members are required and assumed meaningful: `Add`/`Subtract` power `SetRelative` and `Incremental` loops (ADR 0008). There is no "Lerp-only" registration, so `Incremental` cannot be detected as unsupported at `Start()` — an interpolator whose `Subtract` throws surfaces that exception on the first incremental cycle computation.
+
 ## Registration
 
 ```csharp

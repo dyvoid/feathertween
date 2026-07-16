@@ -11,7 +11,8 @@ namespace Dyvoid.FeatherTween.Internal
 
 	internal sealed class IntInterpolator : IInterpolator<int>
 	{
-		public int Lerp(int from, int to, float t) => (int)(from + (to - from) * t);
+		// Round to nearest: truncation steps asymmetrically across 0 (phase 1.15).
+		public int Lerp(int from, int to, float t) => Mathf.RoundToInt(from + (to - from) * t);
 		public int Add(int a, int b) => a + b;
 		public int Subtract(int a, int b) => a - b;
 	}

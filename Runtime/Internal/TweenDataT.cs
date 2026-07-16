@@ -261,6 +261,14 @@ namespace Dyvoid.FeatherTween.Internal
 
 		public override void ForceComplete()
 		{
+			// Sync the playhead to the completed position so a later Seek on a
+			// non-autokill tween starts from where Complete() left it (phase 1.15).
+			var everyLoop = delayType == DelayType.EveryLoop && delay > 0f;
+			double cycleSlot = everyLoop ? (delay + (double)duration) : duration;
+			double firstDelayOffset = everyLoop ? 0d : delay;
+			var completedCycles = loopCount > 0 ? loopCount : lastCycleIndex + 1;
+			localTime = firstDelayOffset + cycleSlot * completedCycles;
+
 			var finalIndex = loopCount > 0 ? loopCount - 1 : lastCycleIndex;
 			if (setter != null)
 			{
@@ -303,9 +311,15 @@ namespace Dyvoid.FeatherTween.Internal
 			double firstDelayOffset = everyLoop ? 0d : delay;
 
 			localTime += dt * dir;
-			if (localTime < 0d)
+			if (loopCount < 0)
 			{
-				if (loopCount < 0)
+				// ADR 0009: infinite loops wrap on a backward crossing instead of
+				// clamping. A FirstLoop delay sits before cycle 0 only, so the wrap
+				// floor is the delay offset — the initial delay is never re-entered
+				// backward (it still plays out forward). An EveryLoop delay lives
+				// inside the cycle slot, so the wrap re-enters the previous cycle's
+				// delay region (phase 1.15).
+				if (dir < 0 && localTime < firstDelayOffset)
 				{
 					localTime += cycleSlot;
 					if (lastCycleIndex == 0)
@@ -313,10 +327,10 @@ namespace Dyvoid.FeatherTween.Internal
 						InvokeOnRewind();
 					}
 				}
-				else
-				{
-					localTime = 0d;
-				}
+			}
+			else if (localTime < 0d)
+			{
+				localTime = 0d;
 			}
 
 			if (!everyLoop && localTime < delay)

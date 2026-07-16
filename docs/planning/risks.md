@@ -14,7 +14,7 @@
 
 _All resolved (2026-07-16, user decisions; documented in 1.16 alongside the rest of the contract):_
 
-1. ~~`globalTimeScale` knob?~~ Shipped in 1.10: `FT.SetGlobalTimeScale` / `SetTimeScale(phase, scale)` / per-handle `SetTimeScale`.
+1. ~~`globalTimeScale` knob?~~ Shipped in 1.10: `FT.GlobalTimeScale` (property since 1.15) / `SetTimeScale(phase, scale)` / per-handle `SetTimeScale`.
 2. ~~Quaternion default?~~ **Decided**: shortest-path slerp (`Quaternion.SlerpUnclamped`) is the contract; euler overloads convert via `Quaternion.Euler`. A `RotateMode` alternative (e.g. beyond-360) is additive, M2+ if requested. Doc note for 1.16: shortest-path + yoyo/`Incremental` over rotations ≥180° takes the short way round, which can surprise.
 3. ~~Per-tween manual ticking?~~ **Decided**: global `Manual` root only (`FT.ManualTick`); no `tween.Tick(dt)`. Adding it later would be additive.
 4. ~~`Append(Action)` sugar?~~ **Decided**: no — `AppendCallback(Action)` stays the only spelling; the overload would ambiguate with `Append(Tween)`/`Append(SequenceBuilder)` composition. Recorded in `docs/guides/conventions.md` API shape rules.

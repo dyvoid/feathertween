@@ -3,7 +3,7 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-07-16 (phase restructure: new 1.15 = API finalization, docs/hygiene moved to 1.16; all pending semantics decisions taken — see phases.md 1.15)
+Last updated: 2026-07-16 (phase 1.15 implemented on `claude/sweet-galileo-jgxpl8`; awaiting Unity verification + merge)
 
 ## Current position
 
@@ -23,7 +23,17 @@ Last updated: 2026-07-16 (phase restructure: new 1.15 = API finalization, docs/h
 
 ## In flight
 
-_Nothing in flight._
+- **Phase 1.15 — API finalization, implemented on `claude/sweet-galileo-jgxpl8`** (2026-07-16). All decided semantics are in; both harness legs green (211 + 199). Remaining before close: Unity Editor/PlayMode sweep by the user, then fast-forward merge to `main`. Changes:
+  - **Reverse-through-delay**: delays are part of the timeline. Tween: finite loops count the initial delay back down and hold `Delayed` at playhead 0; infinite loops wrap per ADR 0009 with a delay-aware floor (`FirstLoop` delay never re-entered backward; `EveryLoop` delay passed through inside the slot) — see ADR 0009 addendum. Sequence: fixed the infinite `Delayed` stall (negative dt now re-grows `delayRemaining`; reversing out of content past playhead 0 re-enters the delay).
+  - **Dead-handle late subscriptions all no-op**: `OnComplete`/`OnKill`/`OnStepComplete` on dead `Tween`/`Sequence` handles do nothing (was: late-fire).
+  - **`duration <= 0` + `SetLoops(-1)` throws** at `Start()`/append (validated in `TweenBuilderBuffer.Build`).
+  - **`IntInterpolator.Lerp` rounds to nearest** (`Mathf.RoundToInt`), symmetric across 0.
+  - **`ForceComplete` syncs `localTime`** so Complete-then-Seek starts from the completed position; `TotalProgress` reads 1 after `Complete()`.
+  - **`CompleteAtCycleEnd()`/`CompleteAtCycleStart()`** replace `SetRemainingCycles(bool)` on both handles.
+  - **`FT.SetCapacity(int)`** (single param) and **`FT.GlobalTimeScale` property** (setter throws on negative) replace the old spellings; all call sites (tests, ComposedDemo sample) updated.
+  - **ADR 0008 guard**: verified — no detectable gap without a Lerp-only interpolator tier; recorded as ADR 0008 addendum, no code change.
+  - **Docs**: handles.md (new methods, dead-handle rule, reverse-through-delay, Complete sync, `GlobalTimeScale`), builders.md, sequences.md (`AddLabel` definition-time note), interpolators.md (int rounding, ADR 0008 note), overview.md (manual-phase cleanup contract), ADR 0008/0009 addenda, risks.md.
+  - **Tests**: 14 new/updated (reverse-through-delay ×7 incl. wrap composition, dead-handle ×2, zero-duration throw ×2, int rounding, Complete-then-Seek, `CompleteAtCycleStart`).
 
 ## Recently landed
 
@@ -39,7 +49,7 @@ _Nothing in flight._
 
 ## Next up
 
-1. **Phase 1.15 — API finalization**: implement the decided semantics (full list with rationale in `docs/planning/phases.md` 1.15): reverse-through-delay (incl. ADR 0009 wrap composition), dead-handle late subscriptions all no-op, throw on `duration <= 0` + infinite loops, `IntInterpolator` round-to-nearest, `ForceComplete` playhead sync, `CompleteAtCycleEnd()`/`CompleteAtCycleStart()` replacing `SetRemainingCycles(bool)`, `SetCapacity(int)`, `FT.GlobalTimeScale` property, manual-phase cleanup doc note, ADR 0008 `Subtract` guard verification, `AddLabel` doc note. Fast-path freeze check done (see phases.md — `TweenBuilder<T>` signatures safe). **ADR audit 2026-07-16**: all 11 ADRs re-litigated with the user; all decisions upheld; ADR 0006 gained an addendum describing the as-implemented mechanism (no parent pointers, top-down entry ownership, per-phase roots). Exit: "Open questions / decisions pending" below is empty; API final for v0.1.
+1. **Close phase 1.15**: user runs the Unity Editor/PlayMode sweep on `claude/sweet-galileo-jgxpl8`, then fast-forward merge to `main`. Exit criteria already met in the harness; API is final for v0.1 once Unity confirms.
 2. **Phase 1.16 — Release hygiene and documentation**: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs, v0.1 tag.
 3. **Phase 1.17 — Showcase sample "the movie"** (new, 2026-07-16): the whole sample is one nested master sequence — chaptered feature screens with self-describing captions and a seek-bar/player UI driving the root sequence. Spec: `docs/design/showcase-sample.md`. Serves as the v0.1 dogfood gate and the pure-function-of-time stress test; M1 closes and v0.1 is declared stable at its exit.
 
@@ -89,8 +99,8 @@ Remaining tracked debt:
 
 ## Test status
 
-- Compile-check harness: 186 tests green + 174 in the FEATHERTWEEN_RELEASE leg (2026-07-08, includes hardening-pass fixes and 2 new nested-loop tests).
-- Unity (Editor + Runtime + Performance): 196 green 2026-07-07 (through 1.14); hardening-pass changes verified in Unity 2026-07-08 (store tests re-run green after `slotFree` fix).
+- Compile-check harness: 211 tests green + 199 in the FEATHERTWEEN_RELEASE leg (2026-07-16, includes the 14 phase-1.15 tests).
+- Unity (Editor + Runtime + Performance): 196 green through 1.14 + ADR 0011 sweep confirmed 2026-07-16; **phase 1.15 changes not yet Unity-verified** — run the full sweep before merging.
 
 ## Consumer setup reminders
 

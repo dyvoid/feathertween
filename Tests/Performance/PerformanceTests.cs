@@ -21,7 +21,7 @@ namespace Dyvoid.FeatherTween.Tests.Performance
 			TweenStore.Reset();
 			FeatherTweenRunner.Reset();
 			Interpolators.Reset();
-			FT.SetCapacity(200_000, 0);
+			FT.SetCapacity(200_000);
 		}
 
 		private static void SpawnManualTweens(int count)

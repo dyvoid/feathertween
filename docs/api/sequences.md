@@ -42,6 +42,7 @@ public readonly struct Position
 
 - A `SequenceBuilder` accepts only unstarted builders. Passing the same builder to two `Append/Insert/Join` calls throws (builder already consumed).
 - `Insert(Position.AtLabel("x"))` where `"x"` is not yet defined is deferred until `Start()`; unresolved labels throw at start.
+- `AddLabel` resolves its position at **definition time** (only `Insert`/`AddPause` defer to `Start()`); a duplicate label name throws.
 - `Insert(time: t)` with `t < 0` throws. The sequence's own delay is the only way to defer.
 - `Insert(time: t)` with `t > current duration` extends the sequence's duration to `t + child.duration`.
 - `Start()` on an empty sequence produces a zero-duration `Sequence` that completes on its first tick.

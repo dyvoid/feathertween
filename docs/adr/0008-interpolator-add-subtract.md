@@ -30,3 +30,7 @@ For `Quaternion`, `Subtract(a, b) := a * Quaternion.Inverse(b)` (the rotation th
 User-defined interpolators must implement all three. The contract is small enough that this is not a burden, and it makes `Incremental` work uniformly for any `T`.
 
 If a future interpolator type cannot meaningfully define `Subtract` (e.g. a non-group type), `Incremental` is unsupported for that type; the builder can throw at `.Start()` time.
+
+## Addendum (phase 1.15, 2026-07-16) — guard verification
+
+The "throw at `Start()` when `Subtract` is not meaningful" idea was re-examined and **no guard was added**, on purpose: the interface makes all three members mandatory, so there is no registration-side signal ("Lerp-only interpolator") from which `Start()` could detect an unsupported `Incremental`. A meaningless-but-present `Subtract` is indistinguishable from a valid one without executing it. The failure mode is therefore left as-is: an interpolator whose `Subtract` throws surfaces that exception on the first incremental cycle computation (under safe mode, it kills the tween per the error contract). If a Lerp-only interpolator tier ever exists (M5's `IBurstInterpolator<T>` discussions), the gap becomes detectable and the guard becomes implementable — additively.

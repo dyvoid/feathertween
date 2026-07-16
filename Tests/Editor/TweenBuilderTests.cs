@@ -191,8 +191,13 @@ namespace Dyvoid.FeatherTween.Tests
 			Assert.That(t.Status, Is.EqualTo(TweenStatus.Disposed));
 		}
 
+		// Phase 1.15: all late subscriptions on a dead handle are no-ops — the
+		// handle cannot know whether its record completed or was killed, so
+		// firing either callback would be a guess. This keeps "OnComplete fires
+		// only on actual completion" and "OnKill fires only on actual kills"
+		// unconditional.
 		[Test]
-		public void LateSubscription_OnDisposed_FiresImmediately()
+		public void LateSubscription_OnDeadHandle_NoOps()
 		{
 			var t = TweenBuilderFactory.Create<float>().Start();
 			t.Kill();
@@ -200,7 +205,23 @@ namespace Dyvoid.FeatherTween.Tests
 			var fired = 0;
 			t.OnComplete(() => fired++);
 			t.OnKill(() => fired++);
-			Assert.That(fired, Is.EqualTo(2));
+			t.OnStepComplete(() => fired++);
+			Assert.That(fired, Is.Zero, "dead-handle late subscriptions must not fire");
+		}
+
+		[Test]
+		public void LateSubscription_OnDeadSequenceHandle_NoOps()
+		{
+			var sb = FT.Sequence().SetUpdate(UpdatePhase.Manual);
+			sb.Append(TweenBuilderFactory.Create<float>());
+			var s = sb.Start();
+			s.Kill();
+
+			var fired = 0;
+			s.OnComplete(() => fired++);
+			s.OnKill(() => fired++);
+			s.OnStepComplete(() => fired++);
+			Assert.That(fired, Is.Zero, "dead-handle late subscriptions must not fire");
 		}
 
 		private static void CreateAndDropUnconsumed()

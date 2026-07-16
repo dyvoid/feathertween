@@ -251,6 +251,14 @@ namespace Dyvoid.FeatherTween.Internal
 		// children resolve on parent-window entry.
 		public TweenData<T> Build()
 		{
+			// Zero duration with infinite loops has no meaningful playhead (the
+			// cycle index diverges); throw instead of clamping (phase 1.15).
+			if (loopCount < 0 && duration <= 0f)
+			{
+				throw new InvalidOperationException(
+					"[FeatherTween] duration must be > 0 when looping forever (SetLoops(-1)).");
+			}
+
 			var data = TweenDataPool<T>.Rent();
 			data.Phase = phase;
 			data.AutoKill = autoKill;

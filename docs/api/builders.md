@@ -61,7 +61,7 @@ All of these return the builder so they can be chained.
 ```csharp
 .SetEase(EaseRef)                            // produced by Easing.X(...) factories
 .SetEase(AnimationCurve)                     // convenience: wraps Easing.Curve(c)
-.SetLoops(count, LoopType)                   // Restart | Yoyo | Incremental
+.SetLoops(count, LoopType)                   // Restart | Yoyo | Incremental; SetLoops(-1) with duration 0 throws at Start()
 .SetDelay(seconds, DelayType.FirstLoop | DelayType.EveryLoop)  // negative throws
 .SetUpdate(UpdatePhase, ignoreTimeScale)    // Update | Late | Fixed | Manual
 .SetAutoKill(bool)

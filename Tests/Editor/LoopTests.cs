@@ -203,7 +203,7 @@ namespace Dyvoid.FeatherTween.Tests
 		}
 
 		[Test]
-		public void SetRemainingCycles_StopAtNextEnd_Completes()
+		public void CompleteAtCycleEnd_StopAtNextEnd_Completes()
 		{
 			var v = 0f;
 			var completed = false;
@@ -214,11 +214,179 @@ namespace Dyvoid.FeatherTween.Tests
 				.Start();
 
 			FeatherTweenRunner.ManualTick(0.5);
-			t.SetRemainingCycles(true);
+			t.CompleteAtCycleEnd();
 
 			FeatherTweenRunner.ManualTick(0.6);
 			Assert.That(completed, Is.True);
 			Assert.That(v, Is.EqualTo(1f).Within(1e-3f));
+		}
+
+		[Test]
+		public void CompleteAtCycleStart_ReversedCrossing_CompletesAtStartValue()
+		{
+			var v = 0f;
+			var completed = false;
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(-1, LoopType.Restart)
+				.OnComplete(() => completed = true)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(1.5);
+			t.Reverse();
+			t.CompleteAtCycleStart();
+
+			FeatherTweenRunner.ManualTick(0.6);
+			Assert.That(completed, Is.True, "completes on the backward cycle crossing");
+			Assert.That(v, Is.EqualTo(0f).Within(1e-3f), "settles on the start value");
+		}
+
+		// --- Reverse through delay (phase 1.15): the delay is part of the
+		// timeline; a reversed tween counts it back down before playhead 0. ---
+
+		[Test]
+		public void Reverse_FromContent_BackThroughFirstLoopDelay_HoldsAtZero()
+		{
+			var v = 0f;
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetDelay(0.5f, DelayType.FirstLoop)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(1.0);
+			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f), "0.5 into content after the delay");
+
+			t.Reverse();
+			FeatherTweenRunner.ManualTick(0.5);
+			Assert.That(v, Is.EqualTo(0f).Within(1e-3f), "rewound to the content start");
+
+			FeatherTweenRunner.ManualTick(0.25);
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Delayed), "counting the delay back down");
+
+			FeatherTweenRunner.ManualTick(1.0);
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Delayed), "holds at playhead 0, no stall or wrap");
+
+			t.Reverse();
+			FeatherTweenRunner.ManualTick(0.75);
+			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f), "forward again: delay replays, then content");
+		}
+
+		[Test]
+		public void Reverse_DuringInitialDelay_Finite_CountsDownAndHolds()
+		{
+			var v = 0f;
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetDelay(0.5f, DelayType.FirstLoop)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.25);
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Delayed));
+
+			t.Reverse();
+			FeatherTweenRunner.ManualTick(1.0);
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Delayed), "clamped at playhead 0 inside the delay");
+			Assert.That(v, Is.EqualTo(0f).Within(1e-6f), "no value writes in the delay");
+
+			t.Reverse();
+			FeatherTweenRunner.ManualTick(0.75);
+			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f), "recovers forward through the full delay");
+		}
+
+		// --- ADR 0009 x reverse-through-delay composition: infinite loops wrap
+		// backward instead of clamping, and the wrap floor depends on where the
+		// delay lives (phase 1.15). ---
+
+		[Test]
+		public void InfiniteFirstLoopDelay_BackwardWrap_SkipsInitialDelay()
+		{
+			var v = 0f;
+			var rewinds = 0;
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(-1, LoopType.Restart)
+				.SetDelay(0.5f, DelayType.FirstLoop)
+				.OnRewind(() => rewinds++)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.75);
+			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f), "cycle 0 after the initial delay");
+
+			t.Reverse();
+			FeatherTweenRunner.ManualTick(0.5);
+			// Backward past the cycle-0 start wraps within cycle content; the
+			// FirstLoop delay sits before cycle 0 only and is never re-entered.
+			Assert.That(v, Is.EqualTo(0.75f).Within(1e-3f), "wrapped into the previous iteration's content");
+			Assert.That(rewinds, Is.EqualTo(1), "the wrap is a cycle-boundary crossing");
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Playing), "never stalls in the delay");
+		}
+
+		[Test]
+		public void InfiniteEveryLoopDelay_BackwardWrap_ReentersDelaySlot()
+		{
+			var v = 0f;
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(-1, LoopType.Restart)
+				.SetDelay(0.5f, DelayType.EveryLoop)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.75);
+			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f), "cycle 0 content, past the in-slot delay");
+
+			t.Reverse();
+			FeatherTweenRunner.ManualTick(0.5);
+			// Back inside cycle 0's delay portion: EveryLoop delays live in the
+			// cycle slot, so the playhead passes through them going backward.
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Delayed), "re-entered the in-slot delay backward");
+			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f), "delay holds the last written value");
+
+			FeatherTweenRunner.ManualTick(0.5);
+			// Crossing below 0 wraps a full slot (delay + duration) into the
+			// previous iteration's content.
+			Assert.That(v, Is.EqualTo(0.75f).Within(1e-3f), "wrapped into the previous slot's content");
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Playing));
+		}
+
+		[Test]
+		public void InfiniteFirstLoopDelay_ReverseDuringInitialDelay_WrapsIntoContent()
+		{
+			var v = 0f;
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(-1, LoopType.Restart)
+				.SetDelay(0.5f, DelayType.FirstLoop)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.25);
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Delayed), "in the initial delay");
+
+			t.Reverse();
+			FeatherTweenRunner.ManualTick(0.25);
+			// Infinite means infinite in either direction (ADR 0009): reversing
+			// inside the initial delay wraps into cycle content instead of
+			// stalling at playhead 0.
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Playing));
+			Assert.That(v, Is.GreaterThan(0f), "playing backward through wrapped content");
+		}
+
+		[Test]
+		public void InfiniteEveryLoopDelay_ReverseDuringInitialDelay_WrapsIntoContent()
+		{
+			var v = 0f;
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(-1, LoopType.Restart)
+				.SetDelay(0.5f, DelayType.EveryLoop)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.25);
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Delayed), "in cycle 0's in-slot delay");
+
+			t.Reverse();
+			FeatherTweenRunner.ManualTick(0.5);
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Playing), "wrapped below 0 into the previous slot");
+			Assert.That(v, Is.EqualTo(0.75f).Within(1e-3f), "landed in the previous iteration's content");
 		}
 
 		[Test]

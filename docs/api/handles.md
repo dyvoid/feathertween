@@ -20,11 +20,12 @@ public readonly struct Tween : IEquatable<Tween>
     public void Seek(float time, bool fireCallbacks = false);  // preserves play/pause state
     public void SetTimeScale(float scale);
     public void SetRemainingCycles(int cycles);
-    public void SetRemainingCycles(bool stopAtEndValue);
+    public void CompleteAtCycleEnd();     // stop at the next forward cycle boundary, on the end value
+    public void CompleteAtCycleStart();   // stop on a backward/reversed crossing, on the start value
     public void Kill(bool complete = false);
     public void Complete();
 
-    // Late-subscription callbacks (completion-shaped only)
+    // Late-subscription callbacks (completion-shaped only); no-ops on a dead handle
     public Tween OnComplete(Action cb);          // multicast (appends)
     public Tween OnKill(Action cb);              // multicast
     public Tween OnStepComplete(Action cb);      // multicast
@@ -53,13 +54,15 @@ public readonly struct Sequence : IEquatable<Sequence>
     public void Seek(float time, bool fireCallbacks = false);
     public void SetTimeScale(float scale);
     public void SetRemainingCycles(int cycles);
-    public void SetRemainingCycles(bool stopAtEndValue);
+    public void CompleteAtCycleEnd();     // stop at the next forward cycle boundary, on the end state
+    public void CompleteAtCycleStart();   // stop on a backward/reversed crossing, on the start state
     public void Kill(bool complete = false);
     public void Complete();
 
     // Mid-play modification
     public void Insert<T>(float time, TweenBuilder<T> child);
 
+    // Late-subscription callbacks; no-ops on a dead handle
     public Sequence OnComplete(Action cb);       // multicast
     public Sequence OnKill(Action cb);           // multicast
     public Sequence OnStepComplete(Action cb);   // multicast
@@ -88,11 +91,14 @@ There is no `Scheduled` state. A tween only exists as a `Tween` handle after `.S
 
 - `Play()` on a completed tween restarts from 0.
 - `Seek` preserves the current `Status`; a paused tween stays paused.
+- **Late subscriptions on a dead handle are no-ops**: `OnComplete`/`OnKill`/`OnStepComplete` on a dead `Tween`/`Sequence` do nothing. A dead handle cannot know whether its record completed or was killed, so firing either callback would be a guess; "OnComplete fires only on actual completion" and "OnKill fires only on actual kills" hold unconditionally.
+- **`Complete()` syncs the playhead**: on a non-autokill tween, a later `Seek` starts from the completed position (`TotalProgress` reads 1 after `Complete()`).
+- **Reverse through delay**: the initial delay is part of the timeline. A reversed tween/sequence counts the delay back down before reaching playhead 0, then holds there (`Delayed`). Infinite loops never hold: they wrap backward per ADR 0009 — a `FirstLoop` delay sits before cycle 0 and is not re-entered by the wrap, while an `EveryLoop` delay lives inside the cycle slot and is passed through backward.
 - `SetTimeScale` rejects negative values: throws in safe mode, clamps to 0 in release. Direction is owned exclusively by `Reverse()`.
 - Engine-wide time control lives on the static class:
 
 ```csharp
-FT.SetGlobalTimeScale(float scale);              // all phases
+FT.GlobalTimeScale = 0.5f;                       // all phases (property; setter throws on negative)
 FT.SetTimeScale(UpdatePhase phase, float scale); // one phase (e.g. slow gameplay, keep UI)
 ```
 

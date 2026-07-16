@@ -64,7 +64,7 @@ namespace Dyvoid.FeatherTween.Samples.ComposedDemo
 		{
 			show.Kill();
 			FT.Kill(WaveTag);
-			FT.SetGlobalTimeScale(1f);
+			FT.GlobalTimeScale = 1f;
 			foreach (var go in orbiters) DestroySpawned(go);
 			foreach (var go in pillars) DestroySpawned(go);
 			DestroySpawned(hero);
@@ -229,7 +229,7 @@ namespace Dyvoid.FeatherTween.Samples.ComposedDemo
 			if (!Mathf.Approximately(newScale, globalScale))
 			{
 				globalScale = newScale;
-				FT.SetGlobalTimeScale(globalScale);
+				FT.GlobalTimeScale = globalScale;
 			}
 
 			GUI.enabled = waveAlive;

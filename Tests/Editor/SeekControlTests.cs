@@ -253,7 +253,7 @@ namespace Dyvoid.FeatherTween.Tests
 		}
 
 		[Test]
-		public void SequenceSetRemainingCycles_StopAtNextEnd_Completes()
+		public void SequenceCompleteAtCycleEnd_StopAtNextEnd_Completes()
 		{
 			var v = 0f;
 			var completed = false;
@@ -263,7 +263,7 @@ namespace Dyvoid.FeatherTween.Tests
 			seq.OnComplete(() => completed = true);
 
 			FeatherTweenRunner.ManualTick(0.5);
-			seq.SetRemainingCycles(true);
+			seq.CompleteAtCycleEnd();
 
 			FeatherTweenRunner.ManualTick(0.6);
 			Assert.That(completed, Is.True, "infinite sequence completes at the next cycle boundary");
@@ -431,6 +431,73 @@ namespace Dyvoid.FeatherTween.Tests
 			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "inserted child playing on later ticks");
 		}
 
+		// --- Reverse through delay (phase 1.15): a sequence delay is part of
+		// the timeline; reversing counts it back toward playhead 0 instead of
+		// stalling in Delayed forever. ---
+
+		[Test]
+		public void SequenceReverse_DuringInitialDelay_CountsBackDown_NoStall()
+		{
+			var v = 0f;
+			var sb = ManualSequence().SetDelay(0.5f);
+			sb.Append(FT.FromTo(x => v = x, 0f, 1f, 1f));
+			var seq = sb.Start();
+
+			FeatherTweenRunner.ManualTick(0.25);
+			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Delayed));
+
+			seq.Reverse();
+			FeatherTweenRunner.ManualTick(1.0);
+			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Delayed), "holds at playhead 0 inside the delay");
+			Assert.That(v, Is.EqualTo(0f).Within(1e-6f), "children untouched");
+
+			seq.Reverse();
+			FeatherTweenRunner.ManualTick(0.75);
+			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f), "recovers forward through the full delay");
+		}
+
+		[Test]
+		public void SequenceReverse_FromContent_BackThroughDelay()
+		{
+			var v = 0f;
+			var sb = ManualSequence().SetDelay(0.5f);
+			sb.Append(FT.FromTo(x => v = x, 0f, 1f, 1f));
+			var seq = sb.Start();
+
+			FeatherTweenRunner.ManualTick(1.0);
+			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f), "0.5 into content after the delay");
+
+			seq.Reverse();
+			FeatherTweenRunner.ManualTick(0.75);
+			Assert.That(v, Is.EqualTo(0f).Within(1e-3f), "walked back to the content start");
+			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Delayed), "overshoot re-entered the delay");
+
+			seq.Reverse();
+			FeatherTweenRunner.ManualTick(0.75);
+			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f), "forward: remaining delay, then content");
+			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Playing));
+		}
+
+		// --- Complete() playhead sync (phase 1.15) ---
+
+		[Test]
+		public void Complete_SyncsPlayhead_SeekAfterwardStartsFromCompletedPosition()
+		{
+			var v = 0f;
+			var t = FloatTween(() => v, x => v = x, 1f, 2f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetAutoKill(false)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.5);
+			t.Complete();
+			Assert.That(v, Is.EqualTo(1f).Within(1e-3f));
+			Assert.That(t.TotalProgress, Is.EqualTo(1f).Within(1e-4f), "playhead sits at the completed position");
+
+			t.Seek(1f);
+			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f), "Seek repositions from the synced playhead");
+		}
+
 		// --- Time scale ---
 
 		[Test]
@@ -441,7 +508,8 @@ namespace Dyvoid.FeatherTween.Tests
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			FT.SetGlobalTimeScale(0.5f);
+			FT.GlobalTimeScale = 0.5f;
+			Assert.That(FT.GlobalTimeScale, Is.EqualTo(0.5f), "property round-trips");
 			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f));
 		}
@@ -454,7 +522,7 @@ namespace Dyvoid.FeatherTween.Tests
 				.SetUpdate(UpdatePhase.Manual)
 				.Start();
 
-			FT.SetGlobalTimeScale(0.5f);
+			FT.GlobalTimeScale = 0.5f;
 			FT.SetTimeScale(UpdatePhase.Manual, 0.5f);
 			t.SetTimeScale(2f);
 
@@ -485,7 +553,7 @@ namespace Dyvoid.FeatherTween.Tests
 				.Start();
 
 			Assert.Throws<ArgumentOutOfRangeException>(() => t.SetTimeScale(-1f));
-			Assert.Throws<ArgumentOutOfRangeException>(() => FT.SetGlobalTimeScale(-1f));
+			Assert.Throws<ArgumentOutOfRangeException>(() => FT.GlobalTimeScale = -1f);
 			Assert.Throws<ArgumentOutOfRangeException>(() => FT.SetTimeScale(UpdatePhase.Manual, -0.5f));
 		}
 
@@ -499,7 +567,7 @@ namespace Dyvoid.FeatherTween.Tests
 				.SetUpdate(UpdatePhase.Manual, ignoreTimeScale: true)
 				.Start();
 
-			FT.SetGlobalTimeScale(0.25f);
+			FT.GlobalTimeScale = 0.25f;
 			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(v, Is.EqualTo(0.25f).Within(1e-3f));
 		}

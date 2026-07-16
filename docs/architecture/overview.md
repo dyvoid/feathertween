@@ -81,7 +81,7 @@ static void InstallRunner()
 - **Time source** per phase: `Update` uses `Time.deltaTime` for time-scaled tweens, `Time.unscaledDeltaTime` for `ignoreTimeScale = true`; `LateUpdate` same; `FixedUpdate` uses `Time.fixedDeltaTime` (and `Time.fixedUnscaledDeltaTime` for unscaled). `Manual` uses caller-provided delta. Unity's built-in `maximumDeltaTime` clamp applies to `Time.deltaTime` automatically.
 - **Thread safety**: handles are read-safe across threads (struct value, generation check on read), but every mutating control method is main-thread only and asserts in safe mode. `FT.X(...)` builders and registration calls are likewise main-thread only. Awaiter continuations are posted to the next PlayerLoop tick on the main thread regardless of capture context, so `await tween;` from any thread always resumes on the main thread.
 - **Editor**: a second hookup via `EditorApplication.update` ticks an editor-only runner.
-- **Manual**: `FeatherTweenRunner.ManualTick(deltaTime)` advances only the `Manual` root.
+- **Manual**: `FeatherTweenRunner.ManualTick(deltaTime)` advances only the `Manual` root. Destroyed-target cleanup is part of the tick: keep calling `ManualTick` or kill explicitly — tweens on destroyed targets in a stopped manual phase are not auto-killed.
 - **Domain reload / Fast Enter Play Mode**: `TweenStore.Reset()` runs at `SubsystemRegistration` time. Editor uses `[InitializeOnLoad]` to also reset on assembly reload. Both cases drop all tweens cleanly so generation ids stay coherent.
 - **Debug visibility**: the M4 EditorWindow reads active tweens directly from `TweenStore`. No scene-side proxy needed.
 

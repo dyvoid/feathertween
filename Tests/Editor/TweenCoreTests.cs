@@ -41,6 +41,55 @@ namespace Dyvoid.FeatherTween.Tests
 			Assert.That(v, Is.EqualTo(10f).Within(1e-4f));
 		}
 
+		// Phase 1.15: int interpolation rounds to nearest. Truncation stepped
+		// asymmetrically across 0 (2.6 -> 2 but -2.6 -> -2).
+		[Test]
+		public void IntInterpolator_RoundsToNearest_SymmetricAcrossZero()
+		{
+			var v = 0;
+			FT.To(() => v, x => v = x, 10, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.26);
+			Assert.That(v, Is.EqualTo(3), "2.6 rounds to 3 (truncation gave 2)");
+
+			TweenStore.Reset();
+			var w = 0;
+			FT.To(() => w, x => w = x, -10, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.26);
+			Assert.That(w, Is.EqualTo(-3), "-2.6 rounds to -3, symmetric with the positive case");
+		}
+
+		// Phase 1.15: zero duration with infinite loops has no meaningful
+		// playhead; throw at Start() instead of clamping.
+		[Test]
+		public void ZeroDuration_WithInfiniteLoops_ThrowsAtStart()
+		{
+			var v = 0f;
+			var b = FT.To(() => v, x => v = x, 1f, 0f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(-1, LoopType.Restart);
+			Assert.Throws<InvalidOperationException>(() => b.Start());
+		}
+
+		[Test]
+		public void ZeroDuration_WithFiniteLoops_StillCompletes()
+		{
+			var v = 0f;
+			var t = FT.To(() => v, x => v = x, 1f, 0f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(2, LoopType.Restart)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.1);
+			Assert.That(v, Is.EqualTo(1f).Within(1e-6f));
+			Assert.That(t.IsAlive, Is.False, "zero-duration finite tween completes and auto-kills");
+		}
+
 		[Test]
 		public void Setter_InvokedExactlyOncePerTick()
 		{
@@ -176,7 +225,7 @@ namespace Dyvoid.FeatherTween.Tests
 		[Test]
 		public void Alloc_SteadyState1kTweens_BoundedDelta()
 		{
-			FT.SetCapacity(2048, 0);
+			FT.SetCapacity(2048);
 
 			for (var i = 0; i < 1000; i++)
 			{
