@@ -11,6 +11,7 @@ namespace Dyvoid.FeatherTween
 	// hand-written zero-alloc fast paths are an M2 deliverable.
 	public static partial class FT
 	{
+		/// <summary>Animates <c>Transform.position</c> to <paramref name="to"/>.</summary>
 		public static TweenBuilder<Vector3> Move(Transform target, Vector3 to, float duration)
 		{
 			RequireTarget(target);
@@ -18,6 +19,7 @@ namespace Dyvoid.FeatherTween
 				.SetTarget(target);
 		}
 
+		/// <summary>Animates <c>Transform.localPosition</c> to <paramref name="to"/>.</summary>
 		public static TweenBuilder<Vector3> LocalMove(Transform target, Vector3 to, float duration)
 		{
 			RequireTarget(target);
@@ -25,6 +27,7 @@ namespace Dyvoid.FeatherTween
 				.SetTarget(target);
 		}
 
+		/// <summary>Animates <c>Transform.localScale</c> to <paramref name="to"/>.</summary>
 		public static TweenBuilder<Vector3> Scale(Transform target, Vector3 to, float duration)
 		{
 			RequireTarget(target);
@@ -32,9 +35,11 @@ namespace Dyvoid.FeatherTween
 				.SetTarget(target);
 		}
 
+		/// <summary>Animates <c>Transform.localScale</c> to a uniform scale of <paramref name="uniformTo"/>.</summary>
 		public static TweenBuilder<Vector3> Scale(Transform target, float uniformTo, float duration)
 			=> Scale(target, new Vector3(uniformTo, uniformTo, uniformTo), duration);
 
+		/// <summary>Animates <c>Transform.rotation</c> to <paramref name="to"/> (shortest-path slerp).</summary>
 		public static TweenBuilder<Quaternion> Rotate(Transform target, Quaternion to, float duration)
 		{
 			RequireTarget(target);
@@ -42,9 +47,11 @@ namespace Dyvoid.FeatherTween
 				.SetTarget(target);
 		}
 
+		/// <summary>Animates <c>Transform.rotation</c> to the given Euler angles (shortest-path slerp).</summary>
 		public static TweenBuilder<Quaternion> Rotate(Transform target, Vector3 eulerAngles, float duration)
 			=> Rotate(target, Quaternion.Euler(eulerAngles.x, eulerAngles.y, eulerAngles.z), duration);
 
+		/// <summary>Animates <c>Transform.localRotation</c> to <paramref name="to"/> (shortest-path slerp).</summary>
 		public static TweenBuilder<Quaternion> LocalRotate(Transform target, Quaternion to, float duration)
 		{
 			RequireTarget(target);
@@ -52,9 +59,11 @@ namespace Dyvoid.FeatherTween
 				.SetTarget(target);
 		}
 
+		/// <summary>Animates <c>Transform.localRotation</c> to the given Euler angles (shortest-path slerp).</summary>
 		public static TweenBuilder<Quaternion> LocalRotate(Transform target, Vector3 eulerAngles, float duration)
 			=> LocalRotate(target, Quaternion.Euler(eulerAngles.x, eulerAngles.y, eulerAngles.z), duration);
 
+		/// <summary>Animates <c>CanvasGroup.alpha</c> to <paramref name="toAlpha"/>.</summary>
 		public static TweenBuilder<float> Fade(CanvasGroup target, float toAlpha, float duration)
 		{
 			RequireTarget(target);
@@ -62,6 +71,7 @@ namespace Dyvoid.FeatherTween
 				.SetTarget(target);
 		}
 
+		/// <summary>Animates <c>Image.color</c> to <paramref name="to"/>.</summary>
 		public static TweenBuilder<UnityEngine.Color> Color(Image target, UnityEngine.Color to, float duration)
 		{
 			RequireTarget(target);
@@ -69,6 +79,7 @@ namespace Dyvoid.FeatherTween
 				.SetTarget(target);
 		}
 
+		/// <summary>Animates the alpha channel of <c>Image.color</c> to <paramref name="toAlpha"/>.</summary>
 		public static TweenBuilder<float> Fade(Image target, float toAlpha, float duration)
 		{
 			RequireTarget(target);
@@ -84,6 +95,7 @@ namespace Dyvoid.FeatherTween
 				.SetTarget(target);
 		}
 
+		/// <summary>Animates <c>Image.fillAmount</c> to <paramref name="to"/>.</summary>
 		public static TweenBuilder<float> FillAmount(Image target, float to, float duration)
 		{
 			RequireTarget(target);

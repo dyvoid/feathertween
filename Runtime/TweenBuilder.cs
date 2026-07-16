@@ -3,6 +3,13 @@ using Dyvoid.FeatherTween.Internal;
 
 namespace Dyvoid.FeatherTween
 {
+	/// <summary>
+	/// Mutable configuration for a tween before it runs. Chain setters, then call
+	/// <see cref="Start"/> to consume the builder and get a <see cref="Tween"/>
+	/// handle. Copies alias one shared backing record; after the builder is
+	/// consumed (started or appended to a sequence), every alias is invalid and
+	/// further use throws.
+	/// </summary>
 	public struct TweenBuilder<T>
 	{
 		private TweenBuilderBuffer<T> buffer;
@@ -11,6 +18,7 @@ namespace Dyvoid.FeatherTween
 		internal TweenBuilderBuffer<T> Buffer => buffer;
 		internal uint Generation => generation;
 
+		/// <summary>Reads <see cref="TweenStatus.Delayed"/> while the builder is un-consumed, <see cref="TweenStatus.Disposed"/> after.</summary>
 		public TweenStatus Status
 		{
 			get
@@ -29,6 +37,7 @@ namespace Dyvoid.FeatherTween
 			this.generation = buffer.Generation;
 		}
 
+		/// <summary>Selects the driving <see cref="UpdatePhase"/>; with <paramref name="ignoreTimeScale"/> the tween uses unscaled delta time (but still honors FeatherTween's own scales).</summary>
 		public TweenBuilder<T> SetUpdate(UpdatePhase phase, bool ignoreTimeScale = false)
 		{
 			ValidateOrThrow();
@@ -37,6 +46,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Whether the tween frees itself on completion (default true). Disable to keep it seekable/restartable; kill it explicitly when done.</summary>
 		public TweenBuilder<T> SetAutoKill(bool value)
 		{
 			ValidateOrThrow();
@@ -44,6 +54,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Associates a target for <c>FT.Kill(target)</c>/<c>FT.IsTweening(target)</c>; destroyed <c>UnityEngine.Object</c> targets auto-kill the tween.</summary>
 		public TweenBuilder<T> SetTarget(object target)
 		{
 			ValidateOrThrow();
@@ -51,9 +62,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		// Try/catch around setter and callback invocations. Default on in the
-		// Editor, off in player builds; FEATHERTWEEN_RELEASE compiles the wrapper out
-		// entirely (docs/architecture/overview.md "Safe mode").
+		/// <summary>Try/catch around setter and callback invocations. Default on in the Editor, off in player builds; <c>FEATHERTWEEN_RELEASE</c> compiles the wrapper out entirely.</summary>
 		public TweenBuilder<T> SetSafeMode(bool value)
 		{
 			ValidateOrThrow();
@@ -61,8 +70,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		// In safe mode: a setter exception kills the tween silently and fires
-		// OnKill; a callback exception is logged and cancels the tween.
+		/// <summary>In safe mode: a setter exception kills the tween silently and fires <c>OnKill</c>; a callback exception is logged and cancels the tween.</summary>
 		public TweenBuilder<T> SetCancelOnError(bool value)
 		{
 			ValidateOrThrow();
@@ -70,6 +78,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Treats the end value as an offset from the start value sampled at playback (no effect on <c>FromTo</c>-style tweens, whose endpoints are explicit).</summary>
 		public TweenBuilder<T> SetRelative(bool value)
 		{
 			ValidateOrThrow();
@@ -77,6 +86,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Sets the ease shape (see <see cref="Easing"/> factories). Default is linear.</summary>
 		public TweenBuilder<T> SetEase(EaseRef ease)
 		{
 			ValidateOrThrow();
@@ -84,6 +94,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Uses an <c>AnimationCurve</c> as the ease shape (shorthand for <c>SetEase(Easing.Curve(curve))</c>).</summary>
 		public TweenBuilder<T> SetEase(UnityEngine.AnimationCurve curve)
 		{
 			ValidateOrThrow();
@@ -91,8 +102,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		/// Swap mode: the creation method's end value becomes the start, and the
-		/// tween plays to the value the getter reads at snap time (ADR 0007).
+		/// <summary>Swap mode: the creation method's end value becomes the start, and the tween plays to the value the getter reads at snap time (ADR 0007).</summary>
 		public TweenBuilder<T> From()
 		{
 			ValidateOrThrow();
@@ -100,10 +110,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		/// Explicit start value: the tween plays from `value` to the creation
-		/// method's end value. The getter is never read — both endpoints are
-		/// known at this call, exactly like FT.FromTo. Applies SnapMode.FromTo,
-		/// so SetRelative (which only affects lazily-sampled tweens) is ignored.
+		/// <summary>Explicit start value: the tween plays from <paramref name="value"/> to the creation method's end value. The getter is never read — both endpoints are known at this call, exactly like <c>FT.FromTo</c>, so <c>SetRelative</c> is ignored.</summary>
 		public TweenBuilder<T> From(T value)
 		{
 			ValidateOrThrow();
@@ -112,6 +119,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Plays <paramref name="count"/> cycles (negative = forever) traversed per <paramref name="loopType"/>.</summary>
 		public TweenBuilder<T> SetLoops(int count, LoopType loopType = LoopType.Restart)
 		{
 			ValidateOrThrow();
@@ -120,6 +128,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Defers playback by <paramref name="seconds"/>; <paramref name="delayType"/> chooses first-cycle-only or every cycle. Negative values throw.</summary>
 		public TweenBuilder<T> SetDelay(float seconds, DelayType delayType = DelayType.FirstLoop)
 		{
 			ValidateOrThrow();
@@ -132,6 +141,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called once, when playback first begins (after any initial delay).</summary>
 		public TweenBuilder<T> OnStart(Action cb)
 		{
 			ValidateOrThrow();
@@ -139,6 +149,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called whenever playback begins or resumes.</summary>
 		public TweenBuilder<T> OnPlay(Action cb)
 		{
 			ValidateOrThrow();
@@ -146,6 +157,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called whenever playback pauses.</summary>
 		public TweenBuilder<T> OnPause(Action cb)
 		{
 			ValidateOrThrow();
@@ -153,8 +165,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		// Receives the eased in-cycle progress used for the value write (1f at
-		// a cycle end regardless of ease shape).
+		/// <summary>Called every tick with the eased in-cycle progress used for the value write (1f at a cycle end regardless of ease shape).</summary>
 		public TweenBuilder<T> OnUpdate(Action<float> cb)
 		{
 			ValidateOrThrow();
@@ -162,6 +173,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called at the end of each loop cycle.</summary>
 		public TweenBuilder<T> OnStepComplete(Action cb)
 		{
 			ValidateOrThrow();
@@ -169,6 +181,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called when the playhead returns to the start (reverse playback or rewind).</summary>
 		public TweenBuilder<T> OnRewind(Action cb)
 		{
 			ValidateOrThrow();
@@ -176,6 +189,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called once, when the final cycle finishes. Not called on kill.</summary>
 		public TweenBuilder<T> OnComplete(Action cb)
 		{
 			ValidateOrThrow();
@@ -183,8 +197,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		// Zero-alloc target-capture overload (anchor 15): pass state explicitly
-		// and use a static lambda so the compiler emits no closure.
+		/// <summary>Zero-alloc target-capture overload: pass state explicitly and use a static lambda so the compiler emits no closure.</summary>
 		public TweenBuilder<T> OnComplete<TTarget>(TTarget state, Action<TTarget> cb)
 			where TTarget : class
 		{
@@ -196,6 +209,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called when the tween is killed (not on completion).</summary>
 		public TweenBuilder<T> OnKill(Action cb)
 		{
 			ValidateOrThrow();
@@ -203,6 +217,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Zero-alloc target-capture overload of <see cref="OnKill(Action)"/>.</summary>
 		public TweenBuilder<T> OnKill<TTarget>(TTarget state, Action<TTarget> cb)
 			where TTarget : class
 		{
@@ -214,6 +229,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Consumes the builder, registers the tween with the runner, and returns its handle. Root <c>From</c>/<c>FromTo</c> tweens snap their start value here.</summary>
 		public Tween Start()
 		{
 			ValidateOrThrow();

@@ -3,6 +3,14 @@ using Dyvoid.FeatherTween.Internal;
 
 namespace Dyvoid.FeatherTween
 {
+	/// <summary>
+	/// Mutable composition surface for a sequence: append, join, insert and
+	/// prepend tweens, nested sequences, intervals, callbacks, labels and pauses,
+	/// then call <see cref="Start"/> for a <see cref="Sequence"/> handle. Copies
+	/// alias one shared backing record; after the builder is consumed (started or
+	/// nested into another sequence), every alias is invalid and further use throws.
+	/// Child builders passed to composition methods are consumed too.
+	/// </summary>
 	public struct SequenceBuilder
 	{
 		private SequenceBuilderBuffer buffer;
@@ -17,6 +25,7 @@ namespace Dyvoid.FeatherTween
 			this.generation = buffer.Generation;
 		}
 
+		/// <summary>Selects the driving <see cref="UpdatePhase"/>; children inherit it, and an explicitly mismatched child throws at append.</summary>
 		public SequenceBuilder SetUpdate(UpdatePhase phase, bool ignoreTimeScale = false)
 		{
 			ValidateOrThrow();
@@ -25,6 +34,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Whether the sequence frees itself on completion (default true). Disable to keep it seekable/restartable; kill it explicitly when done.</summary>
 		public SequenceBuilder SetAutoKill(bool value)
 		{
 			ValidateOrThrow();
@@ -32,6 +42,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Associates a target for <c>FT.Kill(target)</c>/<c>FT.IsTweening(target)</c>; destroyed <c>UnityEngine.Object</c> targets auto-kill the sequence.</summary>
 		public SequenceBuilder SetTarget(object target)
 		{
 			ValidateOrThrow();
@@ -39,6 +50,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Defers playback by <paramref name="seconds"/> before the first cycle. Negative values throw.</summary>
 		public SequenceBuilder SetDelay(float seconds)
 		{
 			ValidateOrThrow();
@@ -50,9 +62,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		// Sequence-level looping. Yoyo traverses children in reverse window order
-		// on odd cycles; Incremental has no sequence-level meaning and is treated
-		// as Restart. count < 0 loops forever.
+		/// <summary>Sequence-level looping. Yoyo traverses children in reverse window order on odd cycles; Incremental has no sequence-level meaning and is treated as Restart. Negative <paramref name="count"/> loops forever.</summary>
 		public SequenceBuilder SetLoops(int count, LoopType loopType = LoopType.Restart)
 		{
 			ValidateOrThrow();
@@ -60,8 +70,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		// Try/catch around the sequence's own callback invocations (children
-		// carry their own flag). See TweenBuilder<T>.SetSafeMode.
+		/// <summary>Try/catch around the sequence's own callback invocations (children carry their own flag). See <c>TweenBuilder&lt;T&gt;.SetSafeMode</c>.</summary>
 		public SequenceBuilder SetSafeMode(bool value)
 		{
 			ValidateOrThrow();
@@ -69,6 +78,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>In safe mode, a callback exception is logged and cancels the sequence.</summary>
 		public SequenceBuilder SetCancelOnError(bool value)
 		{
 			ValidateOrThrow();
@@ -76,6 +86,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>How the sequence reacts when a child is auto-killed (e.g. destroyed target); see <see cref="SequenceCancelBehavior"/>.</summary>
 		public SequenceBuilder SetCancelBehavior(SequenceCancelBehavior behavior)
 		{
 			ValidateOrThrow();
@@ -83,8 +94,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		// No duration default: every creation method requires an explicit
-		// duration, so a duration cascade could never apply (ADR 0010).
+		/// <summary>Default ease/loops/delay applied to children appended after this call (frozen per child at append). No duration default: every creation method requires an explicit duration (ADR 0010).</summary>
 		public SequenceBuilder SetDefaults(
 			EaseRef? ease = null,
 			int? loops = null,
@@ -96,6 +106,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called once, when playback first begins (after any initial delay).</summary>
 		public SequenceBuilder OnStart(Action cb)
 		{
 			ValidateOrThrow();
@@ -103,6 +114,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called whenever playback begins or resumes.</summary>
 		public SequenceBuilder OnPlay(Action cb)
 		{
 			ValidateOrThrow();
@@ -110,6 +122,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called whenever playback pauses (including <c>AddPause</c> halts).</summary>
 		public SequenceBuilder OnPause(Action cb)
 		{
 			ValidateOrThrow();
@@ -117,7 +130,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		// Receives the normalized playhead (playhead / duration, 0..1).
+		/// <summary>Called every tick with the normalized playhead (playhead / duration, 0..1).</summary>
 		public SequenceBuilder OnUpdate(Action<float> cb)
 		{
 			ValidateOrThrow();
@@ -125,6 +138,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called at the end of each loop cycle.</summary>
 		public SequenceBuilder OnStepComplete(Action cb)
 		{
 			ValidateOrThrow();
@@ -132,6 +146,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called when the playhead returns to the start (reverse playback or rewind).</summary>
 		public SequenceBuilder OnRewind(Action cb)
 		{
 			ValidateOrThrow();
@@ -139,6 +154,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called once, when the final cycle finishes. Not called on kill.</summary>
 		public SequenceBuilder OnComplete(Action cb)
 		{
 			ValidateOrThrow();
@@ -146,8 +162,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
-		// Zero-alloc target-capture overload (anchor 15): pass state explicitly
-		// and use a static lambda so the compiler emits no closure.
+		/// <summary>Zero-alloc target-capture overload: pass state explicitly and use a static lambda so the compiler emits no closure.</summary>
 		public SequenceBuilder OnComplete<TTarget>(TTarget state, Action<TTarget> cb)
 			where TTarget : class
 		{
@@ -159,6 +174,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Called when the sequence is killed (not on completion).</summary>
 		public SequenceBuilder OnKill(Action cb)
 		{
 			ValidateOrThrow();
@@ -166,6 +182,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Zero-alloc target-capture overload of <see cref="OnKill(Action)"/>.</summary>
 		public SequenceBuilder OnKill<TTarget>(TTarget state, Action<TTarget> cb)
 			where TTarget : class
 		{
@@ -177,6 +194,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Adds the tween at the current end of the sequence; the cursor advances past it. Consumes <paramref name="child"/>.</summary>
 		public SequenceBuilder Append<T>(TweenBuilder<T> child)
 		{
 			ValidateOrThrow();
@@ -187,6 +205,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Adds a nested sequence at the current end; the cursor advances past all its cycles. Consumes <paramref name="child"/>.</summary>
 		public SequenceBuilder Append(SequenceBuilder child)
 		{
 			ValidateOrThrow();
@@ -197,6 +216,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Adds the tween starting alongside the most recently appended child. Consumes <paramref name="child"/>.</summary>
 		public SequenceBuilder Join<T>(TweenBuilder<T> child)
 		{
 			ValidateOrThrow();
@@ -206,6 +226,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Adds a nested sequence starting alongside the most recently appended child. Consumes <paramref name="child"/>.</summary>
 		public SequenceBuilder Join(SequenceBuilder child)
 		{
 			ValidateOrThrow();
@@ -215,6 +236,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Adds the tween at an absolute time on the sequence's timeline. Consumes <paramref name="child"/>.</summary>
 		public SequenceBuilder Insert<T>(float time, TweenBuilder<T> child)
 		{
 			ValidateOrThrow();
@@ -228,6 +250,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Adds the tween at a <see cref="Position"/> (label references may resolve at <see cref="Start"/>). Consumes <paramref name="child"/>.</summary>
 		public SequenceBuilder Insert<T>(Position position, TweenBuilder<T> child)
 		{
 			ValidateOrThrow();
@@ -236,6 +259,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Adds a nested sequence at an absolute time on the sequence's timeline. Consumes <paramref name="child"/>.</summary>
 		public SequenceBuilder Insert(float time, SequenceBuilder child)
 		{
 			ValidateOrThrow();
@@ -249,6 +273,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Adds a nested sequence at a <see cref="Position"/> (label references may resolve at <see cref="Start"/>). Consumes <paramref name="child"/>.</summary>
 		public SequenceBuilder Insert(Position position, SequenceBuilder child)
 		{
 			ValidateOrThrow();
@@ -257,6 +282,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Advances the cursor by <paramref name="seconds"/> of empty time.</summary>
 		public SequenceBuilder AppendInterval(float seconds)
 		{
 			ValidateOrThrow();
@@ -268,6 +294,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Fires <paramref name="cb"/> when the playhead crosses the current cursor position (in either direction).</summary>
 		public SequenceBuilder AppendCallback(Action cb)
 		{
 			ValidateOrThrow();
@@ -280,6 +307,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Adds the tween at time 0, shifting all existing children later. Consumes <paramref name="child"/>.</summary>
 		public SequenceBuilder Prepend<T>(TweenBuilder<T> child)
 		{
 			ValidateOrThrow();
@@ -289,6 +317,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Adds a nested sequence at time 0, shifting all existing children later. Consumes <paramref name="child"/>.</summary>
 		public SequenceBuilder Prepend(SequenceBuilder child)
 		{
 			ValidateOrThrow();
@@ -300,6 +329,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Shifts all existing children later by <paramref name="seconds"/> of empty time.</summary>
 		public SequenceBuilder PrependInterval(float seconds)
 		{
 			ValidateOrThrow();
@@ -311,6 +341,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Fires <paramref name="cb"/> when the playhead crosses time 0.</summary>
 		public SequenceBuilder PrependCallback(Action cb)
 		{
 			ValidateOrThrow();
@@ -323,6 +354,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Names an absolute time for later <c>Position.AtLabel</c> addressing. Duplicate names throw.</summary>
 		public SequenceBuilder AddLabel(string name, float time)
 		{
 			ValidateOrThrow();
@@ -339,6 +371,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Names a <see cref="Position"/>-addressed time. Resolves at definition time: referencing a label defined later throws (only <c>Insert</c>/<c>AddPause</c> defer).</summary>
 		public SequenceBuilder AddLabel(string name, Position position)
 		{
 			ValidateOrThrow();
@@ -362,6 +395,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Halts the playhead when it reaches <paramref name="time"/> going forward; resume with <c>Resume()</c> or a seek.</summary>
 		public SequenceBuilder AddPause(float time, Action onPause = null)
 		{
 			ValidateOrThrow();
@@ -374,6 +408,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Halts the playhead at a <see cref="Position"/> (label references may resolve at <see cref="Start"/>).</summary>
 		public SequenceBuilder AddPause(Position position, Action onPause = null)
 		{
 			ValidateOrThrow();
@@ -382,6 +417,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Removes all composed children (freeing their store slots); with <paramref name="labels"/> the label table is cleared too.</summary>
 		public SequenceBuilder Clear(bool labels = false)
 		{
 			ValidateOrThrow();
@@ -389,6 +425,7 @@ namespace Dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>Consumes the builder, resolves deferred label positions, registers the sequence with the runner, and returns its handle.</summary>
 		public Sequence Start()
 		{
 			ValidateOrThrow();

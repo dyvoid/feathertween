@@ -3,19 +3,38 @@ using Dyvoid.FeatherTween.Internal;
 
 namespace Dyvoid.FeatherTween
 {
+	/// <summary>
+	/// The FeatherTween entry point: creation methods (<see cref="To{T}"/>,
+	/// <see cref="From{T}"/>, <see cref="FromTo{T}"/>, <see cref="Sequence"/>,
+	/// typed shortcuts), bulk operations, and engine-level settings.
+	/// </summary>
 	public static partial class FT
 	{
+		/// <summary>
 		/// Pre-sizes the shared store (tweens and sequences live in one pool).
 		/// Grows only; a smaller value than the current capacity is a no-op.
+		/// </summary>
 		public static void SetCapacity(int capacity)
 		{
 			TweenStore.EnsureCapacity(capacity);
 		}
 
+		/// <summary>
+		/// Advances the <see cref="UpdatePhase.Manual"/> phase by
+		/// <paramref name="deltaTime"/> seconds. Manual tweens tick only here;
+		/// no other phase is affected. Main thread only.
+		/// </summary>
+		public static void ManualTick(double deltaTime)
+		{
+			FeatherTweenRunner.ManualTick(deltaTime);
+		}
+
+		/// <summary>
 		/// Engine-side global playback rate, applied at the hidden root of every
 		/// phase. Composes multiplicatively with per-phase and per-tween scales.
-		/// Distinct from Unity's Time.timeScale: it also governs tweens using
-		/// SetUpdate(..., ignoreTimeScale: true). Negative values throw.
+		/// Distinct from Unity's <c>Time.timeScale</c>: it also governs tweens using
+		/// <c>SetUpdate(..., ignoreTimeScale: true)</c>. Negative values throw.
+		/// </summary>
 		public static float GlobalTimeScale
 		{
 			get
@@ -34,7 +53,7 @@ namespace Dyvoid.FeatherTween
 			}
 		}
 
-		/// Per-phase playback rate; composes with the global scale.
+		/// <summary>Per-phase playback rate; composes with the global scale. Negative values throw.</summary>
 		public static void SetTimeScale(UpdatePhase phase, float scale)
 		{
 			if (scale < 0f)
@@ -45,6 +64,7 @@ namespace Dyvoid.FeatherTween
 			FeatherTweenRunner.SetPhaseTimeScale(phase, scale);
 		}
 
+		/// <summary>The current playback rate of one phase (see <see cref="SetTimeScale"/>).</summary>
 		public static float GetTimeScale(UpdatePhase phase)
 		{
 			FeatherTweenRunner.EnsureInitialized();
@@ -57,9 +77,12 @@ namespace Dyvoid.FeatherTween
 		private static readonly System.Collections.Generic.List<int> bulkIds = new System.Collections.Generic.List<int>(64);
 		private static readonly System.Collections.Generic.List<uint> bulkGens = new System.Collections.Generic.List<uint>(64);
 
-		/// Kills every tween and sequence whose target is `target` (set via
-		/// SetTarget or a typed shortcut). Sequence children with the target are
-		/// reached too. O(k) in that target's tween count via the target map.
+		/// <summary>
+		/// Kills every tween and sequence whose target is <paramref name="target"/>
+		/// (set via <c>SetTarget</c> or a typed shortcut). Sequence children with the
+		/// target are reached too; with <paramref name="complete"/> they first jump
+		/// to their end values.
+		/// </summary>
 		public static void Kill(object target, bool complete = false)
 		{
 			if (target == null || !TweenStore.TryGetByTarget(target, out var ids))
@@ -73,7 +96,7 @@ namespace Dyvoid.FeatherTween
 			}
 		}
 
-		/// True while at least one live tween or sequence targets `target`.
+		/// <summary>True while at least one live tween or sequence targets <paramref name="target"/>.</summary>
 		public static bool IsTweening(object target)
 		{
 			return target != null
@@ -81,6 +104,7 @@ namespace Dyvoid.FeatherTween
 				&& ids.Count > 0;
 		}
 
+		/// <summary>Kills every live tween and sequence; with <paramref name="complete"/> they first jump to their end values.</summary>
 		public static void KillAll(bool complete = false)
 		{
 			SnapshotAllActive();
@@ -91,6 +115,7 @@ namespace Dyvoid.FeatherTween
 			TweenStore.FlushPoolReturns();
 		}
 
+		/// <summary>Pauses every live root tween and sequence (children follow their parent).</summary>
 		public static void PauseAll()
 		{
 			SnapshotAllActive();
@@ -100,6 +125,7 @@ namespace Dyvoid.FeatherTween
 			}
 		}
 
+		/// <summary>Resumes every live root tween and sequence (children follow their parent).</summary>
 		public static void ResumeAll()
 		{
 			SnapshotAllActive();
@@ -145,6 +171,7 @@ namespace Dyvoid.FeatherTween
 			}
 		}
 
+		/// <summary>Creates an empty sequence builder; compose with <c>Append</c>/<c>Join</c>/<c>Insert</c>, then <c>Start()</c>.</summary>
 		public static SequenceBuilder Sequence()
 		{
 			var buf = SequenceBuilderBufferPool.Rent();
@@ -155,8 +182,10 @@ namespace Dyvoid.FeatherTween
 		// animated — a getter/setter pair, a setter, or a typed target), then
 		// endpoint value(s), then duration (docs/guides/conventions.md).
 
-		/// Animates from the current value (read via `getter` when playback
-		/// begins) to `to`.
+		/// <summary>
+		/// Animates from the current value (read via <paramref name="getter"/> when
+		/// playback begins) to <paramref name="to"/> over <paramref name="duration"/> seconds.
+		/// </summary>
 		public static TweenBuilder<T> To<T>(Func<T> getter, Action<T> setter, T to, float duration)
 		{
 			if (getter == null)
@@ -180,8 +209,10 @@ namespace Dyvoid.FeatherTween
 			return new TweenBuilder<T>(buf);
 		}
 
-		/// Animates from `from` to the current value (read via `getter` at snap
-		/// time; ADR 0007).
+		/// <summary>
+		/// Animates from <paramref name="from"/> to the current value (read via
+		/// <paramref name="getter"/> at snap time; ADR 0007).
+		/// </summary>
 		public static TweenBuilder<T> From<T>(Func<T> getter, Action<T> setter, T from, float duration)
 		{
 			if (getter == null)
@@ -206,9 +237,11 @@ namespace Dyvoid.FeatherTween
 			return new TweenBuilder<T>(buf);
 		}
 
-		/// Animates from `from` to `to`. Both endpoints are explicit, so no
-		/// getter exists: the values are captured at this call, not at playback
-		/// (unlike To/From, which sample the getter lazily).
+		/// <summary>
+		/// Animates from <paramref name="from"/> to <paramref name="to"/>. Both
+		/// endpoints are explicit, so no getter exists: the values are captured at
+		/// this call, not at playback (unlike To/From, which sample the getter lazily).
+		/// </summary>
 		public static TweenBuilder<T> FromTo<T>(Action<T> setter, T from, T to, float duration)
 		{
 			if (setter == null)

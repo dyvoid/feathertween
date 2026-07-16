@@ -19,6 +19,11 @@ jobs:
       - name: Compile Runtime + Samples against Unity stubs
         run: dotnet build tools~/compile-check/FeatherTween.CompileCheck.csproj -c Release
 
+      # Phase 1.16 gate: every public Runtime type/member has an XML doc
+      # comment (CS1591 as error, Runtime only).
+      - name: XML doc coverage check
+        run: dotnet build tools~/compile-check/FeatherTween.DocCheck.csproj -c Release
+
       - name: Run EditMode suite (NUnitLite, excludes RequiresUnity)
         run: >
           dotnet run --project tools~/compile-check/FeatherTween.TestRunner.csproj

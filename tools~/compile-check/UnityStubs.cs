@@ -1,5 +1,6 @@
 // Minimal UnityEngine surface so the package Runtime compiles outside Unity.
 // Syntax/type check only — never executed.
+#pragma warning disable 1591 // stubs carry no XML docs; the DocCheck leg gates Runtime only
 using System;
 
 namespace UnityEngine

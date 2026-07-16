@@ -30,6 +30,30 @@ namespace Dyvoid.FeatherTween.Tests
 			Assert.That(FeatherTweenRunner.RootManual.LocalTime, Is.EqualTo(m + 0.25));
 		}
 
+		// FT.ManualTick is the public spelling (docs/guides/conventions.md);
+		// added in 1.16 when doc reconciliation found only the internal runner
+		// method existed. It both advances the Manual root and ticks a Manual
+		// tween end to end through the public API alone.
+		[Test]
+		public void FT_ManualTick_DrivesManualPhaseThroughPublicApi()
+		{
+			var m = FeatherTweenRunner.RootManual.LocalTime;
+
+			var value = 0f;
+			var tween = FT.To(() => value, v => value = v, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.Start();
+
+			FT.ManualTick(0.5);
+
+			Assert.That(FeatherTweenRunner.RootManual.LocalTime, Is.EqualTo(m + 0.5));
+			Assert.That(value, Is.EqualTo(0.5f).Within(1e-4f));
+
+			FT.ManualTick(0.6);
+			Assert.That(value, Is.EqualTo(1f).Within(1e-4f));
+			Assert.That(tween.IsAlive, Is.False);
+		}
+
 		[Test]
 		public void TickEditorDelta_AdvancesUpdateRoot()
 		{

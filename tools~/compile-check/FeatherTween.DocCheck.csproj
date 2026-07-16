@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <!-- Phase 1.16 gate: every public type/member carries an XML doc comment.
+         Runtime only — samples are demos, not API surface. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarningsAsErrors>CS1591</WarningsAsErrors>
+    <!-- CS0660/661: stub UnityEngine.Object defines ==/!= without Equals overrides -->
+    <NoWarn>CS0660;CS0661</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="UnityStubs.cs" />
+    <Compile Include="..\..\Runtime\**\*.cs" />
+  </ItemGroup>
+</Project>
