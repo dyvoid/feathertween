@@ -1,6 +1,6 @@
 # Showcase sample — "the movie"
 
-Design spec for the feature-showcase sample (implemented in phase 1.17 as `Samples~/Showcase/`). Replaces the current demo scenes as the flagship sample; `BasicUsage` stays as the minimal copy-paste starting point.
+Design spec for the feature-showcase sample (implemented in phase 1.17 as `Samples~/Showcase/`). It is the package's only sample: the older demos (BasicUsage, SequenceDemo, MiniShowcase, ComposedDemo) were removed once it landed (user decision, 2026-07-16).
 
 ## Concept
 

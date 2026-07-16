@@ -19,29 +19,9 @@
   ],
   "samples": [
     {
-      "displayName": "Showcase (the movie)",
-      "description": "The flagship sample: every M1 feature as one nested master sequence — eight captioned chapters (title eases, creation semantics, full ease gallery, loops and delays, sequence composition with a self-drawing timing diagram, control surface, typed shortcuts, imperative playground) driven by a full player panel (seek bar with chapter markers, play/pause, reverse, speed).",
+      "displayName": "Showcase",
+      "description": "A guided tour of FeatherTween as one scrubbable timeline: captioned chapters covering eases, creation modes, loops and delays, sequence composition, runtime control, and typed shortcuts, driven by a player panel with a seek bar, chapter jumps, play/pause, reverse, and speed controls.",
       "path": "Samples~/Showcase"
-    },
-    {
-      "displayName": "Basic Usage",
-      "description": "A demo MonoBehaviour that spawns primitives showcasing move, scale, rotate, color, and bounce tweens.",
-      "path": "Samples~/BasicUsage"
-    },
-    {
-      "displayName": "Sequence Demo",
-      "description": "A choreographed show exercising sequence features: Append/Join, SetDefaults cascade, callbacks, AddPause with auto-resume, label-based Insert, deferred From snap, and Restart looping.",
-      "path": "Samples~/SequenceDemo"
-    },
-    {
-      "displayName": "Mini Showcase",
-      "description": "A small preview of the phase 1.17 showcase: one master sequence with four captioned chapters (ease race, loops, deferred From drop, synchronized finale) driven by a player panel — seek bar, play/pause, reverse, speed, and chapter jumps all operate on the root sequence.",
-      "path": "Samples~/MiniShowcase"
-    },
-    {
-      "displayName": "Composed Demo",
-      "description": "The M1 acceptance demo: infinite Incremental/Yoyo loops, EveryLoop-staggered generic tweens with parametric elastic ease, a master sequence with a nested sub-sequence and label-based deferred From, plus a runtime control panel (pause/resume all, reverse, seek, global time scale, target-filtered kill).",
-      "path": "Samples~/ComposedDemo"
     }
   ]
 }

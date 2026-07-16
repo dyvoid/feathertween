@@ -10,7 +10,7 @@ A robust, minimal C# tween engine for Unity. Compositional sequences, static-met
 
 ## Status
 
-Early development — M1 (Core) is complete through phase 1.16 (release hygiene: MIT LICENSE, [CHANGELOG](CHANGELOG.md), XML docs on the full public surface): the public API is final for v0.1. Phase 1.17 (showcase sample) concludes M1 with the v0.1 tag and stable declaration. Expect breaking changes until M1 ships.
+Early development, approaching the first release: the core feature set is complete and the public API is final for v0.1. See the [CHANGELOG](CHANGELOG.md) for what ships in 0.1.0. Expect breaking changes until the v0.1 tag lands.
 
 ## Getting Started
 
@@ -18,7 +18,7 @@ FeatherTween is distributed as a UPM package.
 
 1. Add the repository as an embedded or scoped-registry package in your Unity project.
 2. Install the `com.unity.test-framework.performance` package if you want to run the performance benchmarks (test-only dependency).
-3. Open `Window > Package Manager > FeatherTween > Samples` and import **Showcase (the movie)** — the flagship sample: every M1 feature as one scrubbable, captioned master sequence with a player panel. Also available: **Basic Usage** (the minimal starter), **Sequence Demo** (sequence choreography), **Mini Showcase** (a four-chapter preview of the movie), and **Composed Demo** (the M1 acceptance demo).
+3. Open `Window > Package Manager > FeatherTween > Samples` and import **Showcase** — a guided tour of the whole feature set as one scrubbable, captioned timeline with a player panel.
 
 See [`docs/guides/testing.md`](docs/guides/testing.md) for consumer-project setup details.
 
@@ -57,7 +57,7 @@ Tests/
   Editor/             EditMode correctness tests
   Runtime/            PlayMode tests
   Performance/        Allocation guards + throughput benchmarks
-Samples~/             Importable package samples (Showcase, BasicUsage, SequenceDemo, MiniShowcase, ComposedDemo)
+Samples~/             Importable package sample (Showcase)
 docs/                 Architecture, decisions, and guides
 AGENTS.md             AI agent instructions and conventions
 PICKUP.md             Where the last session left off — active work only, not the backlog

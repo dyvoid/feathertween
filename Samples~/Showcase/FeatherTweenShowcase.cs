@@ -7,22 +7,22 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 {
 	// Attach to an empty GameObject and press Play.
 	//
-	// The phase 1.17 feature showcase — "the movie" (docs/design/showcase-sample.md).
-	// The entire sample is ONE nested master sequence: every chapter is a nested
-	// sequence appended with a label, screen transitions are themselves tweens on
-	// the same timeline, and the player panel below drives the master sequence
-	// through the public control surface (Seek / Pause / Resume / Reverse /
-	// SetTimeScale). Because everything lives on one timeline, state is a pure
-	// function of the playhead: scrub the seek bar erratically and any frame must
-	// match what forward playback shows at that time.
+	// A guided tour of FeatherTween. The entire sample is ONE nested master
+	// sequence: every chapter is a nested sequence appended with a label, screen
+	// transitions are themselves tweens on the same timeline, and the player
+	// panel drives the master sequence through the public control surface
+	// (Seek / Pause / Resume / Reverse / SetTimeScale). Because everything lives
+	// on one timeline, state is a pure function of the playhead: scrub the seek
+	// bar erratically and any frame will match what forward playback shows at
+	// that time.
 	//
-	// Every chapter captions its expected outcome, so the scene is visually
-	// testable without reading the code. Two things deliberately do NOT live on
-	// the timeline (and the boundary is part of the demonstration):
+	// Every chapter captions its expected outcome, so you can tell correct from
+	// broken without reading the code. Two things deliberately do NOT live on
+	// the timeline (the boundary is part of the demonstration):
 	//   - infinite loops appear only as bounded excerpts (chapter 6 stops one
 	//     with CompleteAtCycleEnd);
 	//   - imperative features (kill-by-target, bulk ops, one-shots) live in the
-	//     final playground chapter, where the movie parks at an AddPause and
+	//     final playground chapter, where the timeline parks at an AddPause and
 	//     hands over buttons.
 	public class FeatherTweenShowcase : MonoBehaviour
 	{
@@ -69,7 +69,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 		private Image uiColorImage, uiFadeImage, uiFillImage;
 		private GameObject playP1, playP2;
 
-		private Sequence movie;
+		private Sequence showcase;                  // the master timeline
 		private Sequence controlInner;              // chapter 6's driven sequence (deliberately detached)
 		private float totalDuration;
 		private float speed = 1f;
@@ -77,12 +77,12 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 		private void Start()
 		{
 			SpawnCast();
-			BuildMovie();
+			BuildShowcase();
 		}
 
 		private void OnDestroy()
 		{
-			movie.Kill();
+			showcase.Kill();
 			controlInner.Kill();
 			foreach (var go in spawned)
 			{
@@ -273,15 +273,15 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 			easeRefs = refs.ToArray();
 		}
 
-		// ---- the movie ----------------------------------------------------------
+		// ---- the showcase timeline ----------------------------------------------
 
-		private void BuildMovie()
+		private void BuildShowcase()
 		{
 			chapters.Clear();
 			totalDuration = 0f;
 
 			var master = FT.Sequence()
-				.SetAutoKill(false); // replayable and seekable after the credits
+				.SetAutoKill(false); // replayable and seekable after completion
 
 			AddChapter(master, "1. Title", TitleContent,
 				"Seven blocks assemble into a bar — each flies up with a DIFFERENT ease " +
@@ -293,7 +293,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 				"Top: To — lazy, reads its start from the scene when its window begins. " +
 				"Middle: From() — snaps to the FAR tick, plays BACK to where it was (right to left). " +
 				"Bottom: FromTo — both endpoints explicit, captured at build time. " +
-				"Each cube flashes at its ADR 0007 snap moment.",
+				"Each cube flashes at the moment its start value is applied (the snap).",
 				BuildCreationChapter());
 
 			AddChapter(master, "3. Eases gallery", EasesContent,
@@ -317,7 +317,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 				BuildComposeChapter());
 
 			AddChapter(master, "6. Control surface", ControlContent,
-				"A movie inside the movie: the magenta cube runs an INFINITE yoyo that is not on this " +
+				"A player inside the player: the magenta cube runs an INFINITE yoyo that is not on this " +
 				"timeline. Scripted callbacks drive it through its handle — restart, 2x speed, reverse, " +
 				"then CompleteAtCycleEnd() parks it exactly on the marker. Note: silent scrubbing skips " +
 				"callbacks by design; play through (or Restart) to see the commands fire.",
@@ -332,7 +332,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 
 			BuildPlaygroundChapter(master);
 
-			movie = master.Start();
+			showcase = master.Start();
 		}
 
 		// Wraps a chapter's content in slide-in/slide-out transitions (tweens on
@@ -418,8 +418,9 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 					new Vector3(-3f, -0.6f, 0f), new Vector3(3f, -0.6f, 0f), run)
 				.SetEase(Easing.InOutQuad()));
 
-			// Snap markers: a white flash at each lane's window start — the visible
-			// ADR 0007 snap moment (deferred to chapter entry for all three).
+			// Snap markers: a flash at each lane's window start — the visible
+			// moment the start value is applied (deferred to chapter entry for all
+			// three, because they are sequenced children).
 			ch.Join(Flash(creationARend, UnityEngine.Color.white));
 			ch.Join(Flash(creationBRend, UnityEngine.Color.white));
 			ch.Join(Flash(creationCRend, UnityEngine.Color.white));
@@ -596,7 +597,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 		private SequenceBuilder BuildControlChapter()
 		{
 			// The driven sequence: an infinite yoyo, deliberately NOT on the
-			// master timeline (an open window would make the movie unendable).
+			// master timeline (an open window would make it unendable).
 			// SetAutoKill(false) so CompleteAtCycleEnd leaves a live, restartable
 			// handle for the next pass.
 			var innerBuilder = FT.Sequence()
@@ -666,7 +667,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 			return ch;
 		}
 
-		// The finale is off-timeline by design: the movie slides the playground
+		// The finale is off-timeline by design: the timeline slides the playground
 		// in and parks at an AddPause; the buttons in OnGUI take over.
 		private void BuildPlaygroundChapter(SequenceBuilder master)
 		{
@@ -675,7 +676,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 			{
 				Name = "8. Playground",
 				Caption =
-					"The movie has parked itself at an AddPause — imperative features do not " +
+					"The timeline has parked itself at an AddPause — imperative features do not " +
 					"live on a timeline. Use the playground buttons: punch one-shots, Kill vs " +
 					"Kill(complete:true) on a spinning target, IsTweening readouts, KillAll and " +
 					"the global time-scale slider. Replay seeks the master back to 0.",
@@ -704,7 +705,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 
 		// The playhead in seconds, derived from the handle — the same value the
 		// seek bar writes back through Seek(). No local playback state.
-		private float CurrentTime => movie.TotalProgress * movie.Duration;
+		private float CurrentTime => showcase.TotalProgress * showcase.Duration;
 
 		private Chapter CurrentChapter(float time)
 		{
@@ -726,7 +727,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 			var time = CurrentTime;
 			var chapter = CurrentChapter(time);
 			GUILayout.Label(
-				$"FeatherTween Showcase — {chapter.Name}  ({time:0.0}s / {totalDuration:0.0}s, {movie.Status})",
+				$"FeatherTween Showcase — {chapter.Name}  ({time:0.0}s / {totalDuration:0.0}s, {showcase.Status})",
 				GUILayout.Height(40f));
 			GUILayout.Label(chapter.Caption, GUILayout.Height(110f));
 
@@ -735,24 +736,24 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 			var target = GUILayout.HorizontalSlider(time, 0f, totalDuration);
 			if (Mathf.Abs(target - time) > 0.01f)
 			{
-				movie.Seek(target);
+				showcase.Seek(target);
 			}
 
 			GUILayout.BeginHorizontal();
-			if (movie.Status == TweenStatus.Paused)
+			if (showcase.Status == TweenStatus.Paused)
 			{
-				if (GUILayout.Button("Play")) movie.Resume();
+				if (GUILayout.Button("Play")) showcase.Resume();
 			}
-			else if (movie.Status == TweenStatus.Completed)
+			else if (showcase.Status == TweenStatus.Completed)
 			{
-				if (GUILayout.Button("Replay")) movie.Restart();
+				if (GUILayout.Button("Replay")) showcase.Restart();
 			}
 			else
 			{
-				if (GUILayout.Button("Pause")) movie.Pause();
+				if (GUILayout.Button("Pause")) showcase.Pause();
 			}
-			if (GUILayout.Button("Reverse")) movie.Reverse();
-			if (GUILayout.Button("Restart")) movie.Restart();
+			if (GUILayout.Button("Reverse")) showcase.Reverse();
+			if (GUILayout.Button("Restart")) showcase.Restart();
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
@@ -762,7 +763,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 				if (GUILayout.Button($"{s:0.##}x"))
 				{
 					speed = s;
-					movie.SetTimeScale(s);
+					showcase.SetTimeScale(s);
 				}
 			}
 			GUILayout.EndHorizontal();
@@ -774,7 +775,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 				// "3. Eases gallery" -> "3"
 				if (GUILayout.Button(ch.Name.Substring(0, 1)))
 				{
-					movie.Seek(ch.Start);
+					showcase.Seek(ch.Start);
 				}
 			}
 			GUILayout.EndHorizontal();
@@ -818,13 +819,13 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 			GUILayout.Label(
 				$"IsTweening — P1: {FT.IsTweening(playP1.transform)}  P2: {FT.IsTweening(playP2.transform)}",
 				GUILayout.Width(240f));
-			if (GUILayout.Button("KillAll (kills the movie too!)"))
+			if (GUILayout.Button("KillAll (kills the showcase too!)"))
 			{
 				FT.KillAll();
 			}
-			if (GUILayout.Button("Replay movie"))
+			if (GUILayout.Button("Replay showcase"))
 			{
-				ReplayMovie();
+				ReplayShowcase();
 			}
 			GUILayout.EndHorizontal();
 
@@ -836,13 +837,13 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 
 		// Replay seeks the master back to 0 — unless KillAll destroyed it, in
 		// which case the scene is rebuilt from scratch.
-		private void ReplayMovie()
+		private void ReplayShowcase()
 		{
 			FT.GlobalTimeScale = 1f;
-			if (movie.IsAlive)
+			if (showcase.IsAlive)
 			{
-				movie.Seek(0f);
-				movie.Resume();
+				showcase.Seek(0f);
+				showcase.Resume();
 				return;
 			}
 			controlInner.Kill();
@@ -856,7 +857,7 @@ namespace Dyvoid.FeatherTween.Samples.Showcase
 			spawned.Clear();
 			speed = 1f;
 			SpawnCast();
-			BuildMovie();
+			BuildShowcase();
 		}
 
 		private GameObject Spawn(Transform parent, PrimitiveType type, Vector3 localPosition, UnityEngine.Color color, string label)

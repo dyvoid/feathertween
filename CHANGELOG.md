@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - Unreleased
 
-Initial release — the M1 (Core) feature set. The public API is declared stable
-at this version; breaking changes from here on follow semantic versioning.
+Initial release. The public API is declared stable at this version; breaking
+changes from here on follow semantic versioning.
 
 ### Added
 
@@ -53,8 +53,8 @@ at this version; breaking changes from here on follow semantic versioning.
   `SetCancelOnError`, main-thread assertions.
 - **Performance posture**: pooled storage, zero per-frame managed allocation in
   steady-state ticking (guarded by allocation tests).
-- **Samples**: Basic Usage, Sequence Demo, Mini Showcase, Composed Demo, and
-  the flagship Showcase ("the movie").
+- **Samples**: Showcase — a guided tour of the whole feature set as one
+  scrubbable, captioned timeline with a player panel.
 
 ### Known limitations
 
