@@ -3,14 +3,14 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-07-14 (API consistency pass, ADR 0011: getter-less FromTo, From(value), subject-first param naming, handle symmetry; on branch `claude/feathertween-api-simplify-o17c3b`)
+Last updated: 2026-07-16 (phase restructure: new 1.15 = API finalization, docs/hygiene moved to 1.16; all pending semantics decisions taken — see phases.md 1.15)
 
 ## Current position
 
 - **Milestone**: M1 (Core), production cut. See `docs/planning/phases.md`.
 - **Done through**: Phase 1.14 (dev acceptance) merged to `main`. Unity run 2026-07-07: 196 tests green including the new 10k-tween and 1k×10-child-sequence zero-alloc guards. **Composed demo visual pass**: confirm it has been eyeballed in Play mode; if not, it is the one open 1.14 exit item.
-- **Phase restructure (user decision, 2026-07-07)**: release hygiene (LICENSE, CHANGELOG, XML docs) split out of 1.14 into a new **1.15**, which now carries the v0.1 tag. Between 1.14 and 1.15 sits a hardening pass (full test sweep + code review) — everything must be flawless before 1.15 documents it.
-- **Remaining M1**: hardening pass → 1.15 (hygiene + docs, v0.1 tag).
+- **Phase restructure (user decision, 2026-07-16)**: new **1.15 — API finalization** (implement the pending semantics decisions so the surface is frozen); release hygiene/docs moved to **1.16**, which now carries the v0.1 tag. Rationale: 1.16 documents contracts, so the contracts must be final first.
+- **Remaining M1**: 1.15 (API finalization) → 1.16 (hygiene + docs, v0.1 tag).
 - **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
 
 ## Done
@@ -23,7 +23,11 @@ Last updated: 2026-07-14 (API consistency pass, ADR 0011: getter-less FromTo, Fr
 
 ## In flight
 
-- **API consistency pass (2026-07-14, branch `claude/feathertween-api-simplify-o17c3b`, ADR 0011)** — user-driven ergonomics/consistency sweep of the whole public surface, done before 1.15 locks the docs. Breaking (pre-v0.1, so free):
+_Nothing in flight._
+
+## Recently landed
+
+- **API consistency pass (ADR 0011) — merged to `main` (`9d0bc99`), Unity-verified 2026-07-16** — user-driven ergonomics/consistency sweep of the whole public surface. Breaking (pre-v0.1, so free):
   - `FT.FromTo(setter, from, to, duration)` — getter removed (it was dead: `SnapMode.FromTo` never read it). One lambda instead of two.
   - `TweenBuilder<T>.From(T value)` — explicit start on any builder; `FT.Fade(cg, 1f, .5f).From(0f)` is a lambda-free FromTo on shortcuts.
   - Param renames: endpoints are `from`/`to` (`toAlpha`, `uniformTo` on shortcuts); enum params named after type (`loopType`, `delayType`); timeline positions `time`, spans `seconds` (`Seek(time)`, `Sequence.Insert(time, …)`, `Position.AtTime(time)`).
@@ -31,12 +35,12 @@ Last updated: 2026-07-14 (API consistency pass, ADR 0011: getter-less FromTo, Fr
   - `Chain`/`Group` aliases removed; `Join(SequenceBuilder)` + `Prepend(SequenceBuilder)` added (nested sequences now first-class in all composition methods).
   - Handle symmetry: `Tween.Duration`/`Tween.TotalProgress` (mirror Sequence semantics), `Sequence.SetRemainingCycles(int|bool)` (SequenceData grew boundary-stop mirroring `TweenData<T>`; loopCount no longer readonly).
   - Docs: api pages updated to the new signatures; drift fixed where touched (`endValue:`→`to:`, `SetEase(Easing.OutCubic())` parens, nonexistent creation-side target-capture overload + awaitables marked M2-planned, phantom `Progress`/`SetId` removed); conventions.md gained "Public API shape rules"; ADR 0011 records the decision incl. the rejected subject-last ordering.
-  - Tests: 197 + 185 (release leg) green on the compile-check harness. **Not yet run in real Unity** — needs the usual Editor/PlayMode sweep before merge.
+  - Tests: 197 + 185 (release leg) green on the compile-check harness; Unity Editor/PlayMode sweep confirmed by user 2026-07-16.
 
 ## Next up
 
-1. **Hardening pass** (user-mandated gate before 1.15): full test sweep + deep code review of the whole M1 surface; fix everything found. Candidate entry points: the "Known issues / tech debt" list below, edge-case coverage (Yoyo+Reverse composition, seek across EveryLoop delays, nested-sequence kill semantics), and a fresh end-to-end review of Runtime/.
-2. Phase 1.15 — Release hygiene and documentation: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs, v0.1 tag.
+1. **Phase 1.15 — API finalization**: implement the decided semantics (full list with rationale in `docs/planning/phases.md` 1.15): reverse-through-delay, dead-handle `OnKill` no-op, throw on `duration <= 0` + infinite loops, `IntInterpolator` round-to-nearest, `ForceComplete` playhead sync, manual-phase cleanup doc note, ADR 0008 `Subtract` guard verification, `AddLabel` doc note. Exit: "Open questions / decisions pending" below is empty; API final for v0.1.
+2. **Phase 1.16 — Release hygiene and documentation**: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs, v0.1 tag.
 
 ## Infra (2026-07-02)
 
@@ -47,18 +51,7 @@ Last updated: 2026-07-14 (API consistency pass, ADR 0011: getter-less FromTo, Fr
 
 ## Open questions / decisions pending
 
-- `AddLabel(name, Position)` resolves at definition time (only `Insert`/`AddPause` defer label resolution to `Start()`); duplicate label names throw.
-
-### From code review (2026-07-08) — semantics decisions needed
-
-Deliberate non-fixes from the hardening-pass review: the behavior is questionable but the right answer is a design decision, not a patch. Decide before 1.15 documents the contracts.
-
-- **`Reverse()` during an initial delay stalls a sequence forever**: in `SequenceData.Step` a negative `dt` never decrements `delayRemaining`, so the sequence reports `Delayed` every frame and never moves. Decide: rewind through the delay, settle at playhead 0, or no-op while delayed. Tween-level delay has the same question.
-- **Dead-handle `OnKill(cb)` fires the callback immediately** (test-locked in `TweenBuilderTests`). This conflicts with "natural completion never fires OnKill": a naturally-completed auto-killed tween returns a dead handle, so a late `OnKill` subscription fires for a tween that was never killed. Decide: keep the late-fire convenience and document the exception, or make dead-handle `OnKill` a no-op (updates that test).
-- **Zero-duration tween + `SetLoops(-1, Incremental)` can freeze a frame**: `cycleSlot` clamps to 1e-9, `cycleIndex` explodes, and the incremental cold-cache recompute in `GetCycleEnds` loops `cycleIndex` times. Decide: reject `duration <= 0` with infinite loops at build time, or clamp.
-- **Manual-phase destroyed-target cleanup depends on `ManualTick` being called**: if manual ticking stops, tweens on destroyed Unity objects in that phase are never auto-killed and `byTarget` pins them until reset. Probably a doc note ("keep ticking or kill explicitly"), but decide.
-- **`IntInterpolator.Lerp` truncates toward zero**, so negative-range int tweens step asymmetrically around 0. Floor/round would be uniform; changing it alters observable values, so it needs decision + test updates in one move.
-- **`TweenData<T>.ForceComplete` leaves `localTime` stale**: after `Complete()` on a non-autokill tween, a later `Seek` starts from the old playhead. Harmless today (`ResetPlayhead` covers Restart/Play), but a trap for future timeline features.
+_None. All semantics decisions from the 2026-07-08 review were taken by the user on 2026-07-16 and are scheduled as implementation work in phase 1.15 — see `docs/planning/phases.md` for the decided behavior of each (reverse-through-delay, dead-handle `OnKill` no-op, zero-duration+infinite-loop throw at `Start()`, `IntInterpolator` round-to-nearest, `ForceComplete` playhead sync, manual-phase cleanup doc note, ADR 0008 `Subtract` guard verification, `AddLabel` definition-time resolution confirmed)._
 
 ## Known issues / tech debt
 

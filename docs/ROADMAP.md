@@ -22,7 +22,9 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Filters and bulk ops | Done | Target-indexed multimap, `Kill(target)`, `IsTweening`, `KillAll` | — |
 | Safe mode and assertions | Done | Try/catch wrapper, off-thread assertions, release-build skip | — |
 | M1 dev acceptance | Done | Composed demo, all suites green, zero-alloc verified | — |
-| Release hygiene and documentation (1.15) | In flight | Hardening pass (test sweep + code review), then LICENSE, CHANGELOG, XML docs; v0.1 tag | — |
+| API consistency pass | Done | Getter-less `FromTo`, `From(value)`, subject-first param naming, handle symmetry | 0011 |
+| API finalization (1.15) | Planned | Resolve all pending semantics decisions (reverse-through-delay, dead-handle `OnKill` no-op, zero-duration loop throw, int rounding, `ForceComplete` playhead); API final for v0.1 | — |
+| Release hygiene and documentation (1.16) | Planned | LICENSE, CHANGELOG, XML docs, docs reconciliation; v0.1 tag | — |
 
 ## M2 — Polish and ecosystem
 

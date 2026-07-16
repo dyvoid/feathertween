@@ -181,7 +181,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 ### Phase 1.14 — M1 dev acceptance
 
-**Deliverable**: composed demo. Performance benchmark suite: 10k float tweens; 1k 10-child sequences. This closes the *development* part of M1; it is followed by a hardening pass (full test sweep + code review) before 1.15.
+**Deliverable**: composed demo. Performance benchmark suite: 10k float tweens; 1k 10-child sequences. This closes the *development* part of M1; it is followed by a hardening pass (full test sweep + code review) before 1.15 finalizes the API. (The hardening pass ran 2026-07-08.)
 
 **Tests**:
 
@@ -191,7 +191,24 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 **Exit**: dev-complete; hardening pass (testing + code review) finds nothing blocking.
 
-### Phase 1.15 — Release hygiene and documentation
+### Phase 1.15 — API finalization
+
+**Deliverable**: the public surface and its observable semantics are final. Every pending API/semantics decision accumulated in ADRs and the hardening-pass review is resolved and implemented, so 1.16 documents a frozen contract instead of a moving one. All items below are breaking-change-free-zone work (pre-v0.1). Decisions taken 2026-07-16:
+
+- **`Reverse()` during an initial delay**: the delay is part of the timeline — a reversed tween/sequence counts the delay back down before reaching playhead 0 (fixes the current infinite `Delayed` stall where negative `dt` never decrements `delayRemaining`). Applies to both tween-level and sequence-level delays.
+- **Dead-handle `OnKill(cb)`**: becomes a no-op (was: fires immediately, test-locked). The invariant "OnKill fires only on actual kills, at most once, at kill time" holds unconditionally; update the existing `TweenBuilderTests` pin.
+- **`duration <= 0` with infinite loops**: throw at `Start()` (was: 1e-9 clamp that can explode `cycleIndex` and freeze a frame on `Incremental` cold-cache recompute). Matches ADR 0011's throw-on-invalid direction.
+- **`IntInterpolator.Lerp`**: round to nearest (was: truncate toward zero, which steps asymmetrically across 0). Update affected value-expectation tests in the same change.
+- **`TweenData<T>.ForceComplete` stale `localTime`**: fix — sync the playhead on `Complete()` so a later `Seek` on a non-autokill tween starts from the completed position.
+- **Manual-phase destroyed-target cleanup**: documented contract, not a mechanism — "keep calling `ManualTick` or kill explicitly; tweens on destroyed targets in a stopped manual phase are not auto-killed."
+- **ADR 0008 follow-through**: verify the `Incremental`-without-meaningful-`Subtract` guard story for custom interpolators; throw at `Start()` if the gap is real, otherwise record why not.
+- **`AddLabel` resolution**: confirmed as designed — labels resolve at definition time (only `Insert`/`AddPause` defer to `Start()`), duplicate names throw. Document it; no code change.
+
+**Tests**: new/updated coverage for each behavior change above (reverse-through-delay for tween and sequence, dead-handle OnKill no-op, zero-duration+infinite-loop throw, int rounding golden values, Complete-then-Seek playhead); full suite green in the compile-check harness and in Unity (Editor + PlayMode).
+
+**Exit**: PICKUP's "Open questions / decisions pending" section is empty; the public API is declared final for v0.1.
+
+### Phase 1.16 — Release hygiene and documentation
 
 **Deliverable**: `LICENSE` file, `CHANGELOG.md` per UPM convention, and XML doc comments on every public type and member. Reconcile all docs with the final M1 surface.
 
