@@ -8,10 +8,6 @@
 
 A robust, minimal C# tween engine for Unity. Compositional sequences, static-method API, struct handles, PlayerLoop runner.
 
-## Status
-
-Early development, approaching the first release: the core feature set is complete and the public API is final for v0.1. See the [CHANGELOG](CHANGELOG.md) for what ships in 0.1.0. Expect breaking changes until the v0.1 tag lands.
-
 ## Getting Started
 
 FeatherTween is distributed as a UPM package.
