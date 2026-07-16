@@ -9,7 +9,7 @@ Last updated: 2026-07-16 (phase 1.15 closed: Unity-verified by user, merged to `
 
 - **Milestone**: M1 (Core), production cut. See `docs/planning/phases.md`.
 - **Done through**: Phase 1.15 (API finalization) merged to `main`, Unity-tested by the user 2026-07-16 ("works great"), incl. the new MiniShowcase sample. **The public API is final for v0.1.**
-- **Remaining M1**: 1.16 (hygiene + docs, v0.1 tag) → 1.17 (showcase "movie" sample, dogfood gate, v0.1 declared stable).
+- **Remaining M1**: 1.16 (hygiene + docs) → 1.17 (showcase "movie" sample, dogfood gate; **v0.1 tag + stable declaration at its exit** — tag moved from 1.16 to M1's conclusion, user decision 2026-07-16).
 - **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
 
 ## Done
@@ -52,7 +52,7 @@ _Nothing in flight._
 
 ## Next up
 
-1. **Phase 1.16 — Release hygiene and documentation**: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs, v0.1 tag.
+1. **Phase 1.16 — Release hygiene and documentation**: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs. (The v0.1 tag now lands at 1.17's exit.)
 2. **Phase 1.17 — Showcase sample "the movie"** (new, 2026-07-16): the whole sample is one nested master sequence — chaptered feature screens with self-describing captions and a seek-bar/player UI driving the root sequence. Spec: `docs/design/showcase-sample.md`. Serves as the v0.1 dogfood gate and the pure-function-of-time stress test; M1 closes and v0.1 is declared stable at its exit.
 
 ## Infra (2026-07-02)

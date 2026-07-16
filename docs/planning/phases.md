@@ -223,7 +223,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 - No CS1591 (missing XML doc) warnings on the public surface; LICENSE and CHANGELOG.md present and referenced from package.json where applicable
 
-**Exit**: M1 release tag (v0.1). The stable-API declaration waits for 1.17's dogfood.
+**Exit**: release hygiene complete, docs reconciled. The v0.1 tag moved to 1.17's exit (user decision, 2026-07-16): the tag marks the conclusion of M1, so it lands with the dogfood gate, not before it.
 
 ### Phase 1.17 — Showcase sample ("the movie")
 
@@ -233,7 +233,7 @@ This is the v0.1 dogfood gate: it is a real consumer workload, the hardest avail
 
 **Tests**: the manual test protocol in the spec (forward, reversed, random scrub, chapter seeks, 0.25×/4×) plus zero per-frame managed alloc during timeline playback.
 
-**Exit**: showcase passes the protocol in Unity; API friction found while building it is resolved or explicitly deferred; **v0.1 declared stable**. M1 closes here.
+**Exit**: showcase passes the protocol in Unity; API friction found while building it is resolved or explicitly deferred; **v0.1 tagged and declared stable**. M1 closes here.
 
 ## M2 — Polish and ecosystem
 
