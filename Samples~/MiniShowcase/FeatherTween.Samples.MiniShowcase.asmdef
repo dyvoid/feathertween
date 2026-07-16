@@ -1,0 +1,16 @@
+{
+  "name": "FeatherTween.Samples.MiniShowcase",
+  "rootNamespace": "Dyvoid.FeatherTween.Samples.MiniShowcase",
+  "references": [
+    "FeatherTween"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -28,6 +28,11 @@
       "path": "Samples~/SequenceDemo"
     },
     {
+      "displayName": "Mini Showcase",
+      "description": "A small preview of the phase 1.17 showcase: one master sequence with four captioned chapters (ease race, loops, deferred From drop, synchronized finale) driven by a player panel — seek bar, play/pause, reverse, speed, and chapter jumps all operate on the root sequence.",
+      "path": "Samples~/MiniShowcase"
+    },
+    {
       "displayName": "Composed Demo",
       "description": "The M1 acceptance demo: infinite Incremental/Yoyo loops, EveryLoop-staggered generic tweens with parametric elastic ease, a master sequence with a nested sub-sequence and label-based deferred From, plus a runtime control panel (pause/resume all, reverse, seek, global time scale, target-filtered kill).",
       "path": "Samples~/ComposedDemo"

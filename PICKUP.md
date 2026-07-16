@@ -35,6 +35,8 @@ Last updated: 2026-07-16 (phase 1.15 implemented on `claude/sweet-galileo-jgxpl8
   - **Docs**: handles.md (new methods, dead-handle rule, reverse-through-delay, Complete sync, `GlobalTimeScale`), builders.md, sequences.md (`AddLabel` definition-time note), interpolators.md (int rounding, ADR 0008 note), overview.md (manual-phase cleanup contract), ADR 0008/0009 addenda, risks.md.
   - **Tests**: 14 new/updated (reverse-through-delay ×7 incl. wrap composition, dead-handle ×2, zero-duration throw ×2, int rounding, Complete-then-Seek, `CompleteAtCycleStart`).
 
+- **New sample: MiniShowcase** (`Samples~/MiniShowcase/`, same branch) — a small preview of the 1.17 showcase: one master sequence, four captioned chapters (ease race, loops with exact landing markers, deferred From drop, synchronized finale), and a player panel whose seek bar / play-pause / reverse / speed / chapter jumps drive the root sequence. Registered in `package.json` samples and README. Exists because ComposedDemo is hard to visually test (no stated expected outcomes); this one captions what should happen per chapter, borrowing 1.17's falsifiable-visual-testing idea. Stub harness gained `GUILayout.Width` and `Color.gray`.
+
 ## Recently landed
 
 - **API consistency pass (ADR 0011) — merged to `main` (`9d0bc99`), Unity-verified 2026-07-16** — user-driven ergonomics/consistency sweep of the whole public surface. Breaking (pre-v0.1, so free):

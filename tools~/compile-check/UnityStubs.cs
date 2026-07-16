@@ -132,6 +132,7 @@ namespace UnityEngine
 		public static Color red => default;
 		public static Color blue => default;
 		public static Color white => default;
+		public static Color gray => default;
 		public static Color operator +(Color a, Color b) => new Color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
 		public static Color operator -(Color a, Color b) => new Color(a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a);
 	}
@@ -321,6 +322,7 @@ namespace UnityEngine
 		public static bool Button(string text) => false;
 		public static float HorizontalSlider(float value, float min, float max) => value;
 		public static GUILayoutOption Height(float height) => null;
+		public static GUILayoutOption Width(float width) => null;
 	}
 
 	public class GUILayoutOption { }
