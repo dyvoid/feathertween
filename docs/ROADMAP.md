@@ -23,7 +23,7 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Safe mode and assertions | Done | Try/catch wrapper, off-thread assertions, release-build skip | — |
 | M1 dev acceptance | Done | Composed demo, all suites green, zero-alloc verified | — |
 | API consistency pass | Done | Getter-less `FromTo`, `From(value)`, subject-first param naming, handle symmetry | 0011 |
-| API finalization (1.15) | Planned | Resolve all pending semantics decisions (reverse-through-delay, dead-handle `OnKill` no-op, zero-duration loop throw, int rounding, `ForceComplete` playhead); API final for v0.1 | — |
+| API finalization (1.15) | Planned | All pending semantics decided + ADR-audit fixes (reverse-through-delay, dead-handle late-subscription no-ops, zero-duration loop throw, int rounding, `CompleteAtCycleEnd`/`Start`, `SetCapacity(int)`, `GlobalTimeScale` property); API final for v0.1 | — |
 | Release hygiene and documentation (1.16) | Planned | LICENSE, CHANGELOG, XML docs, docs reconciliation; v0.1 tag | — |
 
 ## M2 — Polish and ecosystem

@@ -39,7 +39,7 @@ _Nothing in flight._
 
 ## Next up
 
-1. **Phase 1.15 — API finalization**: implement the decided semantics (full list with rationale in `docs/planning/phases.md` 1.15): reverse-through-delay, dead-handle `OnKill` no-op, throw on `duration <= 0` + infinite loops, `IntInterpolator` round-to-nearest, `ForceComplete` playhead sync, manual-phase cleanup doc note, ADR 0008 `Subtract` guard verification, `AddLabel` doc note. Plus the **fast-path freeze check** (design-only: confirm M2 fast paths fit inside `TweenBuilder<T>` so shortcut signatures freeze safely). Exit: "Open questions / decisions pending" below is empty; API final for v0.1.
+1. **Phase 1.15 — API finalization**: implement the decided semantics (full list with rationale in `docs/planning/phases.md` 1.15): reverse-through-delay (incl. ADR 0009 wrap composition), dead-handle late subscriptions all no-op, throw on `duration <= 0` + infinite loops, `IntInterpolator` round-to-nearest, `ForceComplete` playhead sync, `CompleteAtCycleEnd()`/`CompleteAtCycleStart()` replacing `SetRemainingCycles(bool)`, `SetCapacity(int)`, `FT.GlobalTimeScale` property, manual-phase cleanup doc note, ADR 0008 `Subtract` guard verification, `AddLabel` doc note. Fast-path freeze check done (see phases.md — `TweenBuilder<T>` signatures safe). **ADR audit 2026-07-16**: all 11 ADRs re-litigated with the user; all decisions upheld; ADR 0006 gained an addendum describing the as-implemented mechanism (no parent pointers, top-down entry ownership, per-phase roots). Exit: "Open questions / decisions pending" below is empty; API final for v0.1.
 2. **Phase 1.16 — Release hygiene and documentation**: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs, v0.1 tag.
 
 ## Infra (2026-07-02)

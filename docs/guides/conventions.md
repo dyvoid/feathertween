@@ -30,6 +30,9 @@ These are API-design invariants (ADR 0011), not just style:
 - **Callbacks keep the `Callback` suffix in sequence composition**: `AppendCallback(Action)` is the only spelling — no `Append(Action)` sugar, which would ambiguate with `Append(TweenBuilder<T>)`/`Append(SequenceBuilder)` composition (decided 2026-07-16).
 - **Rotation default is shortest-path slerp** (`Quaternion.SlerpUnclamped`); euler overloads are pure conversions. Any alternative rotate mode is a new additive parameter, never a change to the default.
 - **Manual ticking is global-only**: `FT.ManualTick(dt)` drives the `Manual` phase; there is no per-tween `Tick`.
+- **Late subscriptions on dead handles are no-ops** (decided 2026-07-16): `OnComplete`/`OnKill`/`OnStepComplete` on a dead `Tween`/`Sequence` do nothing — a dead handle cannot know how its record ended, so firing any callback would be a guess.
+- **A bool overload must not change the operation**: overloads share a name only when they do the same thing with different inputs. An operation selected by a bare bool gets its own name instead (`CompleteAtCycleEnd()`/`CompleteAtCycleStart()`, not `SetRemainingCycles(bool)`).
+- **Signatures don't encode structure that doesn't exist**: parameters imply implementation contract (`SetCapacity(int capacity)`, not a phantom tween/sequence split).
 
 ## Static API usage in samples and docs
 
