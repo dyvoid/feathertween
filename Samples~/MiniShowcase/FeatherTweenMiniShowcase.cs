@@ -105,22 +105,24 @@ namespace Dyvoid.FeatherTween.Samples.MiniShowcase
 			var master = FT.Sequence()
 				.SetAutoKill(false); // replayable and seekable after completion
 
-			AddChapter(master, "1. Ease race",
+			AddChapter(master, "1. Ease race", RaceDuration,
 				"Three cubes race with different eases (Linear, InOutQuad, OutBounce). " +
 				"They take different paths but ALL cross the line together at this chapter's end.",
 				BuildEaseRace());
 
-			AddChapter(master, "2. Loops",
+			AddChapter(master, "2. Loops", LoopsDuration,
 				"Green runs 4 Yoyo cycles and must END BACK AT ITS START. " +
 				"Magenta runs 3 Incremental cycles of +2 and must LAND EXACTLY ON THE MARKER.",
 				BuildLoops());
 
-			AddChapter(master, "3. From drop",
+			AddChapter(master, "3. From drop", DropDuration,
 				"The red cube POPS UP the instant this chapter starts (deferred From snap, " +
-				"ADR 0007), then bounce-drops back onto its marker.",
+				"ADR 0007), then bounce-drops back onto its marker. Note: scrubbing back " +
+				"BEFORE this chapter parks it at the raised start — the pre-movie rest pose " +
+				"was never on the timeline, so a backward crossing renders the tween's start value.",
 				BuildFromDrop());
 
-			AddChapter(master, "4. Finale",
+			AddChapter(master, "4. Finale", FinaleDuration,
 				"Everything pulses once in sync (Join) while the red cube flashes white. " +
 				"At the end the scene matches the frame before this chapter.",
 				BuildFinale());
@@ -128,11 +130,15 @@ namespace Dyvoid.FeatherTween.Samples.MiniShowcase
 			movie = master.Start();
 		}
 
-		private void AddChapter(SequenceBuilder master, string name, string caption, SequenceBuilder chapter)
+		// The chapter builder must not touch totalDuration itself: as an argument
+		// it is evaluated before this method records Start, so the duration is
+		// passed explicitly and accumulated here.
+		private void AddChapter(SequenceBuilder master, string name, float duration, string caption, SequenceBuilder chapter)
 		{
 			master.AddLabel(name, totalDuration);
 			chapters.Add(new Chapter { Name = name, Caption = caption, Start = totalDuration });
 			master.Append(chapter);
+			totalDuration += duration;
 		}
 
 		private SequenceBuilder BuildEaseRace()
@@ -144,7 +150,6 @@ namespace Dyvoid.FeatherTween.Samples.MiniShowcase
 				.SetEase(Easing.InOutQuad()));
 			ch.Join(FT.Move(racers[2].transform, new Vector3(4f, 2.1f, 0f), RaceDuration)
 				.SetEase(Easing.OutBounce()));
-			totalDuration += RaceDuration;
 			return ch;
 		}
 
@@ -161,7 +166,6 @@ namespace Dyvoid.FeatherTween.Samples.MiniShowcase
 			ch.Join(FT.Move(incrementalCube.transform, new Vector3(-2f, -0.9f, 0f), LoopsDuration / 3f)
 				.SetLoops(3, LoopType.Incremental)
 				.SetEase(Easing.InOutQuad()));
-			totalDuration += LoopsDuration;
 			return ch;
 		}
 
@@ -174,7 +178,6 @@ namespace Dyvoid.FeatherTween.Samples.MiniShowcase
 			ch.Append(FT.Move(dropCube.transform, new Vector3(4f, -0.9f, 0f), DropDuration)
 				.From(new Vector3(4f, 2.5f, 0f))
 				.SetEase(Easing.OutBounce()));
-			totalDuration += DropDuration;
 			return ch;
 		}
 
@@ -196,7 +199,6 @@ namespace Dyvoid.FeatherTween.Samples.MiniShowcase
 					c => dropRenderer.material.color = c,
 					UnityEngine.Color.white, pulse)
 				.SetLoops(2, LoopType.Yoyo));
-			totalDuration += FinaleDuration;
 			return ch;
 		}
 
