@@ -4,12 +4,13 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/dyvoid/patween)](https://github.com/dyvoid/patween/commits/main)
 [![GitHub issues](https://img.shields.io/github/issues/dyvoid/patween)](https://github.com/dyvoid/patween/issues)
 [![Unity](https://img.shields.io/badge/Unity-6000.3%2B-black?logo=unity)](https://unity.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A robust, minimal C# tween engine for Unity. Compositional sequences, static-method API, struct handles, PlayerLoop runner.
 
 ## Status
 
-Early development — M1 (Core) is complete through phase 1.15 (API finalization): the public API is final for v0.1. Next, phase 1.16 (release hygiene: LICENSE, CHANGELOG, XML docs), then phase 1.17 (showcase sample) concludes M1 with the v0.1 tag and stable declaration. Expect breaking changes until M1 ships.
+Early development — M1 (Core) is complete through phase 1.16 (release hygiene: MIT LICENSE, [CHANGELOG](CHANGELOG.md), XML docs on the full public surface): the public API is final for v0.1. Phase 1.17 (showcase sample) concludes M1 with the v0.1 tag and stable declaration. Expect breaking changes until M1 ships.
 
 ## Getting Started
 

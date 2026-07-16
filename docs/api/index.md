@@ -9,9 +9,9 @@ using Dyvoid.FeatherTween;
 
 // A one-shot tween
 Tween t = FT.To(
-    () => transform.position.x,
-    v  => transform.position = transform.position with { x = v },
-    to: 10f,
+    () => canvasGroup.alpha,
+    v  => canvasGroup.alpha = v,
+    to: 1f,
     duration: 1f
 )
 .SetEase(Easing.OutCubic())
@@ -55,7 +55,6 @@ await FT.Fade(canvasGroup, 0f, 0.5f); // M2 (planned): awaitable handles
 
 ## Namespaces
 
-- `FeatherTween` — public API
+- `Dyvoid.FeatherTween` — public API
 - `Dyvoid.FeatherTween.Internal` — runtime internals (not intended for direct use)
-- `Dyvoid.FeatherTween.Editor` — inspectors and editor tools
-- `FeatherTween.UniTask` — optional UniTask integration (separate asmdef)
+- `Dyvoid.FeatherTween.Editor` — editor-mode ticking and store bootstrap

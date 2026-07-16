@@ -7,9 +7,9 @@
 ```csharp
 public struct TweenBuilder<T>
 {
-    // Terminators
+    // Terminator
     public Tween Start();
-    public TweenAwaiter GetAwaiter();   // implicit Start on await
+    // M2 (planned): TweenAwaiter GetAwaiter() — implicit Start on await
 }
 ```
 
@@ -54,6 +54,8 @@ public struct SequenceBuilder
 
 `Append`/`Insert`/`Join`/`Prepend` take an **unstarted** `TweenBuilder<T>` or `SequenceBuilder`. Passing the same builder to two calls throws, because the first call consumes it.
 
+**Known limitation — abandoned sequence builders.** Children claimed by a `SequenceBuilder` already occupy store slots. A builder that is never `Start()`ed pins those slots until the next `TweenStore.Reset()` (domain reload / play-mode change); the leak detector logs a warning from the finalizer when this happens. Always `Start()` a composed sequence, or `Clear()` it to release the children.
+
 ## Chainable builder settings
 
 All of these return the builder so they can be chained.
@@ -61,9 +63,9 @@ All of these return the builder so they can be chained.
 ```csharp
 .SetEase(EaseRef)                            // produced by Easing.X(...) factories
 .SetEase(AnimationCurve)                     // convenience: wraps Easing.Curve(c)
-.SetLoops(count, LoopType)                   // Restart | Yoyo | Incremental; SetLoops(-1) with duration 0 throws at Start()
+.SetLoops(count, LoopType)                   // Restart | Yoyo | Incremental | Rewind; SetLoops(-1) with duration 0 throws at Start()
 .SetDelay(seconds, DelayType.FirstLoop | DelayType.EveryLoop)  // negative throws
-.SetUpdate(UpdatePhase, ignoreTimeScale)    // Update | Late | Fixed | Manual
+.SetUpdate(UpdatePhase, ignoreTimeScale)    // Update | Late | Fixed | Manual (drive with FT.ManualTick(dt))
 .SetAutoKill(bool)
 .SetRelative(bool)
 .SetTarget(object)                          // kill-filter tag; not the animation target for generic tweens

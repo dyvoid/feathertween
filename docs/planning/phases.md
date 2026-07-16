@@ -225,6 +225,8 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 **Exit**: release hygiene complete, docs reconciled. The v0.1 tag moved to 1.17's exit (user decision, 2026-07-16): the tag marks the conclusion of M1, so it lands with the dogfood gate, not before it.
 
+**Status: done (2026-07-16).** MIT LICENSE + CHANGELOG.md shipped (referenced from package.json via the `license` field); XML `<summary>` docs on every public Runtime type/member, gated in CI by a Runtime-only doc-check leg with CS1591 as error. Reconciliation findings fixed: `FT.ManualTick(double)` was the decided public spelling (conventions.md, risks.md) but only the internal runner method existed — added as a forwarder with a public-API test; `docs/api/easings.md` and `interpolators.md` described unshipped APIs (cached `EaseRef` properties, `Easing.Elastic`/`Bounce`, `EaseFunction`, `FT.RegisterInterpolator`) and were rewritten to the real surface; smaller drift fixed in index/filters/tweens/sequences/callbacks/builders/handles docs; the abandoned-SequenceBuilder leak is documented as a known limitation (builders.md, CHANGELOG).
+
 ### Phase 1.17 — Showcase sample ("the movie")
 
 **Deliverable**: the feature-showcase sample specified in [`docs/design/showcase-sample.md`](../design/showcase-sample.md) — the whole sample is one nested master sequence with chaptered feature screens, self-describing captions, and a player UI (seek bar, play/pause, reverse, speed) that drives the root sequence through the public control surface. Replaces the current demos as flagship sample; `BasicUsage` remains as the minimal starter.

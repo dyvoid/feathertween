@@ -15,7 +15,7 @@ Set on the builder:
 .OnRewind(Action)
 ```
 
-Each has a plain and a target-capture overload. Implemented as direct delegates, not delegate lists or params arrays, so invocation allocates zero managed bytes.
+`OnComplete`/`OnKill` additionally have zero-alloc target-capture overloads (see below). Implemented as direct delegates, not delegate lists or params arrays, so invocation allocates zero managed bytes.
 
 ## Late subscription
 

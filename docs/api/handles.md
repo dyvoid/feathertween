@@ -100,7 +100,10 @@ There is no `Scheduled` state. A tween only exists as a `Tween` handle after `.S
 ```csharp
 FT.GlobalTimeScale = 0.5f;                       // all phases (property; setter throws on negative)
 FT.SetTimeScale(UpdatePhase phase, float scale); // one phase (e.g. slow gameplay, keep UI)
+FT.ManualTick(double deltaTime);                 // advances the Manual phase only; scales apply
 ```
+
+The `Manual` phase ticks only through `FT.ManualTick` (global — there is no per-tween `Tick`). Tweens on destroyed targets in a stopped manual phase are not auto-killed: keep ticking, or kill explicitly.
 
 Root scale is engine-side and distinct from Unity `Time.timeScale`; `ignoreTimeScale` opts a tween out of Unity's scale only.
 

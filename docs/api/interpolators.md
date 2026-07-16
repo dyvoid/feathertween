@@ -21,12 +21,12 @@ Built-ins in M1: `float`, `Vector2`, `Vector3`, `Vector4`, `Color`, `Quaternion`
 ## Registration
 
 ```csharp
-FT.RegisterInterpolator<T, TInterp>() where TInterp : struct, IInterpolator<T>;
+Interpolators.Register<T>(IInterpolator<T> interpolator);
+Interpolators.Get<T>();   // throws if none registered
 ```
 
-- Main-thread only; throws if called off-thread.
-- Idempotent if the same `TInterp` is re-registered for the same `T`. Re-registering with a different `TInterp` while any tween of `T` is live throws.
-- `TweenStore.Reset()` clears registrations; built-ins are re-registered automatically by the runner installer.
+- Registering while **any** tween of `T` is live throws (`InvalidOperationException`), even when re-registering the same implementation — the interpolator is captured per tween at build time, and a mid-flight swap would split behavior between old and new tweens.
+- Like the rest of the engine, the registry is main-thread only.
 
 ## Example
 
@@ -38,7 +38,7 @@ public struct RectInterpolator : IInterpolator<Rect>
     public Rect Subtract(Rect a, Rect b) => new(a.x - b.x, a.y - b.y, a.width - b.width, a.height - b.height);
 }
 
-FT.RegisterInterpolator<Rect, RectInterpolator>();
+Interpolators.Register<Rect>(new RectInterpolator());
 ```
 
 M5 adds `IBurstInterpolator<T>` with an `unmanaged` constraint for the Burst path. M1-registered managed interpolators continue to work unchanged.

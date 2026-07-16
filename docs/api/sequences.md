@@ -6,7 +6,7 @@ A sequence is a parent timeline that composes tweens, callbacks, intervals, labe
 
 ```csharp
 SequenceBuilder sb = FT.Sequence()
-    .SetDefaults(ease: Easing.OutQuad);
+    .SetDefaults(ease: Easing.OutQuad());
 
 sb.Append(FT.Move(transform, p1, 0.5f));            // builder consumed by sequence
 sb.Append(FT.Rotate(transform, r1, 0.5f));
@@ -28,7 +28,7 @@ Sequence seq = sb.Start();
 public readonly struct Position
 {
     public static Position End { get; }
-    public static Position AtTime(float seconds);
+    public static Position AtTime(float time);
     public static Position AtLabel(string label, float offset = 0f);
     public static Position AfterPrevious(float offset = 0f);
     public static Position WithPrevious(float offset = 0f);

@@ -37,7 +37,7 @@ FT.To(() => x.value, v => x.value = v, 10f, 1f)
 
 ## Typed shortcuts
 
-Static methods on `FeatherTween` cover common Unity components. Each shortcut builds a lambda pair internally, sets `target` automatically, and returns a `TweenBuilder<T>`.
+Static methods on `FT` cover common Unity components. Each shortcut builds a lambda pair internally, sets `target` automatically, and returns a `TweenBuilder<T>`.
 
 ```csharp
 FT.Move(transform, new Vector3(2, 3, 4), 1f).Start();
@@ -57,7 +57,7 @@ Euler overloads take a `Vector3`; quaternion overloads take a `Quaternion`. The 
 ### Fire and forget
 
 ```csharp
-FT.Move(transform, target, 1f).SetEase(Easing.OutCubic).Start();
+FT.Move(transform, target, 1f).SetEase(Easing.OutCubic()).Start();
 ```
 
 A started shortcut behaves exactly like a generic tween: it exposes the full handle control surface, supports callbacks, and participates in sequences.

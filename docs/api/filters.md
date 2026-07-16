@@ -1,12 +1,12 @@
 # Filters and Bulk Operations
 
-Static methods on `FeatherTween` for finding or terminating groups of tweens.
+Static methods on `FT` for finding or terminating groups of tweens.
 
 ```csharp
-FT.Kill(target);                    // by target (object)
-FT.Kill(id: 42);                    // by int id
-FT.KillAll();
-FT.PauseAll(); 
+FT.Kill(target);                    // by target (object); complete: true jumps to end values first
+FT.Kill(target, complete: true);
+FT.KillAll();                       // also takes complete
+FT.PauseAll();
 FT.ResumeAll();
 FT.IsTweening(target);
 ```
