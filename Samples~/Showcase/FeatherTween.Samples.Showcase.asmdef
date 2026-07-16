@@ -1,0 +1,17 @@
+{
+  "name": "FeatherTween.Samples.Showcase",
+  "rootNamespace": "Dyvoid.FeatherTween.Samples.Showcase",
+  "references": [
+    "FeatherTween",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -19,6 +19,11 @@
   ],
   "samples": [
     {
+      "displayName": "Showcase (the movie)",
+      "description": "The flagship sample: every M1 feature as one nested master sequence — eight captioned chapters (title eases, creation semantics, full ease gallery, loops and delays, sequence composition with a self-drawing timing diagram, control surface, typed shortcuts, imperative playground) driven by a full player panel (seek bar with chapter markers, play/pause, reverse, speed).",
+      "path": "Samples~/Showcase"
+    },
+    {
       "displayName": "Basic Usage",
       "description": "A demo MonoBehaviour that spawns primitives showcasing move, scale, rotate, color, and bounce tweens.",
       "path": "Samples~/BasicUsage"

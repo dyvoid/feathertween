@@ -18,7 +18,7 @@ FeatherTween is distributed as a UPM package.
 
 1. Add the repository as an embedded or scoped-registry package in your Unity project.
 2. Install the `com.unity.test-framework.performance` package if you want to run the performance benchmarks (test-only dependency).
-3. Open `Window > Package Manager > FeatherTween > Samples` and import **Basic Usage** (tween features), **Sequence Demo** (sequence choreography), **Mini Showcase** (a captioned, scrubbable mini-movie with a player panel — the most readable place to start), or **Composed Demo** (the M1 acceptance demo: infinite loops, staggered tweens, nested sequences, and a runtime control panel) for a quick demo.
+3. Open `Window > Package Manager > FeatherTween > Samples` and import **Showcase (the movie)** — the flagship sample: every M1 feature as one scrubbable, captioned master sequence with a player panel. Also available: **Basic Usage** (the minimal starter), **Sequence Demo** (sequence choreography), **Mini Showcase** (a four-chapter preview of the movie), and **Composed Demo** (the M1 acceptance demo).
 
 See [`docs/guides/testing.md`](docs/guides/testing.md) for consumer-project setup details.
 
@@ -57,7 +57,7 @@ Tests/
   Editor/             EditMode correctness tests
   Runtime/            PlayMode tests
   Performance/        Allocation guards + throughput benchmarks
-Samples~/             Importable package samples (BasicUsage, SequenceDemo, MiniShowcase, ComposedDemo)
+Samples~/             Importable package samples (Showcase, BasicUsage, SequenceDemo, MiniShowcase, ComposedDemo)
 docs/                 Architecture, decisions, and guides
 AGENTS.md             AI agent instructions and conventions
 PICKUP.md             Where the last session left off — active work only, not the backlog

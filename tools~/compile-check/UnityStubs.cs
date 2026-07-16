@@ -280,6 +280,23 @@ namespace UnityEngine
 		public Quaternion rotation { get; set; }
 		public Quaternion localRotation { get; set; }
 		public void SetParent(Transform parent, bool worldPositionStays) { }
+		public void SetParent(Transform parent) { }
+	}
+
+	public class RectTransform : Transform
+	{
+		public Vector2 anchoredPosition { get; set; }
+		public Vector2 sizeDelta { get; set; }
+		public Vector2 anchorMin { get; set; }
+		public Vector2 anchorMax { get; set; }
+		public Vector2 pivot { get; set; }
+	}
+
+	public enum RenderMode { ScreenSpaceOverlay, ScreenSpaceCamera, WorldSpace }
+
+	public class Canvas : Behaviour
+	{
+		public RenderMode renderMode { get; set; }
 	}
 
 	public enum PrimitiveType { Sphere, Capsule, Cylinder, Cube, Plane, Quad }
@@ -320,7 +337,8 @@ namespace UnityEngine
 		public static void BeginHorizontal() { }
 		public static void EndHorizontal() { }
 		public static void Label(string text, params GUILayoutOption[] options) { }
-		public static bool Button(string text) => false;
+		public static bool Button(string text, params GUILayoutOption[] options) => false;
+		public static void Space(float pixels) { }
 		public static float HorizontalSlider(float value, float min, float max) => value;
 		public static GUILayoutOption Height(float height) => null;
 		public static GUILayoutOption Width(float width) => null;
@@ -355,7 +373,11 @@ namespace UnityEngine.UI
 {
 	public class Image : Behaviour
 	{
+		public enum Type { Simple, Sliced, Tiled, Filled }
+		public enum FillMethod { Horizontal, Vertical, Radial90, Radial180, Radial360 }
 		public Color color { get; set; } = new Color(1f, 1f, 1f, 1f);
 		public float fillAmount { get; set; } = 1f;
+		public Type type { get; set; }
+		public FillMethod fillMethod { get; set; }
 	}
 }

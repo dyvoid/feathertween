@@ -237,6 +237,8 @@ This is the v0.1 dogfood gate: it is a real consumer workload, the hardest avail
 
 **Exit**: showcase passes the protocol in Unity; API friction found while building it is resolved or explicitly deferred; **v0.1 tagged and declared stable**. M1 closes here.
 
+**Status: implementation landed (2026-07-16), Unity protocol pending.** `Samples~/Showcase/FeatherTweenShowcase.cs` — eight chapters per spec (title-card ease assembly, To/From/FromTo with visible snap flashes, all 36 ease variants in a grid, four loop lanes + FirstLoop/EveryLoop countdown bars, composition chapter with a self-drawing timing diagram, control-surface chapter driving a detached infinite yoyo via scripted callbacks ending in `CompleteAtCycleEnd()`, all nine typed shortcuts incl. the uGUI ones on a runtime canvas, and the off-timeline playground parked at an `AddPause`). Registered as the flagship sample in package.json/README. A headless structural replica of the master timeline was verified through `FT.ManualTick` (duration/label math, AddPause park, incremental landing, pure-function-of-time under random scrubbing, reverse-to-start). API friction found: none beyond the `FT.ManualTick` gap already fixed in 1.16. Remaining for the exit: the manual test protocol in Unity, the zero-alloc profiler check, then the v0.1 tag (user).
+
 ## M2 — Polish and ecosystem
 
 ### Hand-written zero-alloc fast paths
