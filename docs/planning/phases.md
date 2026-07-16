@@ -223,7 +223,17 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 
 - No CS1591 (missing XML doc) warnings on the public surface; LICENSE and CHANGELOG.md present and referenced from package.json where applicable
 
-**Exit**: M1 release tag (v0.1); dogfood in a real project before declaring the API stable.
+**Exit**: M1 release tag (v0.1). The stable-API declaration waits for 1.17's dogfood.
+
+### Phase 1.17 — Showcase sample ("the movie")
+
+**Deliverable**: the feature-showcase sample specified in [`docs/design/showcase-sample.md`](../design/showcase-sample.md) — the whole sample is one nested master sequence with chaptered feature screens, self-describing captions, and a player UI (seek bar, play/pause, reverse, speed) that drives the root sequence through the public control surface. Replaces the current demos as flagship sample; `BasicUsage` remains as the minimal starter.
+
+This is the v0.1 dogfood gate: it is a real consumer workload, the hardest available test of the pure-function-of-time timeline model (arbitrary scrubbing through every feature), and it makes visual testing falsifiable (every screen captions its expected outcome).
+
+**Tests**: the manual test protocol in the spec (forward, reversed, random scrub, chapter seeks, 0.25×/4×) plus zero per-frame managed alloc during timeline playback.
+
+**Exit**: showcase passes the protocol in Unity; API friction found while building it is resolved or explicitly deferred; **v0.1 declared stable**. M1 closes here.
 
 ## M2 — Polish and ecosystem
 

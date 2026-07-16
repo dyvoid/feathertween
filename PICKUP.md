@@ -10,7 +10,7 @@ Last updated: 2026-07-16 (phase restructure: new 1.15 = API finalization, docs/h
 - **Milestone**: M1 (Core), production cut. See `docs/planning/phases.md`.
 - **Done through**: Phase 1.14 (dev acceptance) merged to `main`, all exit items closed. Unity run 2026-07-07: 196 tests green including the new 10k-tween and 1k×10-child-sequence zero-alloc guards. Composed demo visual pass confirmed by user 2026-07-16.
 - **Phase restructure (user decision, 2026-07-16)**: new **1.15 — API finalization** (implement the pending semantics decisions so the surface is frozen); release hygiene/docs moved to **1.16**, which now carries the v0.1 tag. Rationale: 1.16 documents contracts, so the contracts must be final first.
-- **Remaining M1**: 1.15 (API finalization) → 1.16 (hygiene + docs, v0.1 tag).
+- **Remaining M1**: 1.15 (API finalization) → 1.16 (hygiene + docs, v0.1 tag) → 1.17 (showcase "movie" sample, dogfood gate, v0.1 declared stable).
 - **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
 
 ## Done
@@ -41,6 +41,7 @@ _Nothing in flight._
 
 1. **Phase 1.15 — API finalization**: implement the decided semantics (full list with rationale in `docs/planning/phases.md` 1.15): reverse-through-delay (incl. ADR 0009 wrap composition), dead-handle late subscriptions all no-op, throw on `duration <= 0` + infinite loops, `IntInterpolator` round-to-nearest, `ForceComplete` playhead sync, `CompleteAtCycleEnd()`/`CompleteAtCycleStart()` replacing `SetRemainingCycles(bool)`, `SetCapacity(int)`, `FT.GlobalTimeScale` property, manual-phase cleanup doc note, ADR 0008 `Subtract` guard verification, `AddLabel` doc note. Fast-path freeze check done (see phases.md — `TweenBuilder<T>` signatures safe). **ADR audit 2026-07-16**: all 11 ADRs re-litigated with the user; all decisions upheld; ADR 0006 gained an addendum describing the as-implemented mechanism (no parent pointers, top-down entry ownership, per-phase roots). Exit: "Open questions / decisions pending" below is empty; API final for v0.1.
 2. **Phase 1.16 — Release hygiene and documentation**: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs, v0.1 tag.
+3. **Phase 1.17 — Showcase sample "the movie"** (new, 2026-07-16): the whole sample is one nested master sequence — chaptered feature screens with self-describing captions and a seek-bar/player UI driving the root sequence. Spec: `docs/design/showcase-sample.md`. Serves as the v0.1 dogfood gate and the pure-function-of-time stress test; M1 closes and v0.1 is declared stable at its exit.
 
 ## Infra (2026-07-02)
 
