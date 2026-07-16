@@ -117,9 +117,8 @@ namespace Dyvoid.FeatherTween.Samples.MiniShowcase
 
 			AddChapter(master, "3. From drop", DropDuration,
 				"The red cube POPS UP the instant this chapter starts (deferred From snap, " +
-				"ADR 0007), then bounce-drops back onto its marker. Note: scrubbing back " +
-				"BEFORE this chapter parks it at the raised start — the pre-movie rest pose " +
-				"was never on the timeline, so a backward crossing renders the tween's start value.",
+				"ADR 0007), then bounce-drops back onto its marker. Scrubbing back BEFORE " +
+				"this chapter parks it at the raised start (the rest pose was never on the timeline).",
 				BuildFromDrop());
 
 			AddChapter(master, "4. Finale", FinaleDuration,
@@ -221,15 +220,16 @@ namespace Dyvoid.FeatherTween.Samples.MiniShowcase
 
 		private void OnGUI()
 		{
-			GUILayout.BeginArea(new Rect(10f, 10f, 420f, 230f), GUI.skin.box);
+			GUILayout.BeginArea(new Rect(10f, 10f, 480f, 250f), GUI.skin.box);
 
 			var time = CurrentTime;
 			var chapter = CurrentChapter(time);
+			// Fixed heights sized for the longest header/caption so multi-line
+			// text neither clips nor shoves the controls around.
 			GUILayout.Label(
 				$"FeatherTween MiniShowcase — {chapter.Name}  ({time:0.0}s / {totalDuration:0.0}s, {movie.Status})",
-				GUILayout.Height(22f));
-			// Fixed height so multi-line captions don't shove the controls around.
-			GUILayout.Label(chapter.Caption, GUILayout.Height(58f));
+				GUILayout.Height(40f));
+			GUILayout.Label(chapter.Caption, GUILayout.Height(96f));
 
 			// Seek bar, bound two-way: it tracks the playhead during playback and
 			// drags call Seek() on the master sequence.
