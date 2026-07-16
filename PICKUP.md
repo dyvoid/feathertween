@@ -3,14 +3,13 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-07-16 (phase 1.15 implemented on `claude/sweet-galileo-jgxpl8`; awaiting Unity verification + merge)
+Last updated: 2026-07-16 (phase 1.15 closed: Unity-verified by user, merged to `main`; API final for v0.1)
 
 ## Current position
 
 - **Milestone**: M1 (Core), production cut. See `docs/planning/phases.md`.
-- **Done through**: Phase 1.14 (dev acceptance) merged to `main`, all exit items closed. Unity run 2026-07-07: 196 tests green including the new 10k-tween and 1k×10-child-sequence zero-alloc guards. Composed demo visual pass confirmed by user 2026-07-16.
-- **Phase restructure (user decision, 2026-07-16)**: new **1.15 — API finalization** (implement the pending semantics decisions so the surface is frozen); release hygiene/docs moved to **1.16**, which now carries the v0.1 tag. Rationale: 1.16 documents contracts, so the contracts must be final first.
-- **Remaining M1**: 1.15 (API finalization) → 1.16 (hygiene + docs, v0.1 tag) → 1.17 (showcase "movie" sample, dogfood gate, v0.1 declared stable).
+- **Done through**: Phase 1.15 (API finalization) merged to `main`, Unity-tested by the user 2026-07-16 ("works great"), incl. the new MiniShowcase sample. **The public API is final for v0.1.**
+- **Remaining M1**: 1.16 (hygiene + docs, v0.1 tag) → 1.17 (showcase "movie" sample, dogfood gate, v0.1 declared stable).
 - **Branch**: trunk-based on `main`; short-lived branches `task/1.x-phase-name` / `fix/...`, fast-forward merge.
 
 ## Done
@@ -23,7 +22,11 @@ Last updated: 2026-07-16 (phase 1.15 implemented on `claude/sweet-galileo-jgxpl8
 
 ## In flight
 
-- **Phase 1.15 — API finalization, implemented on `claude/sweet-galileo-jgxpl8`** (2026-07-16). All decided semantics are in; both harness legs green (211 + 199). Remaining before close: Unity Editor/PlayMode sweep by the user, then fast-forward merge to `main`. Changes:
+_Nothing in flight._
+
+## Recently landed
+
+- **Phase 1.15 — API finalization — merged to `main`, Unity-verified by user 2026-07-16.** Both harness legs green (211 + 199). Changes:
   - **Reverse-through-delay**: delays are part of the timeline. Tween: finite loops count the initial delay back down and hold `Delayed` at playhead 0; infinite loops wrap per ADR 0009 with a delay-aware floor (`FirstLoop` delay never re-entered backward; `EveryLoop` delay passed through inside the slot) — see ADR 0009 addendum. Sequence: fixed the infinite `Delayed` stall (negative dt now re-grows `delayRemaining`; reversing out of content past playhead 0 re-enters the delay).
   - **Dead-handle late subscriptions all no-op**: `OnComplete`/`OnKill`/`OnStepComplete` on dead `Tween`/`Sequence` handles do nothing (was: late-fire).
   - **`duration <= 0` + `SetLoops(-1)` throws** at `Start()`/append (validated in `TweenBuilderBuffer.Build`).
@@ -35,9 +38,7 @@ Last updated: 2026-07-16 (phase 1.15 implemented on `claude/sweet-galileo-jgxpl8
   - **Docs**: handles.md (new methods, dead-handle rule, reverse-through-delay, Complete sync, `GlobalTimeScale`), builders.md, sequences.md (`AddLabel` definition-time note), interpolators.md (int rounding, ADR 0008 note), overview.md (manual-phase cleanup contract), ADR 0008/0009 addenda, risks.md.
   - **Tests**: 14 new/updated (reverse-through-delay ×7 incl. wrap composition, dead-handle ×2, zero-duration throw ×2, int rounding, Complete-then-Seek, `CompleteAtCycleStart`).
 
-- **New sample: MiniShowcase** (`Samples~/MiniShowcase/`, same branch) — a small preview of the 1.17 showcase: one master sequence, four captioned chapters (ease race, loops with exact landing markers, deferred From drop, synchronized finale), and a player panel whose seek bar / play-pause / reverse / speed / chapter jumps drive the root sequence. Registered in `package.json` samples and README. Exists because ComposedDemo is hard to visually test (no stated expected outcomes); this one captions what should happen per chapter, borrowing 1.17's falsifiable-visual-testing idea. Stub harness gained `GUILayout.Width` and `Color.gray`.
-
-## Recently landed
+- **New sample: MiniShowcase** (`Samples~/MiniShowcase/`, merged with 1.15, user-tested) — a small preview of the 1.17 showcase: one master sequence, four captioned chapters (ease race, loops with exact landing markers, deferred From drop, synchronized finale), and a player panel whose seek bar / play-pause / reverse / speed / chapter jumps drive the root sequence. Registered in `package.json` samples and README. Exists because ComposedDemo is hard to visually test (no stated expected outcomes); this one captions what should happen per chapter, borrowing 1.17's falsifiable-visual-testing idea. Stub harness gained `GUILayout.Width` and `Color.gray`.
 
 - **API consistency pass (ADR 0011) — merged to `main` (`9d0bc99`), Unity-verified 2026-07-16** — user-driven ergonomics/consistency sweep of the whole public surface. Breaking (pre-v0.1, so free):
   - `FT.FromTo(setter, from, to, duration)` — getter removed (it was dead: `SnapMode.FromTo` never read it). One lambda instead of two.
@@ -51,9 +52,8 @@ Last updated: 2026-07-16 (phase 1.15 implemented on `claude/sweet-galileo-jgxpl8
 
 ## Next up
 
-1. **Close phase 1.15**: user runs the Unity Editor/PlayMode sweep on `claude/sweet-galileo-jgxpl8`, then fast-forward merge to `main`. Exit criteria already met in the harness; API is final for v0.1 once Unity confirms.
-2. **Phase 1.16 — Release hygiene and documentation**: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs, v0.1 tag.
-3. **Phase 1.17 — Showcase sample "the movie"** (new, 2026-07-16): the whole sample is one nested master sequence — chaptered feature screens with self-describing captions and a seek-bar/player UI driving the root sequence. Spec: `docs/design/showcase-sample.md`. Serves as the v0.1 dogfood gate and the pure-function-of-time stress test; M1 closes and v0.1 is declared stable at its exit.
+1. **Phase 1.16 — Release hygiene and documentation**: LICENSE, CHANGELOG.md, XML docs on every public type/member, reconcile all docs, v0.1 tag.
+2. **Phase 1.17 — Showcase sample "the movie"** (new, 2026-07-16): the whole sample is one nested master sequence — chaptered feature screens with self-describing captions and a seek-bar/player UI driving the root sequence. Spec: `docs/design/showcase-sample.md`. Serves as the v0.1 dogfood gate and the pure-function-of-time stress test; M1 closes and v0.1 is declared stable at its exit.
 
 ## Infra (2026-07-02)
 
@@ -102,7 +102,7 @@ Remaining tracked debt:
 ## Test status
 
 - Compile-check harness: 211 tests green + 199 in the FEATHERTWEEN_RELEASE leg (2026-07-16, includes the 14 phase-1.15 tests).
-- Unity (Editor + Runtime + Performance): 196 green through 1.14 + ADR 0011 sweep confirmed 2026-07-16; **phase 1.15 changes not yet Unity-verified** — run the full sweep before merging.
+- Unity: phase 1.15 + MiniShowcase tested by the user 2026-07-16 ("works great"); prior full sweep (196 green + ADR 0011) confirmed the same day.
 
 ## Consumer setup reminders
 

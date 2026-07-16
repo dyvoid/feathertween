@@ -23,7 +23,7 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Safe mode and assertions | Done | Try/catch wrapper, off-thread assertions, release-build skip | — |
 | M1 dev acceptance | Done | Composed demo, all suites green, zero-alloc verified | — |
 | API consistency pass | Done | Getter-less `FromTo`, `From(value)`, subject-first param naming, handle symmetry | 0011 |
-| API finalization (1.15) | Implemented (pending Unity verify + merge) | All decided semantics landed (reverse-through-delay, dead-handle late-subscription no-ops, zero-duration loop throw, int rounding, `CompleteAtCycleEnd`/`Start`, `SetCapacity(int)`, `GlobalTimeScale` property); API final for v0.1 | — |
+| API finalization (1.15) | Done | All decided semantics landed (reverse-through-delay, dead-handle late-subscription no-ops, zero-duration loop throw, int rounding, `CompleteAtCycleEnd`/`Start`, `SetCapacity(int)`, `GlobalTimeScale` property); API final for v0.1 | — |
 | Release hygiene and documentation (1.16) | Planned | LICENSE, CHANGELOG, XML docs, docs reconciliation; v0.1 tag | — |
 | Showcase sample "the movie" (1.17) | Planned | One master-sequence movie of all features with seek bar/player controls; v0.1 dogfood gate, closes M1 (`docs/design/showcase-sample.md`) | — |
 

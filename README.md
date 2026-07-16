@@ -9,7 +9,7 @@ A robust, minimal C# tween engine for Unity. Compositional sequences, static-met
 
 ## Status
 
-Early development — M1 (Core) dev work is complete through phase 1.14 (safe mode, filters/bulk ops, and the composed acceptance demo). The hardening pass and an API consistency sweep (ADR 0011) have landed; phase 1.15 (API finalization) locks the remaining semantics before phase 1.16 (release hygiene: LICENSE, CHANGELOG, XML docs) tags v0.1. Expect breaking changes until M1 ships.
+Early development — M1 (Core) is complete through phase 1.15 (API finalization): the public API is final for v0.1. Next, phase 1.16 (release hygiene: LICENSE, CHANGELOG, XML docs) tags v0.1, then phase 1.17 (showcase sample) declares it stable. Expect breaking changes until M1 ships.
 
 ## Getting Started
 
