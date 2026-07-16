@@ -54,7 +54,7 @@ public struct SequenceBuilder
 
 `Append`/`Insert`/`Join`/`Prepend` take an **unstarted** `TweenBuilder<T>` or `SequenceBuilder`. Passing the same builder to two calls throws, because the first call consumes it.
 
-**Known limitation — abandoned sequence builders.** Children claimed by a `SequenceBuilder` already occupy store slots. A builder that is never `Start()`ed pins those slots until the next `TweenStore.Reset()` (domain reload / play-mode change); the leak detector logs a warning from the finalizer when this happens. Always `Start()` a composed sequence, or `Clear()` it to release the children.
+**Known limitation — abandoned sequence builders.** Child tweens reserve their store slots the moment they're appended, not at `Start()`. If you build a sequence and never start it, those slots are never released — they stay occupied until the next `TweenStore.Reset()` (domain reload / play-mode change), reducing available tween capacity for the rest of the session. There's no immediate error; the leak detector logs a warning later, when the abandoned builder is garbage-collected. Rule: every composed sequence must end in `Start()` (to play it) or `Clear()` (to discard it and free its children).
 
 ## Chainable builder settings
 

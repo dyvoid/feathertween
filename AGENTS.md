@@ -38,7 +38,7 @@ When writing Unity C# for this project, apply the **unity dev skill**.
 - **Ease as value type**: `EaseRef` produced by `Easing.X(...)` factories. Parameters travel with the ease; tween stores one `EaseRef`.
 - **SoA-friendly internal layout**: keeps a future Burst/Jobs path cheap. Not a public concern.
 
-Full design and locked anchors: `docs/architecture/design.md` and `docs/architecture/overview.md`.
+Full design and locked anchors: `Documentation~/architecture/design.md` and `Documentation~/architecture/overview.md`.
 
 ## Invariants (Do Not Break)
 
@@ -68,13 +68,13 @@ Full design and locked anchors: `docs/architecture/design.md` and `docs/architec
 ### Do not do these
 - Commit directly to `main`
 - Delete or rename files without being asked
-- Change architecture without recording an ADR in `docs/adr/`
+- Change architecture without recording an ADR in `Documentation~/adr/`
 - Add third-party dependencies without explicit instruction
 - Break any invariant listed in the section below
 
 ## Code Style
 
-Apply the unity dev skill (see above). Canonical written conventions: `docs/guides/conventions.md`.
+Apply the unity dev skill (see above). Canonical written conventions: `Documentation~/guides/conventions.md`.
 
 ## Adding New Features
 
@@ -89,23 +89,23 @@ Three asmdefs: `Tests/Editor` (EditMode correctness), `Tests/Runtime` (PlayMode)
 
 Principle: **allocation guards hard-fail** (zero managed bytes in steady-state ticking, CI-safe), **throughput benchmarks are report-only** (noisy, never gate a build).
 
-Full run instructions, consumer-project setup (`testables` + perf package), and Test Runner troubleshooting: see `docs/guides/testing.md`.
+Full run instructions, consumer-project setup (`testables` + perf package), and Test Runner troubleshooting: see `Documentation~/guides/testing.md`.
 
 ## Documentation Discipline
 
 Keep state and design docs in sync with the code. Update as part of the same change, not later.
 
 - **Every session**: update `PICKUP.md` (current position, done, next up, test status) as the closing step.
-- **Finishing a phase or milestone**: update `PICKUP.md` and reconcile the affected docs (`docs/planning/phases.md` phase status, `docs/api/` if the public surface changed, `docs/architecture/overview.md` or `docs/architecture/sequence.md` if internals changed). Move the milestone tag only on explicit user go-ahead.
-- **Any architectural decision or deviation from a doc**: add or update an ADR in `docs/adr/` and its `README.md` index. Do not let code silently contradict a doc.
-- **New public API**: document it in `docs/api/` in the same change that adds it.
-- **New test category or required dependency**: document it in `docs/guides/testing.md` and in `PICKUP.md` consumer reminders.
+- **Finishing a phase or milestone**: update `PICKUP.md` and reconcile the affected docs (`Documentation~/planning/phases.md` phase status, `Documentation~/api/` if the public surface changed, `Documentation~/architecture/overview.md` or `Documentation~/architecture/sequence.md` if internals changed). Move the milestone tag only on explicit user go-ahead.
+- **Any architectural decision or deviation from a doc**: add or update an ADR in `Documentation~/adr/` and its `README.md` index. Do not let code silently contradict a doc.
+- **New public API**: document it in `Documentation~/api/` in the same change that adds it.
+- **New test category or required dependency**: document it in `Documentation~/guides/testing.md` and in `PICKUP.md` consumer reminders.
 
 If a change touches behavior described in a doc and the doc is not updated, the change is incomplete.
 
 ## Git Workflow
 
-See [`docs/git-strategy.md`](docs/git-strategy.md) for full branching, merging, and commit rules. In brief:
+See [`Documentation~/git-strategy.md`](Documentation~/git-strategy.md) for full branching, merging, and commit rules. In brief:
 
 - Trunk-based: single `main` branch, short-lived task/fix branches (`task/1.x-phase-name`, `fix/...`).
 - Rebase onto `main`, fast-forward merge only — no merge commits.
@@ -115,19 +115,19 @@ See [`docs/git-strategy.md`](docs/git-strategy.md) for full branching, merging, 
 
 | Document | Purpose |
 | -------- | ------- |
-| `docs/architecture/design.md` | Goals, non-goals, locked anchors |
-| `docs/api/index.md` | Public API quickstart and map |
-| `docs/architecture/overview.md` | Internal design |
-| `docs/architecture/sequence.md` | Sequence internals |
-| `docs/architecture/performance.md` | Allocation budget and benchmark methodology |
-| `docs/planning/phases.md` | Milestone/phase plan |
-| `docs/planning/risks.md` | Risks and open questions |
-| `docs/guides/conventions.md` | Code style conventions |
-| `docs/guides/testing.md` | Test structure, running, consumer setup |
-| `docs/guides/editor.md` | Editor & integration |
-| `docs/design/comparison.md` | Engine comparison |
-| `docs/design/influences.md` | Design influences |
-| `docs/git-strategy.md` | Branching, merging, commit rules |
-| `docs/ROADMAP.md` | Feature candidates, planned work, and status |
+| `Documentation~/architecture/design.md` | Goals, non-goals, locked anchors |
+| `Documentation~/api/index.md` | Public API quickstart and map |
+| `Documentation~/architecture/overview.md` | Internal design |
+| `Documentation~/architecture/sequence.md` | Sequence internals |
+| `Documentation~/architecture/performance.md` | Allocation budget and benchmark methodology |
+| `Documentation~/planning/phases.md` | Milestone/phase plan |
+| `Documentation~/planning/risks.md` | Risks and open questions |
+| `Documentation~/guides/conventions.md` | Code style conventions |
+| `Documentation~/guides/testing.md` | Test structure, running, consumer setup |
+| `Documentation~/guides/editor.md` | Editor & integration |
+| `Documentation~/design/comparison.md` | Engine comparison |
+| `Documentation~/design/influences.md` | Design influences |
+| `Documentation~/git-strategy.md` | Branching, merging, commit rules |
+| `Documentation~/ROADMAP.md` | Feature candidates, planned work, and status |
 | `PICKUP.md` | Where the last session left off — active work only, not the backlog |
-| `docs/adr/` | Architectural decision records |
+| `Documentation~/adr/` | Architectural decision records |

@@ -7,7 +7,7 @@ Accepted
 ## Context
 
 `SequenceBuilder.SetDefaults` cascades values into subsequently appended child
-builders that have not explicitly set them (see `docs/architecture/sequence.md`).
+builders that have not explicitly set them (see `Documentation~/architecture/sequence.md`).
 The original API sketch included `duration` in the cascade. Building the SequenceDemo sample exposed
 that this is dead code: every tween creation method (`To`, `From`, `FromTo`,
 and the planned typed shortcuts) takes duration as a required argument, so

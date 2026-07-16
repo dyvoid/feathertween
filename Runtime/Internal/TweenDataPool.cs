@@ -24,7 +24,7 @@ namespace Dyvoid.FeatherTween.Internal
 	}
 
 	// Per-type pool for TweenData<T> records so Start() is alloc-free after
-	// warmup (docs/architecture/performance.md). Instances are Reset() on return, so Rent hands out a
+	// warmup (Documentation~/architecture/performance.md). Instances are Reset() on return, so Rent hands out a
 	// clean record. Returns are deferred by TweenStore until end of tick, so
 	// an in-flight walk never sees its instance re-rented mid-step.
 	internal static class TweenDataPool<T>

@@ -295,7 +295,7 @@ namespace Dyvoid.FeatherTween.Internal
 
 		// Direct loops, no method-group arguments: converting data.AddOnX to a
 		// delegate allocates even when the list is null, which broke the
-		// zero-alloc creation budget (docs/architecture/performance.md). Entries outside OnComplete/OnKill
+		// zero-alloc creation budget (Documentation~/architecture/performance.md). Entries outside OnComplete/OnKill
 		// are always plain (target-capture is OnComplete/OnKill only).
 		private void TransferCallbacks(TweenData data)
 		{

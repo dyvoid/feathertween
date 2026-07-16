@@ -16,7 +16,7 @@ FeatherTween is distributed as a UPM package.
 2. Install the `com.unity.test-framework.performance` package if you want to run the performance benchmarks (test-only dependency).
 3. Open `Window > Package Manager > FeatherTween > Samples` and import **Showcase** — a guided tour of the whole feature set as one scrubbable, captioned timeline with a player panel.
 
-See [`docs/guides/testing.md`](docs/guides/testing.md) for consumer-project setup details.
+See [`Documentation~/guides/testing.md`](Documentation~/guides/testing.md) for consumer-project setup details.
 
 ## Usage
 
@@ -54,24 +54,24 @@ Tests/
   Runtime/            PlayMode tests
   Performance/        Allocation guards + throughput benchmarks
 Samples~/             Importable package sample (Showcase)
-docs/                 Architecture, decisions, and guides
+Documentation~/                 Architecture, decisions, and guides
 AGENTS.md             AI agent instructions and conventions
 PICKUP.md             Where the last session left off — active work only, not the backlog
 ```
 
 ## Documentation
 
-- [API Guide](docs/api/index.md) — Public API quickstart and reference
-- [Design](docs/architecture/design.md) — Goals, non-goals, and locked anchors
-- [Architecture](docs/architecture/overview.md) — Internal design
-- [Sequence Design](docs/architecture/sequence.md) — Sequence internals
-- [Performance Plan](docs/architecture/performance.md) — Allocation budget and benchmarks
-- [Editor & integration](docs/guides/editor.md) — Inspector and editor workflows
-- [Testing](docs/guides/testing.md) — Test structure and consumer setup
-- [Milestones](docs/planning/phases.md) — Phase-by-phase implementation plan
-- [Roadmap](docs/ROADMAP.md) — Feature candidates and status
-- [Engine Comparison](docs/design/comparison.md) — Comparison with DOTween, GSAP, LitMotion
-- [ADRs](docs/adr/) — Architectural decision records
+- [API Guide](Documentation~/api/index.md) — Public API quickstart and reference
+- [Design](Documentation~/architecture/design.md) — Goals, non-goals, and locked anchors
+- [Architecture](Documentation~/architecture/overview.md) — Internal design
+- [Sequence Design](Documentation~/architecture/sequence.md) — Sequence internals
+- [Performance Plan](Documentation~/architecture/performance.md) — Allocation budget and benchmarks
+- [Editor & integration](Documentation~/guides/editor.md) — Inspector and editor workflows
+- [Testing](Documentation~/guides/testing.md) — Test structure and consumer setup
+- [Milestones](Documentation~/planning/phases.md) — Phase-by-phase implementation plan
+- [Roadmap](Documentation~/ROADMAP.md) — Feature candidates and status
+- [Engine Comparison](Documentation~/design/comparison.md) — Comparison with DOTween, GSAP, LitMotion
+- [ADRs](Documentation~/adr/) — Architectural decision records
 
 ## Agent guide
 

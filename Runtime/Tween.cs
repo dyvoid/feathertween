@@ -105,7 +105,7 @@ namespace Dyvoid.FeatherTween
 
 		// Late subscriptions on a dead handle are no-ops: the handle cannot know
 		// whether its record completed or was killed, so firing either callback
-		// would be a guess (phase 1.15; docs/api/handles.md).
+		// would be a guess (phase 1.15; Documentation~/api/handles.md).
 		/// <summary>Subscribes to completion. On a dead handle this is a no-op (it cannot know whether the record completed or was killed).</summary>
 		public Tween OnComplete(Action cb)
 		{

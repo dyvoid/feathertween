@@ -10,7 +10,7 @@ using Dyvoid.FeatherTween.Internal;
 namespace Dyvoid.FeatherTween.Tests
 {
 	// Phase 1.13 — safe mode wraps setter and callback invocations in
-	// try/catch. Semantics under test (docs/architecture/overview.md):
+	// try/catch. Semantics under test (Documentation~/architecture/overview.md):
 	// setter exception kills the tween (CancelOnError: silent + OnKill;
 	// otherwise logged, no OnKill); callback exception is logged and the tween
 	// continues (CancelOnError: also cancelled, deferred). Every test sets

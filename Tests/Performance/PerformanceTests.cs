@@ -47,7 +47,7 @@ namespace Dyvoid.FeatherTween.Tests.Performance
 		[Test]
 		public void Create_AfterWarmup_ZeroManagedAlloc()
 		{
-			// docs/architecture/performance.md: creation is 1 pooled TweenData<T> + 1 delegate pair. With
+			// Documentation~/architecture/performance.md: creation is 1 pooled TweenData<T> + 1 delegate pair. With
 			// cached static delegates the whole create/kill cycle must be
 			// alloc-free once pools are warm (records, builder buffers, lists).
 			const int batch = 256;
@@ -139,7 +139,7 @@ namespace Dyvoid.FeatherTween.Tests.Performance
 			var delta = GC.GetAllocatedBytesForCurrentThread() - before;
 
 			Assert.That(delta, Is.Zero,
-				$"Callback dispatch allocated {delta} bytes over 600 ticks; must be zero (docs/architecture/performance.md).");
+				$"Callback dispatch allocated {delta} bytes over 600 ticks; must be zero (Documentation~/architecture/performance.md).");
 		}
 
 		[Test]
@@ -168,7 +168,7 @@ namespace Dyvoid.FeatherTween.Tests.Performance
 				$"Steady-state sequence ticking allocated {delta} bytes over 600 ticks; must be zero.");
 		}
 
-		// M1 acceptance benchmark (docs/planning/phases.md 1.14): 10k float tweens.
+		// M1 acceptance benchmark (Documentation~/planning/phases.md 1.14): 10k float tweens.
 		[Test]
 		public void Tick_SteadyState10kTweens_ZeroManagedAlloc()
 		{
@@ -186,7 +186,7 @@ namespace Dyvoid.FeatherTween.Tests.Performance
 				$"Steady-state ticking 10k tweens allocated {delta} bytes over 600 ticks; must be zero.");
 		}
 
-		// M1 acceptance benchmark (docs/planning/phases.md 1.14): 1k sequences x 10 children.
+		// M1 acceptance benchmark (Documentation~/planning/phases.md 1.14): 1k sequences x 10 children.
 		[Test]
 		public void Tick_SteadyState1kSequencesOf10_ZeroManagedAlloc()
 		{

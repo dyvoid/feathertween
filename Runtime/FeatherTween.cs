@@ -180,7 +180,7 @@ namespace Dyvoid.FeatherTween
 
 		// Creation methods follow one shape: subject first (the thing being
 		// animated — a getter/setter pair, a setter, or a typed target), then
-		// endpoint value(s), then duration (docs/guides/conventions.md).
+		// endpoint value(s), then duration (Documentation~/guides/conventions.md).
 
 		/// <summary>
 		/// Animates from the current value (read via <paramref name="getter"/> when

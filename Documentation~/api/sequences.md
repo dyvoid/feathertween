@@ -59,4 +59,4 @@ A sequence can contain tweens, other sequences, callbacks, intervals, labels, an
 
 ## Reverse and yoyo
 
-Sequence reverse and yoyo follow the rules in the parent-sequence model. See [handles.md](handles.md) for the control surface and [architecture/sequence.md](../../architecture/sequence.md) for the internal design.
+Sequence reverse and yoyo follow the rules in the parent-sequence model. See [handles.md](handles.md) for the control surface and [architecture/sequence.md](../architecture/sequence.md) for the internal design.

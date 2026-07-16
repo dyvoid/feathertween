@@ -223,7 +223,7 @@ namespace Dyvoid.FeatherTween.Tests
 		[Test]
 		public void CreateKillCycle_AfterWarmup_ZeroManagedAlloc()
 		{
-			// docs/architecture/performance.md: with cached delegates, a create/kill cycle is alloc-free once
+			// Documentation~/architecture/performance.md: with cached delegates, a create/kill cycle is alloc-free once
 			// pools are warm (TweenData records, builder buffers, store lists).
 			for (var round = 0; round < 3; round++)
 			{

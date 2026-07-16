@@ -399,7 +399,7 @@ namespace Dyvoid.FeatherTween.Internal
 		}
 
 		// Direct loops, no method-group arguments: converting data.AddOnX to a
-		// delegate allocates even when the list is null (docs/architecture/performance.md).
+		// delegate allocates even when the list is null (Documentation~/architecture/performance.md).
 		private void TransferCallbacks(TweenData data)
 		{
 			if (onStart != null)

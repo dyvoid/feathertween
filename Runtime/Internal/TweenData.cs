@@ -68,7 +68,7 @@ namespace Dyvoid.FeatherTween.Internal
 		public virtual void ForceComplete() { }
 		public virtual bool StartsDelayed() => false;
 
-		// Repositions the playhead (docs/api/handles.md). Silent (fireCallbacks=false) renders a
+		// Repositions the playhead (Documentation~/api/handles.md). Silent (fireCallbacks=false) renders a
 		// single sample at the target; firing walks loop boundaries in temporal
 		// order (OnStepComplete forward, OnRewind backward). Never changes Status.
 		public virtual void SeekTo(double seconds, bool fireCallbacks) { }
@@ -124,7 +124,7 @@ namespace Dyvoid.FeatherTween.Internal
 		public bool IsUnityObject => isUnityObject;
 
 		// Per-tween try/catch around setter and callback invocations. Compiled
-		// out entirely under FEATHERTWEEN_RELEASE (docs/architecture/overview.md).
+		// out entirely under FEATHERTWEEN_RELEASE (Documentation~/architecture/overview.md).
 		public bool SafeMode
 		{
 			get => safeMode;
@@ -278,7 +278,7 @@ namespace Dyvoid.FeatherTween.Internal
 		// Safe-mode setter exception: the value write failed mid-step, so the
 		// animation contract is broken — kill the tween. CancelOnError kills
 		// silently and fires OnKill; without it, log and dispose without OnKill
-		// (docs/api/handles.md firing matrix).
+		// (Documentation~/api/handles.md firing matrix).
 		protected void CancelFromError(Exception e)
 		{
 			if (!cancelOnError)

@@ -29,4 +29,4 @@ Rules of the stub:
   and are excluded here; they still run in the Unity Test Runner.
 - This harness never replaces the in-Unity run — Editor + Runtime + Performance
   suites in a real Unity project remain the merge gate (see
-  `docs/guides/testing.md`).
+  `Documentation~/guides/testing.md`).

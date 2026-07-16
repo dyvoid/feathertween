@@ -58,8 +58,8 @@ changes from here on follow semantic versioning.
 
 ### Known limitations
 
-- An abandoned (never-started) `SequenceBuilder` pins its already-allocated
-  child store slots until the next `TweenStore.Reset()`; the leak detector
-  warns via finalizer. Always `Start()` or `Clear()` a sequence you build.
+- A composed sequence that is never started leaks tween capacity until the
+  next domain reload. Always end a `SequenceBuilder` in `Start()` or
+  `Clear()`; see "Known limitation" in `Documentation~/api/builders.md` for details.
 - Performance tests require the consuming project to install
   `com.unity.test-framework.performance`.

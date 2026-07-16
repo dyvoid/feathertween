@@ -46,7 +46,7 @@ namespace Dyvoid.FeatherTween.Tests
 
 			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(log, Is.EqualTo(new[] { "step", "step", "complete" }),
-				"final boundary + complete; no kill on natural completion (docs/api/handles.md)");
+				"final boundary + complete; no kill on natural completion (Documentation~/api/handles.md)");
 		}
 
 		[Test]
@@ -96,7 +96,7 @@ namespace Dyvoid.FeatherTween.Tests
 
 			t.Kill(true);
 			Assert.That(log, Is.EqualTo(new[] { "complete" }),
-				"Kill on Completed disposes without callbacks (docs/api/handles.md)");
+				"Kill on Completed disposes without callbacks (Documentation~/api/handles.md)");
 			Assert.That(t.IsAlive, Is.False);
 		}
 
@@ -289,7 +289,7 @@ namespace Dyvoid.FeatherTween.Tests
 			Assert.That(completes, Is.EqualTo(1));
 			Assert.That(t.IsAlive, Is.False);
 			// The deferred Kill(false) lands on a Completed tween: disposal
-			// without callbacks (docs/api/handles.md).
+			// without callbacks (Documentation~/api/handles.md).
 			Assert.That(kills, Is.Zero);
 		}
 

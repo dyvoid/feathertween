@@ -122,7 +122,7 @@ namespace Dyvoid.FeatherTween.Tests
 			Assert.That(t.Status, Is.EqualTo(TweenStatus.Disposed));
 		}
 
-		// Firing matrix (docs/api/handles.md): Kill(true) is a completion path — OnKill
+		// Firing matrix (Documentation~/api/handles.md): Kill(true) is a completion path — OnKill
 		// fires only on Kill(false), auto-kill, or error.
 		[Test]
 		public void Kill_True_FiresOnCompleteOnly_AndDisposes()
@@ -137,7 +137,7 @@ namespace Dyvoid.FeatherTween.Tests
 			t.Kill(true);
 
 			Assert.That(completes, Is.EqualTo(1));
-			Assert.That(kills, Is.Zero, "Kill(true) completes; OnKill must not fire (docs/api/handles.md)");
+			Assert.That(kills, Is.Zero, "Kill(true) completes; OnKill must not fire (Documentation~/api/handles.md)");
 			Assert.That(t.IsAlive, Is.False);
 		}
 
@@ -153,7 +153,7 @@ namespace Dyvoid.FeatherTween.Tests
 			t.Complete();
 
 			Assert.That(order, Is.EqualTo(new[] { "complete" }),
-				"Complete() must not fire OnKill even with autoKill (docs/api/handles.md)");
+				"Complete() must not fire OnKill even with autoKill (Documentation~/api/handles.md)");
 			Assert.That(t.IsAlive, Is.False);
 		}
 

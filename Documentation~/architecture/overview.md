@@ -43,7 +43,7 @@ Implementation note: the root is iterated by index over a flat list of active ch
 
 ### Storage and handles
 
-`TweenData` is the abstract base (holds `_parent`, `_start`, `_end`, `_timeScale`, `localTime`, `_paused`, `_reversed`, status, callbacks, target ref). The typed subclass `TweenData<T>` adds `start: T`, `end: T`, `getter`, `setter`, and the `IInterpolator<T>` used to lerp. The runner iterates `List<TweenData>` and calls a virtual `Step(double dt)` per child. This means one vtable dispatch per tween per frame in v1; an acceptable cost (~1-2 ns on modern CPUs). M5 SoA replaces this with per-`(TValue, TInterpolator)` storage and a `[BurstCompile]` job; see [performance.md](performance.md) and [phases.md](../../planning/phases.md).
+`TweenData` is the abstract base (holds `_parent`, `_start`, `_end`, `_timeScale`, `localTime`, `_paused`, `_reversed`, status, callbacks, target ref). The typed subclass `TweenData<T>` adds `start: T`, `end: T`, `getter`, `setter`, and the `IInterpolator<T>` used to lerp. The runner iterates `List<TweenData>` and calls a virtual `Step(double dt)` per child. This means one vtable dispatch per tween per frame in v1; an acceptable cost (~1-2 ns on modern CPUs). M5 SoA replaces this with per-`(TValue, TInterpolator)` storage and a `[BurstCompile]` job; see [performance.md](performance.md) and [phases.md](../planning/phases.md).
 
 ```csharp
 internal static class TweenStore
@@ -112,7 +112,7 @@ For each active root:
 
 ### Ease system
 
-The ease system is documented in the API reference: [api/easings.md](../../api/easings.md). Internally, evaluation uses a static function table indexed by `EaseType`. Standard eases are cached as static `EaseRef` instances; parametric variants construct a struct on the stack. `Curve` and `Custom` read their `AnimationCurve` / delegate slots.
+The ease system is documented in the API reference: [api/easings.md](../api/easings.md). Internally, evaluation uses a static function table indexed by `EaseType`. Standard eases are cached as static `EaseRef` instances; parametric variants construct a struct on the stack. `Curve` and `Custom` read their `AnimationCurve` / delegate slots.
 
 ### From and FromTo
 
@@ -136,7 +136,7 @@ A try/catch wrapper around `setter(...)` and each callback invocation, compiled 
 
 Semantics (phase 1.13):
 
-- **Setter exception** — the value write failed mid-step, so the animation contract is broken: the tween is killed and its slot freed. With `CancelOnError(true)` the kill is silent and fires `OnKill`; without it the exception is logged and the tween is disposed without `OnKill` (see the firing matrix in `docs/api/handles.md`). Other tweens in the same tick are unaffected. A `From`/`FromTo` snap that throws inside `.Start()` returns a dead handle.
+- **Setter exception** — the value write failed mid-step, so the animation contract is broken: the tween is killed and its slot freed. With `CancelOnError(true)` the kill is silent and fires `OnKill`; without it the exception is logged and the tween is disposed without `OnKill` (see the firing matrix in `Documentation~/api/handles.md`). Other tweens in the same tick are unaffected. A `From`/`FromTo` snap that throws inside `.Start()` returns a dead handle.
 - **Callback exception** — a user-code side effect: always logged, remaining callbacks in the same list still run. With `CancelOnError(true)` the tween is additionally cancelled (deferred — the error surfaces inside a callback scope) and `OnKill` fires. A sequence entry callback (`AppendCallback`/`AddPause`) with `CancelOnError(true)` kills the sequence mid-walk using the same unwind path as child auto-kill.
 - **Off-thread assertions** (`TweenStore` access, runner ticks, `.Start()`) are part of the same debug layer and are compiled out under `FEATHERTWEEN_RELEASE`.
 
