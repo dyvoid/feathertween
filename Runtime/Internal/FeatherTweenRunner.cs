@@ -104,9 +104,18 @@ namespace Dyvoid.FeatherTween.Internal
 			}
 
 			var loop = PlayerLoop.GetCurrentPlayerLoop();
-			InsertAfter<Update.ScriptRunBehaviourUpdate>(ref loop, typeof(FeatherTweenUpdate), TickUpdate);
-			InsertAfter<PreLateUpdate.ScriptRunBehaviourLateUpdate>(ref loop, typeof(FeatherTweenLateUpdate), TickLate);
-			InsertAfter<FixedUpdate.ScriptRunBehaviourFixedUpdate>(ref loop, typeof(FeatherTweenFixedUpdate), TickFixed);
+			var ok = InsertAfter<Update.ScriptRunBehaviourUpdate>(ref loop, typeof(FeatherTweenUpdate), TickUpdate);
+			ok &= InsertAfter<PreLateUpdate.ScriptRunBehaviourLateUpdate>(ref loop, typeof(FeatherTweenLateUpdate), TickLate);
+			ok &= InsertAfter<FixedUpdate.ScriptRunBehaviourFixedUpdate>(ref loop, typeof(FeatherTweenFixedUpdate), TickFixed);
+			if (!ok)
+			{
+				// A project that replaced the player loop can drop the anchor
+				// systems; without this warning "tweens never tick" is opaque.
+				Debug.LogWarning(
+					"[FeatherTween] Could not find one or more PlayerLoop anchor systems; "
+					+ "tweens in the affected phase(s) will not tick. Another system may have "
+					+ "replaced the default player loop.");
+			}
 			PlayerLoop.SetPlayerLoop(loop);
 			installed = true;
 		}
@@ -146,8 +155,25 @@ namespace Dyvoid.FeatherTween.Internal
 			LeakDetector.Drain();
 		}
 
+		// The PlayerLoop hooks stay installed after play mode ends, and Unity
+		// runs custom PlayerLoop delegates in edit mode too. EditorRunner drives
+		// edit-mode ticking (via TickEditorDelta), so the player-loop ticks must
+		// not also fire there or edit-mode tweens would be double-advanced.
+		private static bool SkipPlayerLoopTick()
+		{
+#if UNITY_EDITOR
+			return !Application.isPlaying;
+#else
+			return false;
+#endif
+		}
+
 		internal static void TickUpdate()
 		{
+			if (SkipPlayerLoopTick())
+			{
+				return;
+			}
 			AssertMainThread();
 			var root = globalTimeScale * scaleUpdate;
 			double scaled = Time.deltaTime * root;
@@ -159,6 +185,10 @@ namespace Dyvoid.FeatherTween.Internal
 
 		internal static void TickLate()
 		{
+			if (SkipPlayerLoopTick())
+			{
+				return;
+			}
 			AssertMainThread();
 			var root = globalTimeScale * scaleLate;
 			double scaled = Time.deltaTime * root;
@@ -170,6 +200,10 @@ namespace Dyvoid.FeatherTween.Internal
 
 		internal static void TickFixed()
 		{
+			if (SkipPlayerLoopTick())
+			{
+				return;
+			}
 			AssertMainThread();
 			var root = globalTimeScale * scaleFixed;
 			double scaled = Time.fixedDeltaTime * root;
@@ -262,10 +296,10 @@ namespace Dyvoid.FeatherTween.Internal
 			}
 		}
 
-		private static void InsertAfter<TAnchor>(ref PlayerLoopSystem loop, Type newType, PlayerLoopSystem.UpdateFunction update)
+		private static bool InsertAfter<TAnchor>(ref PlayerLoopSystem loop, Type newType, PlayerLoopSystem.UpdateFunction update)
 		{
 			var anchorType = typeof(TAnchor);
-			InsertAfterRecursive(ref loop, anchorType, newType, update);
+			return InsertAfterRecursive(ref loop, anchorType, newType, update);
 		}
 
 		private static bool InsertAfterRecursive(ref PlayerLoopSystem system, Type anchorType, Type newType, PlayerLoopSystem.UpdateFunction update)

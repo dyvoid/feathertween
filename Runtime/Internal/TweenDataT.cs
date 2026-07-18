@@ -310,7 +310,9 @@ namespace Dyvoid.FeatherTween.Internal
 			var dt = (IgnoreTimeScale ? unscaledDelta : scaledDelta) * TimeScale;
 
 			var everyLoop = delayType == DelayType.EveryLoop && delay > 0f;
-			double cycleSlot = everyLoop ? (delay + duration) : Math.Max(duration, 1e-9);
+			// Double addition, matching ForceComplete/TotalProgress: a float-summed
+			// slot can land localTime on the other side of a cycle boundary.
+			double cycleSlot = everyLoop ? (delay + (double)duration) : Math.Max(duration, 1e-9);
 			double firstDelayOffset = everyLoop ? 0d : delay;
 
 			localTime += dt * dir;
@@ -503,7 +505,7 @@ namespace Dyvoid.FeatherTween.Internal
 		public override void SeekTo(double seconds, bool fireCallbacks)
 		{
 			var everyLoop = delayType == DelayType.EveryLoop && delay > 0f;
-			double cycleSlot = everyLoop ? (delay + duration) : Math.Max(duration, 1e-9);
+			double cycleSlot = everyLoop ? (delay + (double)duration) : Math.Max(duration, 1e-9);
 			double firstDelayOffset = everyLoop ? 0d : delay;
 
 			if (seconds < 0d)
