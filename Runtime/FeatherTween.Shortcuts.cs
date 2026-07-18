@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	// Typed shortcuts (phase 1.11). Each builds a lambda pair on the generic
 	// core, auto-sets the target so Kill(target)/IsTweening(target) reach the

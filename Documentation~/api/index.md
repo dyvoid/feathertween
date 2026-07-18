@@ -5,7 +5,7 @@ This section documents the public FeatherTween API. If you are new to the librar
 ## Quickstart
 
 ```csharp
-using Dyvoid.FeatherTween;
+using dyvoid.FeatherTween;
 
 // A one-shot tween
 Tween t = FT.To(
@@ -55,6 +55,6 @@ await FT.Fade(canvasGroup, 0f, 0.5f); // M2 (planned): awaitable handles
 
 ## Namespaces
 
-- `Dyvoid.FeatherTween` — public API
-- `Dyvoid.FeatherTween.Internal` — runtime internals (not intended for direct use)
-- `Dyvoid.FeatherTween.Editor` — editor-mode ticking and store bootstrap
+- `dyvoid.FeatherTween` — public API
+- `dyvoid.FeatherTween.Internal` — runtime internals (not intended for direct use)
+- `dyvoid.FeatherTween.Editor` — editor-mode ticking and store bootstrap

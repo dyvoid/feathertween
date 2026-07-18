@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Dyvoid.FeatherTween;
-using Dyvoid.FeatherTween.Internal;
+using dyvoid.FeatherTween;
+using dyvoid.FeatherTween.Internal;
 
-namespace Dyvoid.FeatherTween.Tests
+namespace dyvoid.FeatherTween.Tests
 {
 	// Phase 1.10: Seek traversal (Documentation~/api/handles.md), sequence SetLoops/Reverse, mid-play
 	// Insert, and global / per-phase / per-tween time scale.

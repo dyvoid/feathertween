@@ -1,7 +1,7 @@
 using System;
-using Dyvoid.FeatherTween.Internal;
+using dyvoid.FeatherTween.Internal;
 
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	/// <summary>
 	/// Immutable handle to a running sequence, returned by <c>SequenceBuilder.Start()</c>.

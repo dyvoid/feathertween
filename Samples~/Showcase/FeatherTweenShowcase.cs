@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using Dyvoid.FeatherTween;
+using dyvoid.FeatherTween;
 
-namespace Dyvoid.FeatherTween.Samples.Showcase
+namespace dyvoid.FeatherTween.Samples.Showcase
 {
 	// Attach to an empty GameObject and press Play.
 	//

@@ -1,4 +1,4 @@
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	/// <summary>When a <c>SetDelay</c> delay applies relative to loop cycles.</summary>
 	public enum DelayType

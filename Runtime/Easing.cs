@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	/// <summary>
 	/// Factories producing <see cref="EaseRef"/> values for <c>SetEase</c>.

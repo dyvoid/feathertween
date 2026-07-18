@@ -1,6 +1,6 @@
 using System;
 
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	/// <summary>
 	/// A position on a sequence's timeline, used by <c>Insert</c>, <c>AddLabel</c>

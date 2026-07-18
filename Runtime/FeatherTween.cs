@@ -1,7 +1,7 @@
 using System;
-using Dyvoid.FeatherTween.Internal;
+using dyvoid.FeatherTween.Internal;
 
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	/// <summary>
 	/// The FeatherTween entry point: creation methods (<see cref="To{T}"/>,

@@ -1,6 +1,6 @@
 {
   "name": "FeatherTween.Tests.Performance",
-  "rootNamespace": "Dyvoid.FeatherTween.Tests.Performance",
+  "rootNamespace": "dyvoid.FeatherTween.Tests.Performance",
   "references": [
     "FeatherTween",
     "UnityEngine.TestRunner",

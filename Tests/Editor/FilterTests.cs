@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Dyvoid.FeatherTween;
-using Dyvoid.FeatherTween.Internal;
+using dyvoid.FeatherTween;
+using dyvoid.FeatherTween.Internal;
 
-namespace Dyvoid.FeatherTween.Tests
+namespace dyvoid.FeatherTween.Tests
 {
 	// Phase 1.12: target-indexed multimap (Kill(target)/IsTweening), bulk ops
 	// (KillAll/PauseAll/ResumeAll), and the storage surgery around them

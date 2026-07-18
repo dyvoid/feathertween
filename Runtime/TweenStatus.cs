@@ -1,4 +1,4 @@
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	/// <summary>Lifecycle state of a tween or sequence.</summary>
 	public enum TweenStatus

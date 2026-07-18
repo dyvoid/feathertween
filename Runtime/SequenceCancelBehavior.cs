@@ -1,4 +1,4 @@
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	/// <summary>How a sequence reacts when one of its children is auto-killed (e.g. its target was destroyed).</summary>
 	public enum SequenceCancelBehavior

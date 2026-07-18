@@ -1,6 +1,6 @@
 {
   "name": "FeatherTween.Samples.Showcase",
-  "rootNamespace": "Dyvoid.FeatherTween.Samples.Showcase",
+  "rootNamespace": "dyvoid.FeatherTween.Samples.Showcase",
   "references": [
     "FeatherTween",
     "UnityEngine.UI"

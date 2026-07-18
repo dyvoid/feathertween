@@ -1,4 +1,4 @@
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	/// <summary>How a tween or sequence traverses cycles when looping.</summary>
 	public enum LoopType

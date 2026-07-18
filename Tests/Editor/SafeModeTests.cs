@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using Dyvoid.FeatherTween;
-using Dyvoid.FeatherTween.Internal;
+using dyvoid.FeatherTween;
+using dyvoid.FeatherTween.Internal;
 
-namespace Dyvoid.FeatherTween.Tests
+namespace dyvoid.FeatherTween.Tests
 {
 	// Phase 1.13 — safe mode wraps setter and callback invocations in
 	// try/catch. Semantics under test (Documentation~/architecture/overview.md):

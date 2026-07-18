@@ -1,6 +1,6 @@
 {
   "name": "FeatherTween.Tests.Runtime",
-  "rootNamespace": "Dyvoid.FeatherTween.Tests",
+  "rootNamespace": "dyvoid.FeatherTween.Tests",
   "references": [
     "FeatherTween",
     "UnityEngine.TestRunner"

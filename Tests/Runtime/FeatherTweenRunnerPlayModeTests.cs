@@ -2,9 +2,9 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using Dyvoid.FeatherTween.Internal;
+using dyvoid.FeatherTween.Internal;
 
-namespace Dyvoid.FeatherTween.Tests
+namespace dyvoid.FeatherTween.Tests
 {
 	[TestFixture]
 	public class FeatherTweenRunnerPlayModeTests

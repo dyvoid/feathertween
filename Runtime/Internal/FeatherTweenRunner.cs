@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.LowLevel;
 using UnityEngine.PlayerLoop;
 
-namespace Dyvoid.FeatherTween.Internal
+namespace dyvoid.FeatherTween.Internal
 {
 	internal static class FeatherTweenRunner
 	{

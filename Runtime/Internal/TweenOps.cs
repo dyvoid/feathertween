@@ -1,4 +1,4 @@
-namespace Dyvoid.FeatherTween.Internal
+namespace dyvoid.FeatherTween.Internal
 {
 	// Shared control-surface cores used by both the Tween and Sequence handles
 	// and by the deferred-command queue. Callback firing follows the matrix in

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Dyvoid.FeatherTween.Internal
+namespace dyvoid.FeatherTween.Internal
 {
 	internal static class SequenceBuilderBufferPool
 	{

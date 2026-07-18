@@ -1,12 +1,12 @@
 # FeatherTween
 
-[![CI](https://github.com/dyvoid/patween/actions/workflows/ci.yml/badge.svg)](https://github.com/dyvoid/patween/actions/workflows/ci.yml)
-[![GitHub last commit](https://img.shields.io/github/last-commit/dyvoid/patween)](https://github.com/dyvoid/patween/commits/main)
-[![GitHub issues](https://img.shields.io/github/issues/dyvoid/patween)](https://github.com/dyvoid/patween/issues)
+[![CI](https://github.com/dyvoid/feathertween/actions/workflows/ci.yml/badge.svg)](https://github.com/dyvoid/feathertween/actions/workflows/ci.yml)
+[![GitHub last commit](https://img.shields.io/github/last-commit/dyvoid/feathertween)](https://github.com/dyvoid/feathertween/commits/main)
+[![GitHub issues](https://img.shields.io/github/issues/dyvoid/feathertween)](https://github.com/dyvoid/feathertween/issues)
 [![Unity](https://img.shields.io/badge/Unity-6000.3%2B-black?logo=unity)](https://unity.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A robust, minimal C# tween engine for Unity. Compositional sequences, static-method API, struct handles, PlayerLoop runner.
+Lightweight tweening for Unity: animate transforms, UI, colors, or any value with a single line of code, then chain tweens into sequences you can loop, reverse, pause, and scrub. No components to add, no per-frame garbage.
 
 ## Getting Started
 
@@ -20,11 +20,11 @@ See [`Documentation~/guides/testing.md`](Documentation~/guides/testing.md) for c
 
 ## Usage
 
-The public API lives in the `Dyvoid.FeatherTween` namespace, and the entry point is the
+The public API lives in the `dyvoid.FeatherTween` namespace, and the entry point is the
 static class `FT`:
 
 ```csharp
-using Dyvoid.FeatherTween;
+using dyvoid.FeatherTween;
 
 FT.To(() => value, v => value = v, to: 10f, duration: 1f).Start();
 FT.FromTo(v => value = v, 0f, 10f, 1f).Start();   // both endpoints known: setter only
@@ -35,12 +35,12 @@ Prefer the full product name at call sites? Add a file-scoped alias — `FT` sta
 canonical type, and `FeatherTween` becomes an equivalent handle in that file:
 
 ```csharp
-using FeatherTween = Dyvoid.FeatherTween.FT;
+using FeatherTween = dyvoid.FeatherTween.FT;
 
 FeatherTween.To(() => value, v => value = v, 10f, 1f).Start();
 ```
 
-Avoid `using static Dyvoid.FeatherTween.FT;` — it dumps every shortcut into scope and
+Avoid `using static dyvoid.FeatherTween.FT;` — it dumps every shortcut into scope and
 shadows common Unity/.NET types (`Color`, `Image`, `Text`, …), producing cryptic `CS0119`
 errors.
 

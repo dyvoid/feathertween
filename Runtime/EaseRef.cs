@@ -1,8 +1,8 @@
 using System;
 using UnityEngine;
-using Dyvoid.FeatherTween.Internal;
+using dyvoid.FeatherTween.Internal;
 
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	/// <summary>
 	/// A value-type reference to an ease shape plus its parameters. Produced by

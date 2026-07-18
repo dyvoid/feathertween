@@ -4,10 +4,10 @@
 #if FEATHERTWEEN_RELEASE
 using System;
 using NUnit.Framework;
-using Dyvoid.FeatherTween;
-using Dyvoid.FeatherTween.Internal;
+using dyvoid.FeatherTween;
+using dyvoid.FeatherTween.Internal;
 
-namespace Dyvoid.FeatherTween.Tests
+namespace dyvoid.FeatherTween.Tests
 {
 	[TestFixture]
 	public class ReleaseModeTests

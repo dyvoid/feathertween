@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using UnityEngine;
 
-namespace Dyvoid.FeatherTween.Internal
+namespace dyvoid.FeatherTween.Internal
 {
 	internal static class LeakDetector
 	{

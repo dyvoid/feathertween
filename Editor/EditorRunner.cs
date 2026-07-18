@@ -1,7 +1,7 @@
 using UnityEditor;
-using Dyvoid.FeatherTween.Internal;
+using dyvoid.FeatherTween.Internal;
 
-namespace Dyvoid.FeatherTween.Editor
+namespace dyvoid.FeatherTween.Editor
 {
 	[InitializeOnLoad]
 	internal static class EditorRunner

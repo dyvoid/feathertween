@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Dyvoid.FeatherTween.Internal
+namespace dyvoid.FeatherTween.Internal
 {
 	internal sealed class FloatInterpolator : IInterpolator<float>
 	{

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Dyvoid.FeatherTween.Internal
+namespace dyvoid.FeatherTween.Internal
 {
 	// Reentrancy guard: structural mutation (Kill / Complete / Restart /
 	// Reverse) issued from inside a callback is deferred and executed either

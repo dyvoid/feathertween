@@ -1,6 +1,6 @@
 {
   "name": "FeatherTween",
-  "rootNamespace": "Dyvoid.FeatherTween",
+  "rootNamespace": "dyvoid.FeatherTween",
   "references": ["UnityEngine.UI"],
   "includePlatforms": [],
   "excludePlatforms": [],

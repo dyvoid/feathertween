@@ -1,7 +1,7 @@
 using System;
-using Dyvoid.FeatherTween.Internal;
+using dyvoid.FeatherTween.Internal;
 
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	/// <summary>
 	/// Mutable configuration for a tween before it runs. Chain setters, then call

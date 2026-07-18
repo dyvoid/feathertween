@@ -1,8 +1,8 @@
 {
   "name": "com.dyvoid.feathertween",
-  "version": "0.0.0-dev",
+  "version": "0.1.0",
   "displayName": "FeatherTween",
-  "description": "A robust, minimal C# tween engine for Unity. Compositional sequences, static-method API, struct handles, PlayerLoop runner.",
+  "description": "Lightweight tweening for Unity: animate transforms, UI, colors, or any value with a single line of code, then chain tweens into sequences you can loop, reverse, pause, and scrub. No components to add, no per-frame garbage.",
   "unity": "6000.3",
   "license": "MIT",
   "dependencies": {

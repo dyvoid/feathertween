@@ -38,7 +38,7 @@ These are API-design invariants (ADR 0011), not just style:
 
 The public entry point is the static class `FT`. Call it as `FT.To(...)`, `FT.Sequence(...)`, `FT.Move(...)`, etc.
 
-Do **not** use `using static Dyvoid.FeatherTween.FT;` in samples, documentation, or any FeatherTween-authored code. It dumps every static method into scope and shadows common Unity types (`Color`, `Image`, `Text`, etc.) and .NET primitive types, producing cryptic `CS0119` compiler errors.
+Do **not** use `using static dyvoid.FeatherTween.FT;` in samples, documentation, or any FeatherTween-authored code. It dumps every static method into scope and shadows common Unity types (`Color`, `Image`, `Text`, etc.) and .NET primitive types, producing cryptic `CS0119` compiler errors.
 
 ## Access and fields
 

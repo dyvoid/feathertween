@@ -1,6 +1,6 @@
 {
   "name": "FeatherTween.Tests.Editor",
-  "rootNamespace": "Dyvoid.FeatherTween.Tests",
+  "rootNamespace": "dyvoid.FeatherTween.Tests",
   "references": [
     "FeatherTween",
     "FeatherTween.Editor",

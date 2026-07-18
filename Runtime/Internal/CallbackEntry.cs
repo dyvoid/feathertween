@@ -1,6 +1,6 @@
 using System;
 
-namespace Dyvoid.FeatherTween.Internal
+namespace dyvoid.FeatherTween.Internal
 {
 	// One subscription slot: either a plain Action or a target-capture pair
 	// (state + Action<TTarget>) invoked through a cached per-type invoker so

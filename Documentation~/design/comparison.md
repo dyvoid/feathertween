@@ -25,7 +25,7 @@ How FeatherTween's design choices compare to DOTween, GSAP, PrimeTween, and LitM
 
 ## Naming and packaging
 
-- Asmdef: `FeatherTween` (runtime), `Dyvoid.FeatherTween.Editor` (editor), `FeatherTween.UniTask` (optional)
+- Asmdef: `FeatherTween` (runtime), `dyvoid.FeatherTween.Editor` (editor), `FeatherTween.UniTask` (optional)
 - Root namespace: `FeatherTween`
 - Unity package: `com.<vendor>.feathertween`
 - Minimum Unity: 6000.3

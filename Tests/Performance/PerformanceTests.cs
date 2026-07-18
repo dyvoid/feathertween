@@ -1,10 +1,10 @@
 using System;
 using NUnit.Framework;
 using Unity.PerformanceTesting;
-using Dyvoid.FeatherTween;
-using Dyvoid.FeatherTween.Internal;
+using dyvoid.FeatherTween;
+using dyvoid.FeatherTween.Internal;
 
-namespace Dyvoid.FeatherTween.Tests.Performance
+namespace dyvoid.FeatherTween.Tests.Performance
 {
 	// Two distinct concerns live here:
 	//   1. Allocation guards   -> hard pass/fail. Steady-state ticking must not allocate managed memory.

@@ -1,4 +1,4 @@
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	/// <summary>The PlayerLoop phase that drives a tween or sequence.</summary>
 	public enum UpdatePhase

@@ -1,10 +1,10 @@
 using NUnit.Framework;
-using Dyvoid.FeatherTween;
-using Dyvoid.FeatherTween.Internal;
+using dyvoid.FeatherTween;
+using dyvoid.FeatherTween.Internal;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Dyvoid.FeatherTween.Tests
+namespace dyvoid.FeatherTween.Tests
 {
 	// Phase 1.11: typed shortcuts on the lambda core. Each shortcut must move
 	// the right property of the right component, auto-set the target, and

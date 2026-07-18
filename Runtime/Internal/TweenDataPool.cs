@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Dyvoid.FeatherTween.Internal
+namespace dyvoid.FeatherTween.Internal
 {
 	// Registry so TweenStore.Reset can clear every per-type pool without
 	// knowing the closed generic types (Fast Enter Play Mode hygiene).

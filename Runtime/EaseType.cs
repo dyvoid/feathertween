@@ -1,4 +1,4 @@
-namespace Dyvoid.FeatherTween
+namespace dyvoid.FeatherTween
 {
 	/// <summary>
 	/// The built-in ease shapes. Obtain one as an <see cref="EaseRef"/> via the

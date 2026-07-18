@@ -1,6 +1,6 @@
 using System;
 
-namespace Dyvoid.FeatherTween.Internal
+namespace dyvoid.FeatherTween.Internal
 {
 	internal class TweenData<T> : TweenData
 	{

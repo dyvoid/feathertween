@@ -1,4 +1,4 @@
-namespace Dyvoid.FeatherTween.Internal
+namespace dyvoid.FeatherTween.Internal
 {
 	// Compile-time default for per-tween safe mode: on in the Editor, off in
 	// player builds. FEATHERTWEEN_RELEASE compiles the whole wrapper out (see

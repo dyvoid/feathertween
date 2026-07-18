@@ -1,4 +1,4 @@
-namespace Dyvoid.FeatherTween.Internal
+namespace dyvoid.FeatherTween.Internal
 {
 	internal enum SequenceChildKind : byte
 	{

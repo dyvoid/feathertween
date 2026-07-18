@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Dyvoid.FeatherTween.Internal
+namespace dyvoid.FeatherTween.Internal
 {
 	internal static class EaseEval
 	{
