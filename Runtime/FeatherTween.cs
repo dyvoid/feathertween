@@ -72,10 +72,30 @@ namespace Dyvoid.FeatherTween
 		}
 
 		// Scratch for bulk-op snapshots: ops mutate the lists they iterate
-		// (kill/free), so ids+generations are copied first. Main-thread only,
-		// like the store itself.
-		private static readonly System.Collections.Generic.List<int> bulkIds = new System.Collections.Generic.List<int>(64);
-		private static readonly System.Collections.Generic.List<uint> bulkGens = new System.Collections.Generic.List<uint>(64);
+		// (kill/free), so ids+generations are copied first. Pooled per bulk op
+		// (not one shared pair): kill/pause callbacks fire synchronously and may
+		// issue a nested bulk op, which must not clobber the snapshot an outer
+		// bulk op is still iterating. Main-thread only, like the store itself.
+		private sealed class BulkSnapshot
+		{
+			public readonly System.Collections.Generic.List<int> Ids = new System.Collections.Generic.List<int>(64);
+			public readonly System.Collections.Generic.List<uint> Gens = new System.Collections.Generic.List<uint>(64);
+		}
+
+		private static readonly System.Collections.Generic.Stack<BulkSnapshot> bulkPool =
+			new System.Collections.Generic.Stack<BulkSnapshot>(4);
+
+		private static BulkSnapshot RentBulk()
+		{
+			return bulkPool.Count > 0 ? bulkPool.Pop() : new BulkSnapshot();
+		}
+
+		private static void ReturnBulk(BulkSnapshot snapshot)
+		{
+			snapshot.Ids.Clear();
+			snapshot.Gens.Clear();
+			bulkPool.Push(snapshot);
+		}
 
 		/// <summary>
 		/// Kills every tween and sequence whose target is <paramref name="target"/>
@@ -89,10 +109,18 @@ namespace Dyvoid.FeatherTween
 			{
 				return;
 			}
-			SnapshotIds(ids);
-			for (var i = 0; i < bulkIds.Count; i++)
+			var snapshot = RentBulk();
+			try
 			{
-				TweenOps.Kill(bulkIds[i], bulkGens[i], complete);
+				SnapshotIds(snapshot, ids);
+				for (var i = 0; i < snapshot.Ids.Count; i++)
+				{
+					TweenOps.Kill(snapshot.Ids[i], snapshot.Gens[i], complete);
+				}
+			}
+			finally
+			{
+				ReturnBulk(snapshot);
 			}
 		}
 
@@ -107,58 +135,83 @@ namespace Dyvoid.FeatherTween
 		/// <summary>Kills every live tween and sequence; with <paramref name="complete"/> they first jump to their end values.</summary>
 		public static void KillAll(bool complete = false)
 		{
-			SnapshotAllActive();
-			for (var i = 0; i < bulkIds.Count; i++)
+			var snapshot = RentBulk();
+			try
 			{
-				TweenOps.Kill(bulkIds[i], bulkGens[i], complete);
+				SnapshotAllActive(snapshot);
+				for (var i = 0; i < snapshot.Ids.Count; i++)
+				{
+					TweenOps.Kill(snapshot.Ids[i], snapshot.Gens[i], complete);
+				}
 			}
-			TweenStore.FlushPoolReturns();
+			finally
+			{
+				ReturnBulk(snapshot);
+			}
+			// Recycling freed records is only safe when nothing is mid-step; from
+			// inside a callback (mid-tick) the runner flushes at end of tick.
+			if (!TweenCommandQueue.InCallback)
+			{
+				TweenStore.FlushPoolReturns();
+			}
 		}
 
 		/// <summary>Pauses every live root tween and sequence (children follow their parent).</summary>
 		public static void PauseAll()
 		{
-			SnapshotAllActive();
-			for (var i = 0; i < bulkIds.Count; i++)
+			var snapshot = RentBulk();
+			try
 			{
-				TweenOps.Pause(bulkIds[i], bulkGens[i]);
+				SnapshotAllActive(snapshot);
+				for (var i = 0; i < snapshot.Ids.Count; i++)
+				{
+					TweenOps.Pause(snapshot.Ids[i], snapshot.Gens[i]);
+				}
+			}
+			finally
+			{
+				ReturnBulk(snapshot);
 			}
 		}
 
 		/// <summary>Resumes every live root tween and sequence (children follow their parent).</summary>
 		public static void ResumeAll()
 		{
-			SnapshotAllActive();
-			for (var i = 0; i < bulkIds.Count; i++)
+			var snapshot = RentBulk();
+			try
 			{
-				TweenOps.Resume(bulkIds[i], bulkGens[i]);
+				SnapshotAllActive(snapshot);
+				for (var i = 0; i < snapshot.Ids.Count; i++)
+				{
+					TweenOps.Resume(snapshot.Ids[i], snapshot.Gens[i]);
+				}
+			}
+			finally
+			{
+				ReturnBulk(snapshot);
 			}
 		}
 
-		private static void SnapshotIds(System.Collections.Generic.List<int> ids)
+		private static void SnapshotIds(BulkSnapshot snapshot, System.Collections.Generic.List<int> ids)
 		{
-			bulkIds.Clear();
-			bulkGens.Clear();
 			for (var i = 0; i < ids.Count; i++)
 			{
-				bulkIds.Add(ids[i]);
-				bulkGens.Add(TweenStore.GetGeneration(ids[i]));
+				snapshot.Ids.Add(ids[i]);
+				snapshot.Gens.Add(TweenStore.GetGeneration(ids[i]));
 			}
 		}
 
 		// Roots only: sequence children follow their parent (pause/kill cascade
 		// through the parent's walk and OnFree).
-		private static void SnapshotAllActive()
+		private static void SnapshotAllActive(BulkSnapshot snapshot)
 		{
-			bulkIds.Clear();
-			bulkGens.Clear();
-			AppendActive(TweenStore.ActiveUpdate);
-			AppendActive(TweenStore.ActiveLate);
-			AppendActive(TweenStore.ActiveFixed);
-			AppendActive(TweenStore.ActiveManual);
+			AppendActive(snapshot, TweenStore.ActiveUpdate);
+			AppendActive(snapshot, TweenStore.ActiveLate);
+			AppendActive(snapshot, TweenStore.ActiveFixed);
+			AppendActive(snapshot, TweenStore.ActiveManual);
 		}
 
-		private static void AppendActive(System.Collections.Generic.List<int> list)
+		private static void AppendActive(BulkSnapshot snapshot, System.Collections.Generic.List<int> list)
 		{
 			if (list == null)
 			{
@@ -166,8 +219,8 @@ namespace Dyvoid.FeatherTween
 			}
 			for (var i = 0; i < list.Count; i++)
 			{
-				bulkIds.Add(list[i]);
-				bulkGens.Add(TweenStore.GetGeneration(list[i]));
+				snapshot.Ids.Add(list[i]);
+				snapshot.Gens.Add(TweenStore.GetGeneration(list[i]));
 			}
 		}
 

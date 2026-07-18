@@ -241,6 +241,63 @@ namespace Dyvoid.FeatherTween.Tests
 			Assert.That(v, Is.EqualTo(0f).Within(1e-3f), "settles on the start value");
 		}
 
+		[Test]
+		public void SetLoops_Zero_ClampsToOne_AndCompletes()
+		{
+			var v = 0f;
+			var completed = false;
+			FT.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(0)
+				.OnComplete(() => completed = true)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(1.5);
+			Assert.That(completed, Is.True, "SetLoops(0) clamps to one cycle");
+			Assert.That(v, Is.EqualTo(1f).Within(1e-3f));
+		}
+
+		[Test]
+		public void SetRemainingCycles_Zero_InFirstCycle_CompletesAtCycleEnd()
+		{
+			var v = 0f;
+			var completed = false;
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetLoops(-1)
+				.OnComplete(() => completed = true)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.5);
+			t.SetRemainingCycles(0);
+
+			FeatherTweenRunner.ManualTick(0.6);
+			Assert.That(completed, Is.True, "0 counts the in-progress cycle as the last");
+			Assert.That(v, Is.EqualTo(1f).Within(1e-3f));
+		}
+
+		[Test]
+		public void CompleteAtCycleStart_SingleCycle_ReversedToStart_Completes()
+		{
+			var v = 0f;
+			var completed = false;
+			var rewound = false;
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.OnComplete(() => completed = true)
+				.OnRewind(() => rewound = true)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.5);
+			t.Reverse();
+			t.CompleteAtCycleStart();
+
+			FeatherTweenRunner.ManualTick(0.6);
+			Assert.That(completed, Is.True, "cycle 0 has no lower boundary to cross; completes at the start");
+			Assert.That(rewound, Is.True, "OnRewind fires at the start");
+			Assert.That(v, Is.EqualTo(0f).Within(1e-3f), "settles on the start value");
+		}
+
 		// --- Reverse through delay (phase 1.15): the delay is part of the
 		// timeline; a reversed tween counts it back down before playhead 0. ---
 

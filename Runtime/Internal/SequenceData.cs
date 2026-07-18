@@ -84,8 +84,9 @@ namespace Dyvoid.FeatherTween.Internal
 				return;
 			}
 			// Mirrors TweenData<T>: the in-progress cycle counts as the first
-			// of the remaining ones.
-			loopCount = CurrentCycle(forward: true) + cycles;
+			// of the remaining ones, so 0 clamps to 1 (loopCount 0 would never
+			// satisfy any completion check).
+			loopCount = CurrentCycle(forward: true) + (cycles == 0 ? 1 : cycles);
 		}
 
 		public override void SetStopAtNextBoundary(bool stopAtEndValue)

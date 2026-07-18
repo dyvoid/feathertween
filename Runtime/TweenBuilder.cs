@@ -123,7 +123,7 @@ namespace Dyvoid.FeatherTween
 		public TweenBuilder<T> SetLoops(int count, LoopType loopType = LoopType.Restart)
 		{
 			ValidateOrThrow();
-			buffer.LoopCount = count < 0 ? -1 : count;
+			buffer.LoopCount = count < 0 ? -1 : (count == 0 ? 1 : count);
 			buffer.LoopType = loopType;
 			return this;
 		}

@@ -54,6 +54,32 @@ namespace Dyvoid.FeatherTween.Tests
 		}
 
 		[Test]
+		public void KillTarget_NestedBulkKillFromOnKillCallback_DoesNotCorruptOuterSnapshot()
+		{
+			var targetA = new object();
+			var targetB = new object();
+
+			var a1 = ManualTween(targetA);
+			// a2's OnKill issues a nested bulk op mid-iteration of the outer one.
+			var a2 = FT.To(() => 0f, _ => { }, 1f, 10f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetTarget(targetA)
+				.OnKill(() => FT.Kill(targetB))
+				.Start();
+			var a3 = ManualTween(targetA);
+			var b1 = ManualTween(targetB);
+
+			FT.Kill(targetA);
+
+			Assert.That(a1.IsAlive, Is.False, "a1");
+			Assert.That(a2.IsAlive, Is.False, "a2");
+			Assert.That(a3.IsAlive, Is.False, "a3 must still be reached after the nested bulk op");
+			Assert.That(b1.IsAlive, Is.False, "nested kill executes after the callback unwinds");
+			Assert.That(FT.IsTweening(targetA), Is.False);
+			Assert.That(FT.IsTweening(targetB), Is.False);
+		}
+
+		[Test]
 		public void KillTarget_Complete_SnapsToEndAndFiresOnComplete()
 		{
 			var target = new object();

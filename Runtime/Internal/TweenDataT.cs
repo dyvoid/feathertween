@@ -233,7 +233,10 @@ namespace Dyvoid.FeatherTween.Internal
 			}
 			else
 			{
-				loopCount = lastCycleIndex + cycles;
+				// The in-progress cycle counts as the first remaining one, so 0
+				// clamps to 1; a loopCount of 0 would never satisfy any completion
+				// check and loop forever.
+				loopCount = lastCycleIndex + (cycles == 0 ? 1 : cycles);
 			}
 		}
 
@@ -311,6 +314,29 @@ namespace Dyvoid.FeatherTween.Internal
 			double firstDelayOffset = everyLoop ? 0d : delay;
 
 			localTime += dt * dir;
+
+			// CompleteAtCycleStart while still in cycle 0: there is no lower
+			// cycle boundary to cross (the backward-crossing branch below never
+			// runs), so reaching the cycle-0 content start completes here. The
+			// content start sits at localTime == delay for both delay types
+			// (FirstLoop: firstDelayOffset; EveryLoop: the in-slot delay region).
+			if (dir < 0 && stopAtStartBoundary && lastCycleIndex == 0 && localTime <= delay)
+			{
+				localTime = delay;
+				if (setter != null)
+				{
+					GetCycleEnds(0, out var startFrom, out var startTo);
+					if (!ApplySetter(interpolator.Lerp(startFrom, startTo, ease.Evaluate(0f))))
+					{
+						return;
+					}
+				}
+				InvokeOnRewind();
+				Status = TweenStatus.Completed;
+				InvokeOnComplete();
+				return;
+			}
+
 			if (loopCount < 0)
 			{
 				// ADR 0009: infinite loops wrap on a backward crossing instead of
