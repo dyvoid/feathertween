@@ -56,7 +56,7 @@ Tests/
 Samples~/             Importable package sample (Showcase)
 Documentation~/                 Architecture, decisions, and guides
 AGENTS.md             AI agent instructions and conventions
-PICKUP.md             Where the last session left off — active work only, not the backlog
+Documentation~/PICKUP.md   Where the last session left off — active work only, not the backlog
 ```
 
 ## Documentation

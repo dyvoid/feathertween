@@ -2,7 +2,7 @@
 
 Single source of truth for AI agents working on this codebase.
 
-> **Session state lives in `PICKUP.md`** (repo root). Read it at the start of every session for current position, what's done, and what's next. Update it at the end of every session. This `AGENTS.md` holds stable conventions; `PICKUP.md` holds volatile state.
+> **Session state lives in `Documentation~/PICKUP.md`**. Read it at the start of every session for current position, what's done, and what's next. Update it at the end of every session. This `AGENTS.md` holds stable conventions; `PICKUP.md` holds volatile state. (Kept under `Documentation~` so Unity does not import it as a package asset.)
 
 ## Stack
 
@@ -95,11 +95,11 @@ Full run instructions, consumer-project setup (`testables` + perf package), and 
 
 Keep state and design docs in sync with the code. Update as part of the same change, not later.
 
-- **Every session**: update `PICKUP.md` (current position, done, next up, test status) as the closing step.
-- **Finishing a phase or milestone**: update `PICKUP.md` and reconcile the affected docs (`Documentation~/planning/phases.md` phase status, `Documentation~/api/` if the public surface changed, `Documentation~/architecture/overview.md` or `Documentation~/architecture/sequence.md` if internals changed). Move the milestone tag only on explicit user go-ahead.
+- **Every session**: update `Documentation~/PICKUP.md` (current position, done, next up, test status) as the closing step.
+- **Finishing a phase or milestone**: update `Documentation~/PICKUP.md` and reconcile the affected docs (`Documentation~/planning/phases.md` phase status, `Documentation~/api/` if the public surface changed, `Documentation~/architecture/overview.md` or `Documentation~/architecture/sequence.md` if internals changed). Move the milestone tag only on explicit user go-ahead.
 - **Any architectural decision or deviation from a doc**: add or update an ADR in `Documentation~/adr/` and its `README.md` index. Do not let code silently contradict a doc.
 - **New public API**: document it in `Documentation~/api/` in the same change that adds it.
-- **New test category or required dependency**: document it in `Documentation~/guides/testing.md` and in `PICKUP.md` consumer reminders.
+- **New test category or required dependency**: document it in `Documentation~/guides/testing.md` and in `Documentation~/PICKUP.md` consumer reminders.
 
 If a change touches behavior described in a doc and the doc is not updated, the change is incomplete.
 
@@ -129,5 +129,5 @@ See [`Documentation~/git-strategy.md`](Documentation~/git-strategy.md) for full 
 | `Documentation~/design/influences.md` | Design influences |
 | `Documentation~/git-strategy.md` | Branching, merging, commit rules |
 | `Documentation~/ROADMAP.md` | Feature candidates, planned work, and status |
-| `PICKUP.md` | Where the last session left off — active work only, not the backlog |
+| `Documentation~/PICKUP.md` | Where the last session left off — active work only, not the backlog |
 | `Documentation~/adr/` | Architectural decision records |
