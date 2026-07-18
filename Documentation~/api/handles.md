@@ -19,9 +19,9 @@ public readonly struct Tween : IEquatable<Tween>
     public void Restart();
     public void Seek(float time, bool fireCallbacks = false);  // preserves play/pause state
     public void SetTimeScale(float scale);
-    public void SetRemainingCycles(int cycles);
+    public void SetRemainingCycles(int cycles);  // in-progress cycle counts as the first; 0 clamps to 1, negative = forever
     public void CompleteAtCycleEnd();     // stop at the next forward cycle boundary, on the end value
-    public void CompleteAtCycleStart();   // stop on a backward/reversed crossing, on the start value
+    public void CompleteAtCycleStart();   // stop on a backward/reversed crossing (the cycle-0 start counts), on the start value
     public void Kill(bool complete = false);
     public void Complete();
 
@@ -53,9 +53,9 @@ public readonly struct Sequence : IEquatable<Sequence>
     public void Restart();
     public void Seek(float time, bool fireCallbacks = false);
     public void SetTimeScale(float scale);
-    public void SetRemainingCycles(int cycles);
+    public void SetRemainingCycles(int cycles);  // in-progress cycle counts as the first; 0 clamps to 1, negative = forever
     public void CompleteAtCycleEnd();     // stop at the next forward cycle boundary, on the end state
-    public void CompleteAtCycleStart();   // stop on a backward/reversed crossing, on the start state
+    public void CompleteAtCycleStart();   // stop on a backward/reversed crossing (the cycle-0 start counts), on the start state
     public void Kill(bool complete = false);
     public void Complete();
 
