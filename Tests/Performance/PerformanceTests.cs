@@ -35,6 +35,24 @@ namespace dyvoid.FeatherTween.Tests.Performance
 			}
 		}
 
+		// Same tweens as SpawnManualTweens, each carrying a SetLink. Paired with
+		// Throughput_Tick1kTweens, the delta is the per-tick cost of the link poll
+		// (one activeInHierarchy native call per linked record) — the open question
+		// in ADR 0012. Each tween links its own GameObject: sharing one would let
+		// the native call hit a warm cache and flatter the result.
+		private static void SpawnLinkedManualTweens(int count, LinkBehavior behavior)
+		{
+			for (var i = 0; i < count; i++)
+			{
+				var go = new UnityEngine.GameObject("ft-link-bench");
+				FT.To(zeroGetter, noopSetter, 1f, 100_000f)
+					.SetUpdate(UpdatePhase.Manual)
+					.SetAutoKill(false)
+					.SetLink(go, behavior)
+					.Start();
+			}
+		}
+
 		// Warms every lazy path: pool growth, snapshot-list capacity, interpolator lookup.
 		private static void Warmup(int ticks)
 		{
@@ -226,6 +244,33 @@ namespace dyvoid.FeatherTween.Tests.Performance
 		public void Throughput_Tick1kTweens()
 		{
 			SpawnManualTweens(1000);
+			Warmup(60);
+
+			Measure.Method(() => FeatherTweenRunner.ManualTick(0.016))
+				.WarmupCount(20)
+				.MeasurementCount(100)
+				.Run();
+		}
+
+		// Compare against Throughput_Tick1kTweens: the difference is what polling costs.
+		[Test, Performance]
+		public void Throughput_Tick1kLinkedTweens()
+		{
+			SpawnLinkedManualTweens(1000, LinkBehavior.PauseOnDisableResumeOnEnable);
+			Warmup(60);
+
+			Measure.Method(() => FeatherTweenRunner.ManualTick(0.016))
+				.WarmupCount(20)
+				.MeasurementCount(100)
+				.Run();
+		}
+
+		// Against Throughput_Tick10kTweens. 10k linked records is far past any real
+		// scene; it is here to make the per-call cost measurable above noise.
+		[Test, Performance]
+		public void Throughput_Tick10kLinkedTweens()
+		{
+			SpawnLinkedManualTweens(10_000, LinkBehavior.PauseOnDisableResumeOnEnable);
 			Warmup(60);
 
 			Measure.Method(() => FeatherTweenRunner.ManualTick(0.016))
