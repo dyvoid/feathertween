@@ -32,9 +32,24 @@ evaluates the link before the status gate, so a link-paused tween is still polle
   at runtime, what `GetComponents` returns, and what a pooling system copies or resets. For a package
   whose pitch is that it never touches the scene graph — invariant 3, the `MonoBehaviour`-free
   runner, ADR 0004 — silently adding components to arbitrary objects is the wrong trade.
-- **The cost is bounded and pay-per-use.** One `activeInHierarchy` read per tick per *linked* record.
-  Unlinked tweens, which are the overwhelming majority, pay nothing but a bool test. The read is a
-  native property call with no managed allocation, so the zero-alloc steady-state budget holds.
+- **The cost is bounded and pay-per-use — measured, not assumed.** One `activeInHierarchy` read per
+  tick per *linked* record. Unlinked tweens, the overwhelming majority, pay nothing but a bool test.
+  The read allocates nothing, so the zero-alloc steady-state budget holds.
+
+  `Throughput_Tick1k/10kLinkedTweens` against their unlinked baselines, measured 2026-09-20 in Unity
+  on the author's machine:
+
+  | Tick | Unlinked | Linked | Per poll |
+  | ---- | -------- | ------ | -------- |
+  | 1k records | 0.08 ms | 0.11 ms | ~30 ns |
+  | 10k records | 0.81 ms | 1.07 ms | ~26 ns |
+
+  Two scales agreeing puts the poll at **~26-30 ns**. A thousand linked tweens cost 0.03 ms/frame, or
+  0.2% of a 60fps budget. The figure also settles a question the Unity docs do not answer outright:
+  at 26 ns this is a cached flag read, not a parent-chain walk — Unity pays the walk inside
+  `SetActive`, which is what propagates the state downward. Caveat: the benchmark objects are
+  parentless, so a deep hierarchy is untested; if a profile ever shows link polling scaling with
+  hierarchy depth, that assumption is the thing to re-check.
 - **One code path, no lifetime puzzle.** A helper component has to answer: what if two tweens link
   the same object, what if the object is destroyed while the component still holds handles, what if
   the user deletes the component. Polling has no state on the object at all.

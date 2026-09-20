@@ -19,8 +19,10 @@ auto-kill cannot cover, since pooling disables objects instead of destroying the
 `RestartOnEnable`; all still kill on destruction. Semantics and rationale: `api/builders.md`, ADR 0012.
 
 Three decisions a future session should not silently reverse:
-- **Polling, not a helper component** (ADR 0012). The poll sits before the status gate in
-  `TickActiveCore`, so a link-paused record is still evaluated and can resume.
+- **Polling, not a helper component** (ADR 0012) — **settled by measurement, do not reopen without
+  new data**. The poll costs ~26-30 ns per linked record per tick (two scales agreeing, numbers in
+  the ADR), so the DOTween-style helper component buys nothing worth its scene-graph cost. It sits
+  before the status gate in `TickActiveCore`, so a link-paused record is still evaluated and resumes.
 - **Link state is seeded active**, so a tween started on an already-inactive object sees a disable edge
   on its first tick.
 - **Links are root-level**: appending a linked builder or nested sequence throws, because in the
