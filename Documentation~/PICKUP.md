@@ -30,9 +30,10 @@ Three decisions a future session should not silently reverse:
 
 ## Test status
 
-- Compile-check harness: 216 green + 204 in the FEATHERTWEEN_RELEASE leg as of 2026-07-18. **The 14
-  new `LinkTests` were not run locally** — this container has no .NET SDK and the egress policy blocks
-  the installer, so CI is the first execution of them.
+- Compile-check harness: **230 green + 218 in the FEATHERTWEEN_RELEASE leg** (2026-09-20, PR #4;
+  216/204 before `LinkTests`). 0 skipped in both legs, so all 14 link tests really ran.
+- Note for future sessions in this container: there is no .NET SDK here and the egress policy blocks
+  the installer, so the harness cannot be run locally. CI on a PR is the only way to execute it.
 - Doc-check leg (CS1591 as error on Runtime): green; wired into CI.
 - Unity: Showcase manual protocol + zero-alloc profiler check passed by user 2026-07-18; edit-mode tick guard sanity-checked in the editor (enter/exit play, edit-mode tweens advance at normal speed).
 
