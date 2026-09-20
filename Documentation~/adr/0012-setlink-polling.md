@@ -65,6 +65,8 @@ evaluates the link before the status gate, so a link-paused tween is still polle
   ```
 
   the poll sees `true` both times, so the retired entity's tween keeps running on the reused one.
+  Confirmed in the editor 2026-09-20: a scripted same-frame `SetActive(false)`/`SetActive(true)` on a
+  linked object produces no observable effect at all — the tween does not pause, flicker or restart.
   That is the exact bug `SetLink` exists to prevent. It is worse on `UpdatePhase.Fixed` (a frame may
   contain no FixedUpdate) and on `Manual` (the poll only happens when the user calls `ManualTick`).
   A pool that recycles an instance within a single frame must still `FT.Kill(target)` on release.

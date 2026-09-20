@@ -38,6 +38,10 @@ Three decisions a future session should not silently reverse:
   the installer, so the harness cannot be run locally. CI on a PR is the only way to execute it.
 - Doc-check leg (CS1591 as error on Runtime): green; wired into CI.
 - Unity: Showcase manual protocol + zero-alloc profiler check passed by user 2026-07-18; edit-mode tick guard sanity-checked in the editor (enter/exit play, edit-mode tweens advance at normal speed).
+- Unity, `SetLink` (2026-09-20): 244 EditMode tests green (231 Editor + 13 Performance; `ReleaseModeTests`
+  needs the define, so it is absent). In play mode, `PauseOnDisableResumeOnEnable` held a tween for a
+  5-second disable and resumed it at the same value; a same-frame disable/enable had no effect at all,
+  confirming the polling blind spot ADR 0012 documents. The 5 PlayMode tests were not run.
 
 ## Known issues / tech debt
 
