@@ -22,6 +22,7 @@ public struct SequenceBuilder
 {
     public SequenceBuilder SetDefaults(/* ease, loops, delay — no duration */);
     public SequenceBuilder SetTarget(object target);   // bulk-kill scope
+    public SequenceBuilder SetLink(GameObject go, LinkBehavior b);  // lifetime link
     public SequenceBuilder SetCancelBehavior(SequenceCancelBehavior b);
     public SequenceBuilder SetLoops(int count, LoopType loopType);
 
@@ -69,10 +70,43 @@ All of these return the builder so they can be chained.
 .SetAutoKill(bool)
 .SetRelative(bool)
 .SetTarget(object)                          // kill-filter tag; not the animation target for generic tweens
-.SetLink(GameObject, LinkBehavior)          // M2 (planned): KillOnDestroy etc.
+.SetLink(GameObject, LinkBehavior)          // ties lifetime to a GameObject's active state
 .SetSafeMode(bool)                          // try/catch around setter + callbacks; default on in Editor
 .SetCancelOnError(bool)                     // setter exception: kill silently + OnKill; callback exception: log + cancel
 ```
+
+## `SetLink` — surviving object pooling
+
+`SetTarget` auto-kill only covers a *destroyed* `UnityEngine.Object`. Pooled objects are never
+destroyed: they are deactivated, parked, and reactivated. `SetLink` ties the tween's lifetime to a
+`GameObject`'s **active state** instead.
+
+```csharp
+FT.Move(enemy.transform, dest, 1f)
+  .SetLink(enemy, LinkBehavior.PauseOnDisableResumeOnEnable)
+  .Start();
+```
+
+| `LinkBehavior` | On disable | On re-enable |
+| -------------- | ---------- | ------------ |
+| `KillOnDestroy` (default) | — | — |
+| `KillOnDisable` | kill (fires `OnKill`) | — |
+| `PauseOnDisable` | pause (fires `OnPause`) | — |
+| `PauseOnDisableResumeOnEnable` | pause | resume where it stopped (fires `OnPlay`) |
+| `RestartOnEnable` | pause | replay from the beginning |
+
+- **Every behavior kills on destruction.** A destroyed object leaves nothing to pause or restart.
+- **Link state is seeded active**, so a tween started on an already-inactive object sees a disable
+  edge on its first tick — `SetLink(go, KillOnDisable)` on a parked pooled object kills it.
+- **The link only resumes what the link paused.** If you call `Pause()` yourself while the object is
+  inactive, `PauseOnDisableResumeOnEnable` leaves it paused. `RestartOnEnable` is the exception: it
+  replays on every enable edge, including for a completed tween kept alive with `SetAutoKill(false)`
+  — that is the pooled-object case it exists for.
+- **Links are root-level.** In the parent-sequence model a child is a pure function of the parent
+  playhead, so it has no status of its own to pause or restart. Appending a linked builder into a
+  sequence throws; link the sequence itself and the whole timeline moves as one.
+- **Implementation**: the runner reads `activeInHierarchy` once per tick for each linked record. No
+  component is attached to your objects; see [ADR 0012](../adr/0012-setlink-polling.md).
 
 `SequenceBuilder.SetDefaults` cascades `ease`, `loops`, and `delay` into **subsequently** appended child builders that have not explicitly overridden them. Duration is not cascaded because every creation method requires an explicit duration.
 

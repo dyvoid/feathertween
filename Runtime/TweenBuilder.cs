@@ -62,6 +62,24 @@ namespace dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>
+		/// Ties the tween's lifetime to a <c>GameObject</c>'s active state. <c>SetTarget</c> auto-kill
+		/// only covers destroyed objects; a pooled object is disabled and reused, which is what
+		/// <see cref="LinkBehavior.PauseOnDisableResumeOnEnable"/> and friends handle. Not valid on a
+		/// builder that is appended into a sequence — link the sequence instead.
+		/// </summary>
+		public TweenBuilder<T> SetLink(UnityEngine.GameObject target, LinkBehavior behavior = LinkBehavior.KillOnDestroy)
+		{
+			ValidateOrThrow();
+			if (ReferenceEquals(target, null))
+			{
+				throw new ArgumentNullException(nameof(target), "[FeatherTween] SetLink requires a GameObject.");
+			}
+			buffer.LinkTarget = target;
+			buffer.LinkMode = behavior;
+			return this;
+		}
+
 		/// <summary>Try/catch around setter and callback invocations. Default on in the Editor, off in player builds; <c>FEATHERTWEEN_RELEASE</c> compiles the wrapper out entirely.</summary>
 		public TweenBuilder<T> SetSafeMode(bool value)
 		{

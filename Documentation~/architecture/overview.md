@@ -128,7 +128,7 @@ Snap timing matches the design anchor:
 ### Auto-kill and SetLink
 
 - Per-frame, if `target is UnityEngine.Object o && o == null` → kill silently.
-- `SetLink(GameObject, LinkBehavior)` (M2): `KillOnDestroy`, `KillOnDisable`, `PauseOnDisable`, `PauseOnDisableRestartOnEnable`. Implemented by a tiny component the system adds on demand; users do not see it.
+- `SetLink(GameObject, LinkBehavior)`: `KillOnDestroy` (default), `KillOnDisable`, `PauseOnDisable`, `PauseOnDisableResumeOnEnable`, `RestartOnEnable`. The runner reads `activeInHierarchy` once per tick for each linked record — no component is attached to the user's objects (ADR 0012). The poll runs *before* the status gate, so a link-paused record is still evaluated and can resume. Links are root-level: appending a linked builder into a sequence throws.
 
 ### Safe mode
 

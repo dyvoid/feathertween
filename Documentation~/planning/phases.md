@@ -284,7 +284,7 @@ Composed demo reproducible against DOTween / PrimeTween reference recordings. Pe
 
 **Planned — production stickiness (do these first in M2)**:
 
-- `SetLink(GameObject, LinkBehavior)` with KillOn/PauseOn/RestartOn variants. `SetTarget` auto-kill only covers *destroyed* objects; pooled objects are disabled and reused, and `PauseOnDisable`/`KillOnDisable` is what prevents that footgun class.
+- ~~`SetLink(GameObject, LinkBehavior)`~~ — **shipped 2026-09-20**. `KillOnDestroy` (default), `KillOnDisable`, `PauseOnDisable`, `PauseOnDisableResumeOnEnable`, `RestartOnEnable`. The runner polls `activeInHierarchy` per linked record rather than attaching a helper component (ADR 0012); links are root-level, so a linked builder appended into a sequence throws.
 - Awaitables: `TweenAwaiter` for `await tween` (zero-alloc, main-thread resume), built on Unity 6's native `Awaitable` since the package targets 6000.3. Pooled `CustomYieldInstruction` for coroutine `yield return tween.WaitForCompletion()`. Plus `Tween.WaitForKill`, `WaitForPosition`, `WaitForElapsedLoops`.
 
 **Candidates**:

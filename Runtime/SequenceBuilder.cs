@@ -50,6 +50,23 @@ namespace dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>
+		/// Ties the sequence's lifetime to a <c>GameObject</c>'s active state. The whole timeline
+		/// pauses, resumes, restarts or dies as one — children cannot be linked individually, since in
+		/// the parent-sequence model a child is a pure function of the parent playhead.
+		/// </summary>
+		public SequenceBuilder SetLink(UnityEngine.GameObject target, LinkBehavior behavior = LinkBehavior.KillOnDestroy)
+		{
+			ValidateOrThrow();
+			if (ReferenceEquals(target, null))
+			{
+				throw new ArgumentNullException(nameof(target), "[FeatherTween] SetLink requires a GameObject.");
+			}
+			buffer.LinkTarget = target;
+			buffer.LinkMode = behavior;
+			return this;
+		}
+
 		/// <summary>Defers playback by <paramref name="seconds"/> before the first cycle. Negative values throw.</summary>
 		public SequenceBuilder SetDelay(float seconds)
 		{
@@ -500,6 +517,16 @@ namespace dyvoid.FeatherTween
 					"[FeatherTween] Child builder was already consumed (started or appended elsewhere).");
 			}
 
+			// A child is a pure function of the parent playhead, so it has no
+			// independent status for a link to pause, resume or restart. Reject
+			// it outright rather than silently dropping the link.
+			if (childBuffer.HasLink)
+			{
+				TweenBuilderBufferPool<T>.Return(childBuffer);
+				throw new InvalidOperationException(
+					"[FeatherTween] SetLink is not valid on a sequence child; link the sequence itself.");
+			}
+
 			if (!childBuffer.PhaseExplicit)
 			{
 				childBuffer.ApplyInheritedPhase(buffer.Phase, buffer.IgnoreTimeScale);
@@ -550,6 +577,14 @@ namespace dyvoid.FeatherTween
 			{
 				throw new InvalidOperationException(
 					"[FeatherTween] Child sequence builder was already consumed (started or appended elsewhere).");
+			}
+
+			if (childBuffer.HasLink)
+			{
+				childBuffer.ClearEntries(clearLabels: true);
+				SequenceBuilderBufferPool.Return(childBuffer);
+				throw new InvalidOperationException(
+					"[FeatherTween] SetLink is not valid on a nested sequence; link the outermost sequence.");
 			}
 
 			if (!childBuffer.PhaseExplicit)

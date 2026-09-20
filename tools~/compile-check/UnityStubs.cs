@@ -43,7 +43,13 @@ namespace UnityEngine
 	{
 		public string name;
 		private readonly Transform tf = new Transform();
+		private bool active = true;
 		public GameObject(string name) { this.name = name; }
+		public bool activeSelf => active;
+		// Flat stand-in for Unity's parent-chain evaluation: the harness has no
+		// hierarchy, so self-active and hierarchy-active coincide.
+		public bool activeInHierarchy => !destroyed && active;
+		public void SetActive(bool value) { active = value; }
 		public Transform transform => tf;
 		public T AddComponent<T>() where T : new() => new T();
 		public T GetComponent<T>() => default;

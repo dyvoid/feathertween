@@ -17,6 +17,12 @@ namespace dyvoid.FeatherTween.Internal
 		private bool startFired;
 		private bool safeMode = SafeModeDefault.Value;
 		private bool cancelOnError;
+		private UnityEngine.GameObject linkTarget;
+		private LinkBehavior linkBehavior;
+		// Last polled activeInHierarchy. Seeded true so a tween started on an
+		// already-inactive object still sees a disable edge on its first tick.
+		private bool linkWasActive = true;
+		private bool linkPaused;
 
 		private List<CallbackEntry> onStart;
 		private List<CallbackEntry> onPlay;
@@ -122,6 +128,94 @@ namespace dyvoid.FeatherTween.Internal
 		}
 
 		public bool IsUnityObject => isUnityObject;
+
+		// SetLink state. The runner polls linked records once per tick rather
+		// than injecting a helper MonoBehaviour into the user's scene
+		// (Documentation~/adr/0012-setlink-polling.md).
+		public void SetLink(UnityEngine.GameObject go, LinkBehavior behavior)
+		{
+			linkTarget = go;
+			linkBehavior = behavior;
+			linkWasActive = true;
+			linkPaused = false;
+		}
+
+		// Reference comparison, not Unity's fake-null: a destroyed link target
+		// still has to be polled, precisely so the record can be killed.
+		public bool HasLink => !ReferenceEquals(linkTarget, null);
+
+		// Returns true when the link requires this record to be killed now. The
+		// runner owns the free so the kill path matches destroyed-target handling.
+		public bool PollLink()
+		{
+			if (linkTarget == null)
+			{
+				return true;
+			}
+
+			var active = linkTarget.activeInHierarchy;
+			if (active == linkWasActive)
+			{
+				return false;
+			}
+			linkWasActive = active;
+
+			if (!active)
+			{
+				return OnLinkDisabled();
+			}
+			OnLinkEnabled();
+			return false;
+		}
+
+		private bool OnLinkDisabled()
+		{
+			if (linkBehavior == LinkBehavior.KillOnDisable)
+			{
+				return true;
+			}
+			if (linkBehavior == LinkBehavior.KillOnDestroy)
+			{
+				return false;
+			}
+			if (status == TweenStatus.Playing || status == TweenStatus.Delayed)
+			{
+				status = TweenStatus.Paused;
+				linkPaused = true;
+				InvokeOnPause();
+			}
+			return false;
+		}
+
+		private void OnLinkEnabled()
+		{
+			var wasLinkPaused = linkPaused;
+			linkPaused = false;
+
+			// RestartOnEnable replays on every enable edge, not only one this
+			// link paused: a pooled object whose tween already completed is the
+			// case the behavior exists for.
+			if (linkBehavior == LinkBehavior.RestartOnEnable)
+			{
+				if (status == TweenStatus.Disposed || status == TweenStatus.Cancelled)
+				{
+					return;
+				}
+				ResetPlayhead();
+				status = StartsDelayed() ? TweenStatus.Delayed : TweenStatus.Playing;
+				return;
+			}
+
+			// Resume only what this link paused, and only if the user did not
+			// take control of the tween while the object was inactive.
+			if (linkBehavior == LinkBehavior.PauseOnDisableResumeOnEnable
+				&& wasLinkPaused
+				&& status == TweenStatus.Paused)
+			{
+				status = TweenStatus.Playing;
+				InvokeOnPlay();
+			}
+		}
 
 		// Per-tween try/catch around setter and callback invocations. Compiled
 		// out entirely under FEATHERTWEEN_RELEASE (Documentation~/architecture/overview.md).
@@ -326,6 +420,10 @@ namespace dyvoid.FeatherTween.Internal
 			startFired = false;
 			safeMode = SafeModeDefault.Value;
 			cancelOnError = false;
+			linkTarget = null;
+			linkBehavior = LinkBehavior.KillOnDestroy;
+			linkWasActive = true;
+			linkPaused = false;
 			onStart?.Clear();
 			onPlay?.Clear();
 			onPause?.Clear();

@@ -21,6 +21,8 @@ namespace dyvoid.FeatherTween.Internal
 		private bool ignoreTimeScale;
 		private bool autoKill;
 		private object target;
+		private UnityEngine.GameObject linkTarget;
+		private LinkBehavior linkBehavior;
 		private float delay;
 		private SequenceCancelBehavior cancelBehavior;
 		private int loops;
@@ -97,6 +99,22 @@ namespace dyvoid.FeatherTween.Internal
 			get => target;
 			set => target = value;
 		}
+
+		public UnityEngine.GameObject LinkTarget
+		{
+			get => linkTarget;
+			set => linkTarget = value;
+		}
+
+		public LinkBehavior LinkMode
+		{
+			get => linkBehavior;
+			set => linkBehavior = value;
+		}
+
+		// Reference comparison, not Unity's fake-null: a link set to an already
+		// destroyed object is still a link the nested-sequence path must reject.
+		public bool HasLink => !ReferenceEquals(linkTarget, null);
 
 		public float Delay
 		{
@@ -391,6 +409,10 @@ namespace dyvoid.FeatherTween.Internal
 			data.IgnoreTimeScale = ignoreTimeScale;
 			data.AutoKill = autoKill;
 			data.Target = target;
+			if (!ReferenceEquals(linkTarget, null))
+			{
+				data.SetLink(linkTarget, linkBehavior);
+			}
 			data.SafeMode = safeMode;
 			data.CancelOnError = cancelOnError;
 			TransferCallbacks(data);
@@ -492,6 +514,8 @@ namespace dyvoid.FeatherTween.Internal
 			ignoreTimeScale = false;
 			autoKill = true;
 			target = null;
+			linkTarget = null;
+			linkBehavior = LinkBehavior.KillOnDestroy;
 			delay = 0f;
 			cancelBehavior = SequenceCancelBehavior.ContinueOnChildAutoKill;
 			loops = 1;

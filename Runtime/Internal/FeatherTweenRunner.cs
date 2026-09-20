@@ -269,6 +269,16 @@ namespace dyvoid.FeatherTween.Internal
 					}
 				}
 
+				// Before the status gate: a link-paused tween must still be
+				// polled, or PauseOnDisableResumeOnEnable could never resume.
+				if (data.HasLink && data.PollLink())
+				{
+					data.Status = TweenStatus.Cancelled;
+					data.InvokeOnKill();
+					pendingKills.Add(id);
+					continue;
+				}
+
 				var status = data.Status;
 				if (status == TweenStatus.Paused
 					|| status == TweenStatus.Completed

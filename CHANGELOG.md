@@ -5,6 +5,18 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`SetLink(GameObject, LinkBehavior)`** on `TweenBuilder<T>` and `SequenceBuilder`: ties an
+  animation's lifetime to a `GameObject`'s active state, which is what object pooling needs —
+  `SetTarget` auto-kill only fires for *destroyed* objects. Behaviors: `KillOnDestroy` (default),
+  `KillOnDisable`, `PauseOnDisable`, `PauseOnDisableResumeOnEnable`, `RestartOnEnable`. The runner
+  reads `activeInHierarchy` once per tick per linked record; no component is attached to your
+  objects (ADR 0012). Links are root-level — appending a linked builder into a sequence throws, so
+  link the sequence instead.
+
 ## [0.1.0] - 2026-07-18
 
 Initial release. The public API is declared stable at this version; breaking

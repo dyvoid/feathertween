@@ -3,33 +3,36 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-09-20 (documentation audit; branch model moved to `main`/`develop`)
+Last updated: 2026-09-20 (M2 started: `SetLink` shipped)
 
 ## Current position
 
 - **Milestone**: M1 **closed**. v0.1.0 tagged on `main` 2026-07-18; public API declared stable (semver from here).
-- Unity manual test protocol for the Showcase (1.17) passed by user, including the zero-alloc profiler check (FeatherTween PlayerLoop rows at 0 B GC Alloc across chapters 1–7).
 - **Branching**: `main` tracks the last release and stays the default/landing branch; `develop` is the integration branch and the base for task branches. See `Documentation~/git-strategy.md`.
-- **Next**: M2 begins — `SetLink` + Awaitables first (production stickiness), then zero-alloc fast paths. See `Documentation~/ROADMAP.md`.
+- **M2 in flight**. `SetLink` done; **next up is Awaitables** (`TweenAwaiter` on Unity 6 native `Awaitable`, `WaitForCompletion`/`WaitForKill`/`WaitForPosition`), then the zero-alloc fast paths. See `Documentation~/ROADMAP.md`.
 
-## This session (2026-09-20, documentation audit)
+## This session (2026-09-20, M2.1 SetLink)
 
-Audited the doc tree against the code; 21 findings fixed. The ones that change how work is done:
+Shipped `SetLink(GameObject, LinkBehavior)` on both builders — the pooled-object footgun `SetTarget`
+auto-kill cannot cover, since pooling disables objects instead of destroying them. Behaviors:
+`KillOnDestroy` (default), `KillOnDisable`, `PauseOnDisable`, `PauseOnDisableResumeOnEnable`,
+`RestartOnEnable`; all still kill on destruction. Semantics and rationale: `api/builders.md`, ADR 0012.
 
-- **Branch model** (user decision): `main` = last release, `develop` = integration, task branches off
-  `develop`, release = fast-forward `main` + tag. `git-strategy.md` rewritten; CI now builds `develop` too.
-- **`api/awaiters.md` and `guides/editor.md` documented unshipped API as shipped** — both now marked as
-  planned surface; `editor.md` describes what `FeatherTween.Editor` actually contains.
-- Editor preview is **M3** everywhere (was M4 in three docs). Roslyn analyzer is an **M2 candidate**
-  (was promised as a guarantee in three docs, planned nowhere). `.prompts/` + `ai-assisted:` commit
-  trailer dropped — zero commits ever used them.
-- `phases.md` preamble corrected (17 phases, closes at 1.17, no `m1.x` tags); the M2 fast-path design
-  decision moved into the M2 section.
-- Added `CLAUDE.md` (`@AGENTS.md`) so the agent guide auto-loads in Claude Code. AGENTS.md 133 → 105 lines.
+Three decisions a future session should not silently reverse:
+- **Polling, not a helper component** (ADR 0012). The poll sits before the status gate in
+  `TickActiveCore`, so a link-paused record is still evaluated and can resume.
+- **Link state is seeded active**, so a tween started on an already-inactive object sees a disable edge
+  on its first tick.
+- **Links are root-level**: appending a linked builder or nested sequence throws, because in the
+  parent-sequence model a child has no independent status to pause or restart.
+
+`Tests/Editor/LinkTests.cs` (14 tests); the `GameObject` stub gained `SetActive`/`activeInHierarchy`.
 
 ## Test status
 
-- Compile-check harness: **216 green + 204 in the FEATHERTWEEN_RELEASE leg** (2026-07-18, includes the four review-fix tests).
+- Compile-check harness: 216 green + 204 in the FEATHERTWEEN_RELEASE leg as of 2026-07-18. **The 14
+  new `LinkTests` were not run locally** — this container has no .NET SDK and the egress policy blocks
+  the installer, so CI is the first execution of them.
 - Doc-check leg (CS1591 as error on Runtime): green; wired into CI.
 - Unity: Showcase manual protocol + zero-alloc profiler check passed by user 2026-07-18; edit-mode tick guard sanity-checked in the editor (enter/exit play, edit-mode tweens advance at normal speed).
 

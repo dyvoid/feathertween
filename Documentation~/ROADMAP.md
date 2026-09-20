@@ -35,7 +35,7 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | TweenSettings serialization | Planned | `[Serializable] TweenSettings<T>`, PropertyDrawer, `WithDirection` |
 | Cross-engine comparative benchmark | Planned | DOTween/PrimeTween recordings, cost vs LitMotion managed path |
 | Zero-alloc target-capture overloads for all callbacks | Candidate | Extend beyond `OnComplete` / `OnKill` |
-| `SetLink(GameObject, LinkBehavior)` | Planned | KillOn/PauseOn/RestartOn variants; covers the pooled-object footgun `SetTarget` auto-kill misses |
+| `SetLink(GameObject, LinkBehavior)` | Done | `KillOnDestroy`, `KillOnDisable`, `PauseOnDisable`, `PauseOnDisableResumeOnEnable`, `RestartOnEnable`; covers the pooled-object footgun `SetTarget` auto-kill misses (ADR 0012) |
 | Typed shortcuts expansion | Candidate | `RectTransform`, `Material`, `SpriteRenderer`, `Camera`, `Light`, `AudioSource` |
 | Shake / Punch shortcuts | Candidate | `ShakePosition`, `ShakeRotation`, `ShakeScale`, `PunchPosition` |
 | Extension method asmdef | Candidate | Optional `transform.PAMove(...)` wrappers |

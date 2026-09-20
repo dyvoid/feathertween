@@ -14,6 +14,8 @@ namespace dyvoid.FeatherTween.Internal
 		private bool autoKill;
 		private bool relative;
 		private object target;
+		private UnityEngine.GameObject linkTarget;
+		private LinkBehavior linkBehavior;
 		private Func<T> getter;
 		private Action<T> setter;
 		private T endValue;
@@ -84,6 +86,22 @@ namespace dyvoid.FeatherTween.Internal
 			get => target;
 			set => target = value;
 		}
+
+		public UnityEngine.GameObject LinkTarget
+		{
+			get => linkTarget;
+			set => linkTarget = value;
+		}
+
+		public LinkBehavior LinkMode
+		{
+			get => linkBehavior;
+			set => linkBehavior = value;
+		}
+
+		// Reference comparison, not Unity's fake-null: a link set to an already
+		// destroyed object is still a link the sequence path must reject.
+		public bool HasLink => !ReferenceEquals(linkTarget, null);
 
 		public Func<T> Getter
 		{
@@ -264,6 +282,10 @@ namespace dyvoid.FeatherTween.Internal
 			data.AutoKill = autoKill;
 			data.IgnoreTimeScale = ignoreTimeScale;
 			data.Target = target;
+			if (!ReferenceEquals(linkTarget, null))
+			{
+				data.SetLink(linkTarget, linkBehavior);
+			}
 			data.Getter = getter;
 			data.Setter = setter;
 			data.EndValue = endValue;
@@ -369,6 +391,8 @@ namespace dyvoid.FeatherTween.Internal
 			autoKill = true;
 			relative = false;
 			target = null;
+			linkTarget = null;
+			linkBehavior = LinkBehavior.KillOnDestroy;
 			getter = null;
 			setter = null;
 			endValue = default;
