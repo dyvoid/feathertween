@@ -22,7 +22,7 @@ public struct SequenceBuilder
 {
     public SequenceBuilder SetDefaults(/* ease, loops, delay — no duration */);
     public SequenceBuilder SetTarget(object target);   // bulk-kill scope
-    public SequenceBuilder SetLink(GameObject go, LinkBehavior b);  // lifetime link
+    public SequenceBuilder SetLink(GameObject go, LinkBehavior b = LinkBehavior.KillOnDestroy);
     public SequenceBuilder SetCancelBehavior(SequenceCancelBehavior b);
     public SequenceBuilder SetLoops(int count, LoopType loopType);
 
@@ -102,6 +102,14 @@ FT.Move(enemy.transform, dest, 1f)
   inactive, `PauseOnDisableResumeOnEnable` leaves it paused. `RestartOnEnable` is the exception: it
   replays on every enable edge, including for a completed tween kept alive with `SetAutoKill(false)`
   — that is the pooled-object case it exists for.
+- **`RestartOnEnable` is exactly `Restart()` on the enable edge**, with the same consequences: the
+  tween replays from its *original* start value (it does not re-read the getter, so a pool that
+  repositions an object on acquire will animate from the old start), and `Direction` resets to
+  forward, discarding a `Reverse()`. If you need the new position, kill on release and start a fresh
+  tween on acquire.
+- **A link kill obeys the firing matrix.** It fires `OnKill` like any other kill, except on a record
+  that already completed — that one is at its terminal value and disposes silently, the same rule
+  `Kill()` follows ([`handles.md`](handles.md#oncomplete-vs-onkill-firing-matrix)).
 - **Links are root-level.** In the parent-sequence model a child is a pure function of the parent
   playhead, so it has no status of its own to pause or restart. Appending a linked builder into a
   sequence throws; link the sequence itself and the whole timeline moves as one.

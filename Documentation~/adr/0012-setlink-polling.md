@@ -38,9 +38,23 @@ evaluates the link before the status gate, so a link-paused tween is still polle
 - **One code path, no lifetime puzzle.** A helper component has to answer: what if two tweens link
   the same object, what if the object is destroyed while the component still holds handles, what if
   the user deletes the component. Polling has no state on the object at all.
-- **Edges are detected on the tick, not the frame.** A disable-then-enable inside one frame is
-  invisible to polling, where callbacks would see both. That is an accepted loss: the behaviors are
-  all idempotent with respect to a net-unchanged state, so nothing is missed that mattered.
+- **Edges are detected on the tick, not the frame — and this is a real, not a theoretical, loss.**
+  A disable-then-enable between two ticks is invisible to polling, where `OnDisable`/`OnEnable` would
+  see both. `PauseOnDisable` and `PauseOnDisableResumeOnEnable` survive it, because a net-unchanged
+  active state means a net-unchanged pause state. `KillOnDisable` and `RestartOnEnable` do not: they
+  are genuinely edge-triggered, and the pattern that defeats them is the ordinary one —
+
+  ```csharp
+  pool.Release(enemy);   // SetActive(false)
+  pool.Get();            // same instance, SetActive(true) — same frame
+  ```
+
+  the poll sees `true` both times, so the retired entity's tween keeps running on the reused one.
+  That is the exact bug `SetLink` exists to prevent. It is worse on `UpdatePhase.Fixed` (a frame may
+  contain no FixedUpdate) and on `Manual` (the poll only happens when the user calls `ManualTick`).
+  A pool that recycles an instance within a single frame must still `FT.Kill(target)` on release.
+  A helper component would catch this case; that is the strongest argument against this ADR, and it
+  is the reason to revisit it if the explicit-kill workaround turns out not to be good enough.
 
 ## Consequences
 

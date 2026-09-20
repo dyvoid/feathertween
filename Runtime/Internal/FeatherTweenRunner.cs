@@ -273,8 +273,14 @@ namespace dyvoid.FeatherTween.Internal
 				// polled, or PauseOnDisableResumeOnEnable could never resume.
 				if (data.HasLink && data.PollLink())
 				{
-					data.Status = TweenStatus.Cancelled;
-					data.InvokeOnKill();
+					// A completed record is already at its terminal value, so it
+					// disposes without callbacks - the firing matrix in
+					// Documentation~/api/handles.md, same rule as TweenOps.Kill.
+					if (data.Status != TweenStatus.Completed)
+					{
+						data.Status = TweenStatus.Cancelled;
+						data.InvokeOnKill();
+					}
 					pendingKills.Add(id);
 					continue;
 				}

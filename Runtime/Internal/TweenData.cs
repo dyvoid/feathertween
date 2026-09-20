@@ -201,6 +201,12 @@ namespace dyvoid.FeatherTween.Internal
 				{
 					return;
 				}
+				// Deliberately identical to Restart(): replay what the user
+				// started, from its original start value. Re-reading the start
+				// value here would fix a pool that repositions on acquire and
+				// break a pooled fade, whose property the pool does not reset -
+				// the tween would then run from 1 to 1. "RestartOnEnable is
+				// Restart() on the enable edge" is the semantic that holds for both.
 				ResetPlayhead();
 				status = StartsDelayed() ? TweenStatus.Delayed : TweenStatus.Playing;
 				return;

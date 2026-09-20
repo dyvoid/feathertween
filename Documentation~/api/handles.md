@@ -121,6 +121,9 @@ Valid status transitions:
 | Playing → Completed | natural end (forward) reached, no remaining loops |
 | Completed → Playing | `Restart()` / `Play()` after complete (resets `_localTime` to 0, resumes playing) |
 | Paused → Playing    | `Restart()` — resets `_localTime` to 0 and begins playing |
+| Playing/Delayed → Paused | linked object disabled, under a `PauseOn…`/`RestartOnEnable` `LinkBehavior` (fires `OnPause`) |
+| Paused → Playing    | linked object re-enabled, under `PauseOnDisableResumeOnEnable` (fires `OnPlay`) |
+| any non-terminal → Playing | linked object re-enabled, under `RestartOnEnable` — same reset as `Restart()` |
 | Delayed → Playing   | `Restart()` — reapplies the full delay, then plays |
 | any non-terminal → Cancelled | `Kill(false)`                 |
 | any non-terminal → Completed | `Kill(true)` / `Complete()`   |
@@ -147,6 +150,8 @@ A zero-duration tween completes on the first tick after `.Start()`. `OnStart`, `
 | `Kill(true)`                           | remaining loops| yes        | no     |
 | `Kill(false)`                          | no             | no         | yes    |
 | Auto-kill (`UnityEngine.Object` dies)  | no             | no         | yes    |
+| `SetLink` kill (linked object destroyed, or disabled under `KillOnDisable`) | no | no | yes |
+| `SetLink` kill on an already-completed record | no          | no         | no     |
 | Setter exception + `CancelOnError`     | no             | no         | yes    |
 | Setter exception, safe mode, no `CancelOnError` (logged) | no | no    | no     |
 

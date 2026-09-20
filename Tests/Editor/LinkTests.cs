@@ -160,7 +160,7 @@ namespace dyvoid.FeatherTween.Tests
 
 			Assert.That(t.Status, Is.EqualTo(TweenStatus.Playing));
 			Assert.That(v, Is.EqualTo(5f).Within(1e-3f), "resumes from 2, not from 0");
-			Assert.That(plays, Is.EqualTo(1), "OnPlay fires on the link resume");
+			Assert.That(plays, Is.EqualTo(2), "initial activation plus the link resume");
 			UnityEngine.Object.DestroyImmediate(go);
 		}
 
