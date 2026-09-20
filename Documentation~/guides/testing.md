@@ -34,6 +34,9 @@ and excluded there. The harness is a fast pre-check, not a replacement: the
 in-Unity Editor + Runtime + Performance run remains the merge gate. See
 `tools~/compile-check/README.md` for stub rules.
 
+CI also runs an XML-doc coverage gate (`FeatherTween.DocCheck.csproj`, CS1591 as error over
+Runtime only), so a new public type or member without a `<summary>` fails the build.
+
 CI also runs a second harness leg with `-p:DefineConstants=FEATHERTWEEN_RELEASE`,
 which compiles the safe-mode wrapper and off-thread assertions out. Tests that
 depend on that debug layer are tagged `[Category("RequiresSafeMode")]` and

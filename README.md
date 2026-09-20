@@ -13,10 +13,10 @@ Lightweight tweening for Unity: animate transforms, UI, colors, or any value wit
 FeatherTween is distributed as a UPM package.
 
 1. Add the repository as an embedded or scoped-registry package in your Unity project.
-2. Install the `com.unity.test-framework.performance` package if you want to run the performance benchmarks (test-only dependency).
-3. Open `Window > Package Manager > FeatherTween > Samples` and import **Showcase** — a guided tour of the whole feature set as one scrubbable, captioned timeline with a player panel.
+2. Open `Window > Package Manager > FeatherTween > Samples` and import **Showcase** — a guided tour of the whole feature set as one scrubbable, captioned timeline with a player panel.
 
-See [`Documentation~/guides/testing.md`](Documentation~/guides/testing.md) for consumer-project setup details.
+Running FeatherTween's own test suites additionally requires consumer-project setup
+(`testables` plus a test-only performance package): see [`Documentation~/guides/testing.md`](Documentation~/guides/testing.md).
 
 ## Usage
 
@@ -48,15 +48,15 @@ errors.
 
 ```
 Runtime/              Core engine (FeatherTween.asmdef)
-Editor/               Inspector drawers and debugger (FeatherTween.Editor.asmdef)
+Editor/               Edit-mode runner and store bootstrap (FeatherTween.Editor.asmdef)
 Tests/
   Editor/             EditMode correctness tests
   Runtime/            PlayMode tests
   Performance/        Allocation guards + throughput benchmarks
 Samples~/             Importable package sample (Showcase)
-Documentation~/                 Architecture, decisions, and guides
-AGENTS.md             AI agent instructions and conventions
-Documentation~/PICKUP.md   Where the last session left off — active work only, not the backlog
+tools~/               .NET stub harness — compile check + EditMode tests without Unity
+Documentation~/       Architecture, decisions, planning, and guides
+AGENTS.md             AI agent instructions and conventions (CLAUDE.md imports it)
 ```
 
 ## Documentation

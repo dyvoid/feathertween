@@ -44,7 +44,7 @@ FT.To(() => x.value, v => x.value = v, 10f, 1f)
 
 Target-capture applies to `OnComplete`/`OnKill` today; creation-side state passing (a getter/setter pair that receives the state) is an M2 candidate.
 
-If you reference `this`, a local, or any field outside the supplied state parameter, the C# compiler emits a closure-allocating delegate and the zero-alloc benefit is lost. Use `static` lambdas where possible. An optional Roslyn analyzer (M2) can enforce this.
+If you reference `this`, a local, or any field outside the supplied state parameter, the C# compiler emits a closure-allocating delegate and the zero-alloc benefit is lost. Use `static` lambdas where possible. An optional Roslyn analyzer could enforce this; it is an M2 candidate (see `Documentation~/ROADMAP.md`), not a shipped tool.
 
 ## Timing details
 

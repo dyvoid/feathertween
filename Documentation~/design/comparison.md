@@ -9,7 +9,7 @@ How FeatherTween's design choices compare to DOTween, GSAP, PrimeTween, and LitM
 | Storage              | pooled classes           | objects + linked list         | pooled (closed)                     | unmanaged[]+managed[] SoA, Burst         | pooled classes (SoA-ready, Burst in M5)      |
 | Runner               | hidden MonoBehaviour     | rAF + global timeline         | hidden MonoBehaviour                | PlayerLoop (8 phases) + editor mirror    | PlayerLoop (3+Manual) + editor mirror        |
 | Nested sequences     | sequences, flat root     | universal parent-timeline     | flat sequences with nesting         | sequence = tween + (time, child) list    | universal parent-sequence (from M1)        |
-| Shortcut style       | extensions on Unity types| n/a                           | static on `Tween`                   | none (just `LMotion.Create` + `Bind`)    | static on `FeatherTween`                          |
+| Shortcut style       | extensions on Unity types| n/a                           | static on `Tween`                   | none (just `LMotion.Create` + `Bind`)    | static on `FT`                               |
 | Position param       | typed only               | string DSL + numeric          | typed (Group/Chain/Insert)          | typed (Append/Insert/Join)               | typed `Position` (M1), string parse (M4)   |
 | Reverse              | yes                      | yes                           | no (fire new tween)                 | no (use PlaybackSpeed)                   | yes (derived from sequence model)            |
 | Generic core         | lambda getter/setter     | string property names         | lambda + target-capture             | lambda + 0/1/2/3-state target-capture    | lambda + target-capture                      |
@@ -17,15 +17,18 @@ How FeatherTween's design choices compare to DOTween, GSAP, PrimeTween, and LitM
 | Eases                | enum + curve + delegate  | string + parameterized        | enum + curve + Easing factories     | enum + curve (native, Burst-friendly)    | `EaseRef` via `Easing.X(...)` factories      |
 | Hot loop             | managed                  | managed (JS)                  | managed                             | [BurstCompile] IJobParallelFor           | managed (M1–M4), Burst job (M5)              |
 | Auto-kill            | yes, per frame           | n/a                           | yes, per frame                      | manual via SetLink                       | yes, per frame for UnityEngine.Object        |
-| Awaitable            | Task + coroutine yield   | promise (then)                | async/await + yield                 | MotionAwaiter + UniTask                  | core struct awaiter + UniTask asmdef         |
-| Designer serialize   | TweenParams-ish          | n/a                           | `TweenSettings<T>` + inspector      | `SerializableMotionSettings<T,O>`        | `TweenSettings`/`TweenSettings<T>` + drawer  |
+| Awaitable            | Task + coroutine yield   | promise (then)                | async/await + yield                 | MotionAwaiter + UniTask                  | core struct awaiter (M2 planned)             |
+| Designer serialize   | TweenParams-ish          | n/a                           | `TweenSettings<T>` + inspector      | `SerializableMotionSettings<T,O>`        | `TweenSettings<T>` + drawer (M2 planned)     |
 | Safe mode            | yes                      | implicit JS try/catch         | yes (auto on destroy)               | per-tween CancelOnError                  | yes, default on in editor + per-tween        |
 | Status granularity   | IsPlaying/IsComplete     | n/a                           | isAlive only                        | full enum (Scheduled→Disposed)            | full `TweenStatus` enum                      |
 | Delay semantics      | first-loop only          | first-loop only               | first-loop only                     | FirstLoop or EveryLoop                   | FirstLoop or EveryLoop                       |
 
 ## Naming and packaging
 
-- Asmdef: `FeatherTween` (runtime), `dyvoid.FeatherTween.Editor` (editor), `FeatherTween.UniTask` (optional)
-- Root namespace: `FeatherTween`
-- Unity package: `com.<vendor>.feathertween`
+- Asmdef: `FeatherTween` (runtime), `FeatherTween.Editor` (editor)
+- Root namespace: `dyvoid.FeatherTween`
+- Unity package: `com.dyvoid.feathertween`
 - Minimum Unity: 6000.3
+
+A `FeatherTween.UniTask` asmdef is an M3 candidate only — the M2 awaiter targets Unity 6's native
+`Awaitable`, which weakens the case for a UniTask dependency.

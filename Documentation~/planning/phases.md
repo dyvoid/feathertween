@@ -2,9 +2,15 @@
 
 ## M1 — Core
 
-M1 is the foundation that everything else is built on. It is divided into 14 sequenced phases. Each phase has a narrow deliverable, a green test suite, and an exit criterion. **Phase 1.1 produces scaffolding only — not a working tween engine.** Each subsequent phase layers one capability on top of the previous, and only that capability is what gets tested at that phase's gate.
+**M1 is closed.** It shipped as `v0.1.0` (2026-07-18) across 17 sequenced phases, 1.1–1.17: the
+original 14 plus API finalization (1.15), release hygiene (1.16), and the Showcase dogfood gate
+(1.17), which is where the version tag landed. Each phase had a narrow deliverable, a green test
+suite, and an exit criterion; the base architecture landed in 1.1–1.3 and was frozen against
+retroactive change after 1.3.
 
-Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared complete when phase 1.14 passes. The base architecture lands in 1.1–1.3 and is frozen against retroactive change after 1.3 ships.
+The phase records below are kept as the design trail. Where a later phase changed an earlier
+phase's API (`SetCapacity`, `SetRemainingCycles(bool)`, global time scale), the 1.15 entry is the
+one that matches the shipped surface — `Documentation~/api/` is authoritative for current API.
 
 ### Phase 1.1 — Storage and handle scaffold (no animation)
 
@@ -203,7 +209,7 @@ Phases land as separate PRs / git tags (`m1.1`, `m1.2`, ...). M1 is declared com
 - **Manual-phase destroyed-target cleanup**: documented contract, not a mechanism — "keep calling `ManualTick` or kill explicitly; tweens on destroyed targets in a stopped manual phase are not auto-killed."
 - **ADR 0008 follow-through**: verify the `Incremental`-without-meaningful-`Subtract` guard story for custom interpolators; throw at `Start()` if the gap is real, otherwise record why not.
 - **`AddLabel` resolution**: confirmed as designed — labels resolve at definition time (only `Insert`/`AddPause` defer to `Start()`), duplicate names throw. Document it; no code change.
-- **Fast-path freeze check (design only, pulled from M2)**: ✅ **verified 2026-07-16 — shortcut signatures are safe to freeze as `TweenBuilder<T>`.** Everything the M2 zero-alloc fast paths need to change is `internal`: `TweenBuilderBuffer<T>` (holds `Func<T> Getter` / `Action<T> Setter` fields), `TweenData<T>` (all value writes already funnel through one private `ApplySetter(T)`, all reads through `getter()` in `ResolveStartValues`), and `Build()`. Two workable internal designs, neither touching the public surface: (a) *two-arg static-delegate mode* — buffer/record gain `object targetRef` + cached static `Action<object,T>` setter (and `Func<object,T>` getter for `From()` snap reads); `ApplySetter` branches on mode; the shortcut's existing `SetTarget(target)` already carries the target ref; or (b) *record subclassing* — make the value read/write virtual (`WriteValue`/`ReadCurrent`) and give each fast shortcut a pooled `TweenData<T>` subclass holding a typed target field (`ReturnToPool` is already virtual, so per-subclass pooling composes). Both give zero per-`Start` alloc; (a) keeps one record type per `T`, (b) avoids a per-write branch. Pick between them in M2 — the decision does not affect v0.1's API.
+- **Fast-path freeze check (design only, pulled from M2)**: ✅ verified 2026-07-16 — shortcut signatures are safe to freeze as `TweenBuilder<T>`; everything the M2 zero-alloc fast paths need to change is `internal`. The two candidate designs and the pick between them moved to the M2 fast-paths section below.
 - **Blessed API-shape decisions (2026-07-16, see `Documentation~/planning/risks.md` and `Documentation~/guides/conventions.md`)**: rotation default is shortest-path slerp; manual ticking is global-only (no per-tween `Tick`); no `Append(Action)` sugar. No code changes — these confirm current behavior as contract.
 - **`SetRemainingCycles(bool)` replaced by named methods** (ADR audit, 2026-07-16): the bool overload shares a name with `SetRemainingCycles(int)` but performs an unrelated operation, and `SetRemainingCycles(true)` is unguessable at a call site. New spelling on both handles: `CompleteAtCycleEnd()` (stop at the next boundary in the forward direction, settling on the end value) and `CompleteAtCycleStart()` (stop on a backward/reversed crossing, settling on the start value). `SetRemainingCycles(int)` is unchanged. Update handles docs and the ADR 0011 handle-symmetry tests.
 - **`FT.SetCapacity(int)`** (ADR audit, 2026-07-16): collapse the `(int tweens, int sequences)` signature — the parameters encode a pool split that doesn't exist (the body sums them). One honest `capacity` parameter; a real split can be reintroduced additively if storage ever separates.
@@ -239,7 +245,13 @@ This is the v0.1 dogfood gate: it is a real consumer workload, the hardest avail
 
 **Status: done (2026-07-18) — protocol passed, v0.1.0 tagged, M1 closed.** The manual test protocol and the zero-alloc profiler check passed in Unity (FeatherTween PlayerLoop rows at 0 B GC Alloc across chapters 1–7); a same-day full-library code review fixed four correctness edge cases (loop-count-zero clamps, bulk-op callback reentrancy, cycle-0 `CompleteAtCycleStart`, mid-tick pool flush) before the tag.
 
-**Original implementation notes (2026-07-16):** `Samples~/Showcase/FeatherTweenShowcase.cs` — eight chapters per spec (title-card ease assembly, To/From/FromTo with visible snap flashes, all 36 ease variants in a grid, four loop lanes + FirstLoop/EveryLoop countdown bars, composition chapter with a self-drawing timing diagram, control-surface chapter driving a detached infinite yoyo via scripted callbacks ending in `CompleteAtCycleEnd()`, all nine typed shortcuts incl. the uGUI ones on a runtime canvas, and the off-timeline playground parked at an `AddPause`). Registered as the flagship sample in package.json/README; the older samples (BasicUsage, SequenceDemo, MiniShowcase, ComposedDemo) were removed on user instruction, and user-facing text carries no internal development references. A headless structural replica of the master timeline was verified through `FT.ManualTick` (duration/label math, AddPause park, incremental landing, pure-function-of-time under random scrubbing, reverse-to-start). API friction found: none beyond the `FT.ManualTick` gap already fixed in 1.16.
+**What shipped**: `Samples~/Showcase/FeatherTweenShowcase.cs` — eight chapters per the spec
+(`Documentation~/design/showcase-sample.md`), registered as the flagship sample in `package.json`
+and the README. A headless structural replica of the master timeline is verified through
+`FT.ManualTick` (duration/label math, `AddPause` park, incremental landing, pure-function-of-time
+under random scrubbing, reverse-to-start). API friction found while building it: none beyond the
+`FT.ManualTick` gap already fixed in 1.16.
+
 ## M2 — Polish and ecosystem
 
 ### Hand-written zero-alloc fast paths
@@ -247,6 +259,16 @@ This is the v0.1 dogfood gate: it is a real consumer workload, the hardest avail
 **Deliverable**: override `Move` / `LocalMove` / `Scale` / `Fade` / `Color` to bypass the lambda core; each emits a static `IInterpolator<T>` instance and a no-closure setter dispatched through a typed-shortcut handle. Generic `FT.To` keeps the lambda pair until M5.
 
 **Tests**: 10k `FT.Move` tweens for 60s: 0 per-frame **and** 0 per-Start managed alloc. Behavior identical to the 1.11 lambda baseline (golden-trace test). Hand-written and lambda paths can coexist in the same sequence.
+
+**Open decision — internal design (verified 2026-07-16 as not affecting the public API).** Everything
+that must change is `internal`: `TweenBuilderBuffer<T>` (holds the `Func<T> Getter` / `Action<T> Setter`
+fields), `TweenData<T>` (all value writes funnel through one private `ApplySetter(T)`, all reads through
+`getter()` in `ResolveStartValues`), and `Build()`. Two workable designs: (a) *two-arg static-delegate mode* — buffer/record gain `object targetRef` + cached static `Action<object,T>` setter (and `Func<object,T>` getter for `From()` snap reads); `ApplySetter` branches on mode; the shortcut's existing `SetTarget(target)` already carries the target ref; or (b) *record subclassing* — make the value read/write virtual (`WriteValue`/`ReadCurrent`) and give each fast shortcut a pooled `TweenData<T>` subclass holding a typed target field (`ReturnToPool` is already virtual, so per-subclass pooling composes). Both give zero per-`Start` alloc; (a) keeps one record type per `T`, (b) avoids a per-write branch.
+
+Fold in the two known micro-opts while here: the
+`Interpolators.Get<T>()` dictionary lookup per `Build()` (needs an `Interpolators.Reset()` version
+stamp to cache safely) and the `TransferCallbacks` duplication between `TweenBuilderBuffer` and
+`SequenceBuilderBuffer`.
 
 ### TweenSettings serialization
 

@@ -83,7 +83,7 @@ static void InstallRunner()
 - **Editor**: a second hookup via `EditorApplication.update` ticks an editor-only runner.
 - **Manual**: `FeatherTweenRunner.ManualTick(deltaTime)` advances only the `Manual` root. Destroyed-target cleanup is part of the tick: keep calling `ManualTick` or kill explicitly — tweens on destroyed targets in a stopped manual phase are not auto-killed.
 - **Domain reload / Fast Enter Play Mode**: `TweenStore.Reset()` runs at `SubsystemRegistration` time. Editor uses `[InitializeOnLoad]` to also reset on assembly reload. Both cases drop all tweens cleanly so generation ids stay coherent.
-- **Debug visibility**: the M4 EditorWindow reads active tweens directly from `TweenStore`. No scene-side proxy needed.
+- **Debug visibility**: the M3 editor preview window reads active tweens directly from `TweenStore`. No scene-side proxy needed.
 
 ### Update step (high level)
 

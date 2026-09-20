@@ -1,6 +1,8 @@
-# FeatherTween — Design Proposal
+# FeatherTween — Design and Locked Anchors
 
 A robust, minimal C# tween engine for Unity. Compositional sequences, static-method API, struct handles, PlayerLoop runner.
+
+The anchors below are the contract the implementation is held to. Changing one requires an ADR.
 
 ---
 
@@ -19,7 +21,7 @@ A robust, minimal C# tween engine for Unity. Compositional sequences, static-met
 - Path tweens, Bezier/Catmull-Rom utilities (M3+).
 - Burst/Jobs hot loop (keep door open via SoA layout, ship in M5 if ever).
 - Source-generator zero-allocation (M5+).
-- Editor preview/debugger window (M4+).
+- Editor preview/debugger window (M3+).
 - GSAP plugins (MorphSVG, Flip, ScrollTrigger). Out of scope, web concerns.
 - The full GSAP position string DSL in v1.0 (typed `Position` first, parser later).
 
@@ -33,7 +35,7 @@ A robust, minimal C# tween engine for Unity. Compositional sequences, static-met
    - After `.Start()` or sequence consumption, every builder alias is invalid.
    - `.Start()` returns an immutable `Tween` handle (`id, generation`). Stale handles no-op safely.
    - Same split for `SequenceBuilder` and `Sequence`.
-   - The pooled backing record has a finalizer that enqueues a leak-detection id; the runner drains it on the main thread and logs a warning in Editor. This is a best-effort diagnostic; the optional Roslyn analyzer (M2) is the hard guarantee.
+   - The pooled backing record has a finalizer that enqueues a leak-detection id; the runner drains it on the main thread and logs a warning in Editor. This is a best-effort diagnostic. A Roslyn analyzer that catches an unconsumed builder at compile time would be the hard guarantee; it is an M2 candidate, not a commitment.
 3. **Pooled-class internal storage** in v1, swappable later. Public handle insulates users.
 4. **PlayerLoop injection runner**, no MonoBehaviour. Edit-mode capable via `EditorApplication.update`.
 5. **Three update phases from M1**: `Update`, `LateUpdate`, `FixedUpdate`. Plus a `Manual` mode that takes an explicit `deltaTime`.
@@ -42,7 +44,7 @@ A robust, minimal C# tween engine for Unity. Compositional sequences, static-met
 8. **Custom awaiter** (`await tween;`, zero managed alloc per await). Deferred to M2; core callback surface covers the same use cases. UniTask asmdef remains optional for cancellation ergonomics.
 9. **Per-frame auto-kill** for `UnityEngine.Object` targets (`obj == null` check).
 10. **SoA-friendly internal layout** to keep a future Burst path cheap; not a public concern.
-11. **Parent-sequence model from M1**: every animation has `_start`, `_end`, `_timeScale`, `_parent`. A hidden root sequence owned by the runner contains all top-level tweens. M2 nested sequences slot in for free. The public type is named `Sequence` to avoid clashing with Unity's `Timeline` package.
+11. **Parent-sequence model from M1**: every animation has `_start`, `_end`, `_timeScale`, `_parent`. A hidden root sequence owned by the runner contains all top-level tweens. Nested sequences shipped in M1 with no structural change, as the model predicted. The public type is named `Sequence` to avoid clashing with Unity's `Timeline` package.
 12. **`Position` value type from M1**: typed `End`, `AtTime`, `AtLabel`, `AfterPrevious`, `WithPrevious`. The GSAP string DSL (`"+=0.3"`, `"<"`, `">"`) is added later as a pure `Position.Parse` sugar, no plumbing changes.
 13. **`From` / `FromTo` are core builder methods**, not extensions. A **root tween** snaps at `.Start()` regardless of its own `SetDelay` (delay only defers interpolation, not the snap). A **sequenced child** with a parent-imposed offset `> 0` snaps when the parent playhead first crosses `child._start`; the child's own `SetDelay` further offsets interpolation but not the snap.
 14. **Safe mode** (try/catch around tween step and callbacks) included from M1. Default `true` in Editor, `false` in release builds.

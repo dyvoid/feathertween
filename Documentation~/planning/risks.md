@@ -8,7 +8,7 @@
 - **Delegate alloc per generic tween**: unavoidable in v1 without source gen. One getter + one setter per tween. Acceptable for M1–M4.
 - **Edit-mode runner**: PlayerLoop is play-mode only. Edit mode uses a parallel `EditorApplication.update` driver over the same store. Assembly reload triggers `TweenStore.Reset()`.
 - **Safe mode in release**: people will leave it on and complain about cost, or turn it off and complain about silent failures. Default split (on in Editor, off in Release) is a reasonable compromise; document loudly.
-- **Builder GC without consumption**: forgetting `.Start()` is a silent no-op at runtime. The pooled backing record's finalizer enqueues the leak id onto a lock-free `ConcurrentQueue<int>`; the next PlayerLoop tick drains the queue on the main thread and emits `Debug.LogWarning`. No Unity API calls from the finalizer thread. Best-effort Editor diagnostic only; the Roslyn analyzer (optional, M2) is the hard guarantee. Release builds skip both.
+- **Builder GC without consumption**: forgetting `.Start()` is a silent no-op at runtime. The pooled backing record's finalizer enqueues the leak id onto a lock-free `ConcurrentQueue<int>`; the next PlayerLoop tick drains the queue on the main thread and emits `Debug.LogWarning`. No Unity API calls from the finalizer thread. Best-effort Editor diagnostic only. A compile-time Roslyn analyzer would be the hard guarantee; it is an M2 candidate, not a commitment. Release builds skip the diagnostic.
 
 ## Open questions
 

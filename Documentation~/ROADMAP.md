@@ -43,6 +43,7 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | `yoyoEase` | Planned | Separate optional `EaseRef` for the return leg of a Yoyo cycle |
 | Awaitables | Planned | `TweenAwaiter` on Unity 6 native `Awaitable`, `WaitForCompletion`, `WaitForKill`, `WaitForPosition` |
 | Improved safe-mode reporting | Candidate | Collected per-frame diagnostics |
+| Roslyn analyzer | Candidate | Compile-time diagnostics for the two footguns the runtime can only warn about after the fact: a builder that is never consumed by `Start()`/`Clear()`, and a non-static lambda in a target-capture callback overload |
 
 ## M3 — Power features
 

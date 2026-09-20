@@ -6,39 +6,15 @@ Single source of truth for AI agents working on this codebase.
 
 ## Stack
 
-- **Unity**: 6000.3.8f1
-- **Type**: UPM package (embedded or registry)
-- **Language**: C# 9+ (Unity)
-- **Test framework**: Unity Test Framework (EditMode + PlayMode)
-- **Target platforms**: All Unity supports ( Burst path kept open for future )
+Unity 6000.3 UPM package, C# 9+, Unity Test Framework (EditMode + PlayMode). The repo root is the
+package; layout and per-folder purpose: [`README.md`](README.md#project-structure).
 
-## Package Structure
+## Architecture
 
-```text
-Runtime/              -- FeatherTween.asmdef (core, Editor references allowed for EditMode)
-Editor/               -- FeatherTween.Editor.asmdef (drawers, debugger)
-Tests/
-  Editor/             -- EditMode tests asmdef
-  Runtime/            -- PlayMode tests asmdef
-  Performance/        -- EditMode allocation guards + throughput asmdef
-Samples~/             -- importable package sample (Showcase)
-```
-
-## AI Skill Reference
-
-When writing Unity C# for this project, apply the **unity dev skill**.
-
-## Architecture Summary
-
-- **Static-method API**: `FT.Move(transform, ...)` — not extension methods on Unity types. One discoverable entry point; avoids namespace pollution.
-- **Builder/handle split**: `FT.X(...)` returns a mutable `TweenBuilder<T>` struct (aliases share a pooled backing record). `.Start()` returns an immutable `Tween` handle (`id, generation`). After `.Start()`, builder aliases are invalid.
-- **Pooled internal storage**: backing classes are pooled in v1; public handles insulate users from the swap.
-- **PlayerLoop runner**: no `MonoBehaviour`. Injection into `Update`, `LateUpdate`, `FixedUpdate`. Edit-mode via `EditorApplication.update`.
-- **Parent-sequence model**: every animation has `_start`, `_end`, `_timeScale`, `_parent`. A hidden root sequence owns top-level tweens. `Sequence` is the public type.
-- **Ease as value type**: `EaseRef` produced by `Easing.X(...)` factories. Parameters travel with the ease; tween stores one `EaseRef`.
-- **SoA-friendly internal layout**: keeps a future Burst/Jobs path cheap. Not a public concern.
-
-Full design and locked anchors: `Documentation~/architecture/design.md` and `Documentation~/architecture/overview.md`.
+Static-method API (`FT.Move(...)`) over a builder/handle split, pooled internal storage, a
+`MonoBehaviour`-free PlayerLoop runner, and a parent-sequence timeline model. Locked anchors and
+the reasoning behind each: [`Documentation~/architecture/design.md`](Documentation~/architecture/design.md).
+The invariants below are the parts an agent must not break without an ADR.
 
 ## Invariants (Do Not Break)
 
@@ -49,7 +25,7 @@ Full design and locked anchors: `Documentation~/architecture/design.md` and `Doc
 5. Pooled backing classes must have a finalizer that enqueues a leak-detection id; runner drains on main thread.
 6. Safe mode (try/catch around step and callbacks) stays in core, default `true` in Editor, `false` in release.
 7. The repo root IS the UPM package — Unity imports every file and DLL in it. Anything Unity must not see (dev tooling, .NET projects, build output) lives in a `~`-suffixed folder (like `Samples~`, `tools~`) or a dot-folder (like `.github`). Never generate or commit DLLs/`bin`/`obj` in a Unity-visible path.
-8. Samples and docs must call the static API as `FT.To(...)`, `FT.Sequence(...)`, etc. Never use `using static dyvoid.FeatherTween.FT;`; it shadows Unity built-in types such as `Color` and `Image` and produces `CS0119` errors.
+8. Samples and docs call the static API as `FT.To(...)`, `FT.Sequence(...)`. Never `using static dyvoid.FeatherTween.FT;` (see `Documentation~/guides/conventions.md`).
 
 ## AI Instructions
 
@@ -66,7 +42,7 @@ Full design and locked anchors: `Documentation~/architecture/design.md` and `Doc
 - Refactors that cut across multiple modules
 
 ### Do not do these
-- Commit directly to `main`
+- Commit directly to `main` or `develop`
 - Delete or rename files without being asked
 - Change architecture without recording an ADR in `Documentation~/adr/`
 - Add third-party dependencies without explicit instruction
@@ -74,7 +50,8 @@ Full design and locked anchors: `Documentation~/architecture/design.md` and `Doc
 
 ## Code Style
 
-Apply the unity dev skill (see above). Canonical written conventions: `Documentation~/guides/conventions.md`.
+Apply the **unity dev skill** when writing Unity C# here. Canonical written conventions, including
+the public API shape rules from ADR 0011: [`Documentation~/guides/conventions.md`](Documentation~/guides/conventions.md).
 
 ## Adding New Features
 
@@ -85,11 +62,10 @@ Apply the unity dev skill (see above). Canonical written conventions: `Documenta
 
 ## Testing
 
-Three asmdefs: `Tests/Editor` (EditMode correctness), `Tests/Runtime` (PlayMode), `Tests/Performance` (EditMode allocation guards + throughput).
+Principle: **allocation guards hard-fail** (zero managed bytes in steady-state ticking),
+**throughput benchmarks are report-only** (noisy, never gate a build). New code needs tests.
 
-Principle: **allocation guards hard-fail** (zero managed bytes in steady-state ticking, CI-safe), **throughput benchmarks are report-only** (noisy, never gate a build).
-
-Full run instructions, consumer-project setup (`testables` + perf package), and Test Runner troubleshooting: see `Documentation~/guides/testing.md`.
+Structure, run instructions, and consumer-project setup: [`Documentation~/guides/testing.md`](Documentation~/guides/testing.md).
 
 ## Documentation Discipline
 
@@ -105,29 +81,25 @@ If a change touches behavior described in a doc and the doc is not updated, the 
 
 ## Git Workflow
 
-See [`Documentation~/git-strategy.md`](Documentation~/git-strategy.md) for full branching, merging, and commit rules. In brief:
+Full rules: [`Documentation~/git-strategy.md`](Documentation~/git-strategy.md). In brief:
 
-- Trunk-based: single `main` branch, short-lived task/fix branches (`task/1.x-phase-name`, `fix/...`).
-- Rebase onto `main`, fast-forward merge only — no merge commits.
+- `main` equals the last tagged release. **`develop` is the integration branch** — branch from it,
+  merge back into it.
+- Short-lived work branches (`task/2.x-name`, `fix/...`), rebased onto `develop`, fast-forward merge.
 - No squashing — atomic commits are the audit trail.
 
 ## Key Documents
 
 | Document | Purpose |
 | -------- | ------- |
+| `Documentation~/PICKUP.md` | Where the last session left off — active work only |
+| `Documentation~/ROADMAP.md` | Feature status and what is planned next |
+| `Documentation~/planning/phases.md` | Milestone/phase plan and exit criteria |
 | `Documentation~/architecture/design.md` | Goals, non-goals, locked anchors |
-| `Documentation~/api/index.md` | Public API quickstart and map |
-| `Documentation~/architecture/overview.md` | Internal design |
-| `Documentation~/architecture/sequence.md` | Sequence internals |
-| `Documentation~/architecture/performance.md` | Allocation budget and benchmark methodology |
-| `Documentation~/planning/phases.md` | Milestone/phase plan |
-| `Documentation~/planning/risks.md` | Risks and open questions |
-| `Documentation~/guides/conventions.md` | Code style conventions |
-| `Documentation~/guides/testing.md` | Test structure, running, consumer setup |
-| `Documentation~/guides/editor.md` | Editor & integration |
-| `Documentation~/design/comparison.md` | Engine comparison |
-| `Documentation~/design/influences.md` | Design influences |
-| `Documentation~/git-strategy.md` | Branching, merging, commit rules |
-| `Documentation~/ROADMAP.md` | Feature candidates, planned work, and status |
-| `Documentation~/PICKUP.md` | Where the last session left off — active work only, not the backlog |
-| `Documentation~/adr/` | Architectural decision records |
+| `Documentation~/architecture/overview.md` | Internal design (storage, runner, tick) |
+| `Documentation~/api/index.md` | Public API quickstart and map to the rest of `api/` |
+| `Documentation~/guides/conventions.md` | Code style and API shape conventions |
+| `Documentation~/adr/README.md` | Index of architectural decision records |
+
+The full tree — sequence internals, performance plan, testing, editor, engine comparison,
+influences, risks — is indexed from [`README.md`](README.md#documentation).

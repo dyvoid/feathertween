@@ -1,16 +1,26 @@
 # Git Strategy for FeatherTween
 
-## Core Approach: Trunk-Based Development
+## Core Approach: `main` is the last release
 
-Single `main` branch. Short-lived branches (hours, not days). Everything merges fast or gets scrapped.
+Two long-lived branches:
+
+- **`main`** — always equals the most recent tagged release. Nothing lands here except a release merge.
+- **`develop`** — the integration branch. All work merges here; it is the default branch for day-to-day development and the base for every task branch.
+
+Work branches stay short-lived (hours, not days) and branch from `develop`.
+
+Before v0.1.0 the project was trunk-based on `main` alone. That worked while nothing was
+published; now that the package is consumed at a tagged version, `main` has to be a stable
+thing to point a consumer at, and unreleased M2 work cannot sit on it.
 
 ---
 
 ## Branch Naming
 
 ```
-main
-task/1.8-sequence-builder
+main                              last release, tagged
+develop                           integration
+task/2.1-setlink
 experiment/soa-storage
 fix/playhead-reset-on-restart
 ```
@@ -19,9 +29,10 @@ fix/playhead-reset-on-restart
 
 ## Merging
 
-- **Fast-forward only** — no merge commits, keeps history linear
-- **Rebase onto `main`** before merging, never merge `main` into your branch
+- **Task branch → `develop`**: rebase onto `develop`, fast-forward only — no merge commits
+- **`develop` → `main`**: release only, at the moment a version is tagged
 - **No squashing** — each atomic commit is a meaningful unit; squashing destroys the audit trail
+- Never merge `main` into a task branch; rebase instead
 
 ---
 
@@ -38,33 +49,17 @@ fix(runner): harden TickActive against reentrancy
 chore(deps): update lockfile
 ```
 
-Annotate AI-assisted commits in the body, not the subject, to keep the subject readable:
-
-```
-feat(sequence): add Append and Join to SequenceBuilder
-
-ai-assisted: <model> | prompt: .prompts/1.8-sequence-builder.md
-```
-
 ---
 
-## Prompt Versioning
+## Releasing
 
-Store prompts that generated significant code alongside the code:
+1. `develop` is green (see [CI gates](#ci) below) and `CHANGELOG.md` has a dated section for the version.
+2. Bump `version` in `package.json`.
+3. Fast-forward `main` to `develop`.
+4. Tag the release commit on `main` (`v0.1.0`, `v0.2.0`, …).
 
-```
-.prompts/
-  1.8-sequence-builder.md
-  1.9-callbacks.md
-```
-
----
-
-## Feature Flags
-
-Not applicable pre-1.0: M1 phases build directly on `main` and the package is not yet released to
-consumers, so there is no shipped surface to guard. Revisit once M1 ships and in-progress M2+ work
-needs to land on `main` without appearing in a tagged release.
+Unreleased work lives on `develop` until the next release, so there is no need for feature flags
+to hide in-progress features from consumers — `main` simply does not carry them yet.
 
 ---
 
@@ -89,17 +84,16 @@ High-blast-radius files always get manual review:
 
 ## CI
 
-CI is load-bearing for trunk-based development — slow or weak pipelines break the entire strategy.
+CI is load-bearing here — slow or weak pipelines break the entire strategy.
 
-`.github/workflows/ci.yml` runs on every push to `main` and every PR: it compiles Runtime + Samples
-and runs the EditMode suite via the .NET stub harness (`tools~/compile-check/`, no Unity license
-needed). Tests tagged `RequiresUnity` plus the PlayMode and Performance suites still require a
-manual Unity Test Runner pass before merge.
+`.github/workflows/ci.yml` runs on every push to `main` or `develop` and on every PR. What it runs
+and how to reproduce it locally: [`guides/testing.md`](guides/testing.md).
 
-Before anything merges to `main`:
+Before anything merges to `develop`:
 
-- CI green (stub harness suite passes)
-- Unity Test Runner green (Editor + Runtime + Performance) for changes touching Runtime code
+- CI green
+- Unity Test Runner green (Editor + Runtime + Performance) for changes touching Runtime code —
+  CI cannot cover `RequiresUnity` tests, PlayMode, or Performance
 - New code must be covered by tests — AI optimizes for code that *looks* correct, not code that *is* correct
 
 ---
@@ -108,7 +102,8 @@ Before anything merges to `main`:
 
 Enforce the strategy at the repo level on GitHub:
 
-- No direct push to `main`
+- `develop` is the default branch
+- No direct push to `main` or `develop`
 - Require fast-forward / rebase-based merges
 - Require CI to pass before merge
 
@@ -116,6 +111,5 @@ Enforce the strategy at the repo level on GitHub:
 
 ## Versioning
 
-Follow [Semantic Versioning](https://semver.org) per Unity package convention (`package.json`
-`version` field). Tag milestone completions (`v0.1.0` at M1 exit, etc.) once M1 ships; pre-1.0, breaking
-changes are expected between phases and don't require a major bump.
+[Semantic Versioning](https://semver.org) per Unity package convention (`package.json` `version`
+field). The public API is stable as of `v0.1.0`; breaking changes follow semver from there.

@@ -1,6 +1,11 @@
-# Awaiters and TweenSettings
+# Awaiters and TweenSettings — planned surface (M2)
 
-## Core awaiter
+> **None of this ships in v0.1.0.** Awaitables and `TweenSettings` are M2 `Planned`
+> ([`ROADMAP.md`](../ROADMAP.md)); the code samples below will not compile against the current
+> package. This page is the design intent the M2 implementation is held to, kept here so the
+> shape is settled before it is built. Every other page under `api/` documents shipped API.
+
+## Core awaiter (planned)
 
 Both `TweenBuilder<T>` and `Tween` expose `GetAwaiter()` returning a `TweenAwaiter` struct (implements `INotifyCompletion`). The builder's awaiter calls `.Start()` internally before returning the handle's awaiter.
 
@@ -14,9 +19,9 @@ The awaiter resolves on **any** terminal status: `Completed`, `Cancelled`, or au
 
 Allocation: the `TweenAwaiter` struct is alloc-free on the await side. Registering the continuation allocates one delegate per await (standard C# state machine behavior). No `TaskCompletionSource`.
 
-## UniTask integration
+## UniTask integration (M3 candidate)
 
-A separate asmdef `FeatherTween.UniTask` with `FEATHERTWEEN_UNITASK` define adds cancellation-aware await semantics.
+A separate asmdef `FeatherTween.UniTask` with a `FEATHERTWEEN_UNITASK` define would add cancellation-aware await semantics. The M2 awaiter targets Unity 6's native `Awaitable`, so this ships only if a consumer needs UniTask interop.
 
 ```csharp
 public static UniTask ToUniTask(this Tween t,
@@ -32,7 +37,7 @@ Cancellation behaviors: `Kill`, `Complete`, `Pause`, `KillAndThrow`, `CompleteAn
 
 Core does **not** reference UniTask. The bare `await tween;` path uses the core awaiter.
 
-## `TweenSettings`
+## `TweenSettings` (planned)
 
 Designer-facing serializable structs for inspector workflows.
 
@@ -67,9 +72,9 @@ public struct TweenSettings<T>
 Usage:
 
 ```csharp
-[SerializeField] TweenSettings<float> windowAnim;
+[SerializeField] TweenSettings<float> fadeAnim;
 public void SetOpen(bool open) =>
-    FT.AnchoredPosY(rect, windowAnim.WithDirection(toEndValue: open)).Start();
+    FT.Fade(canvasGroup, fadeAnim.WithDirection(toEndValue: open)).Start();
 ```
 
 The custom drawer collapses common fields into a single line with a foldout for advanced options. The AnimationCurve field is hidden unless `ease == Curve`. No reflection at runtime.

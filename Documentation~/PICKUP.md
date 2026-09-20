@@ -3,24 +3,29 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-07-18 (v0.1.0 released; M1 closed)
+Last updated: 2026-09-20 (documentation audit; branch model moved to `main`/`develop`)
 
 ## Current position
 
 - **Milestone**: M1 **closed**. v0.1.0 tagged on `main` 2026-07-18; public API declared stable (semver from here).
 - Unity manual test protocol for the Showcase (1.17) passed by user, including the zero-alloc profiler check (FeatherTween PlayerLoop rows at 0 B GC Alloc across chapters 1–7).
+- **Branching**: `main` now tracks the last release only; `develop` is the integration branch. See `Documentation~/git-strategy.md`. **Repo-side setup still pending** (see below).
 - **Next**: M2 begins — `SetLink` + Awaitables first (production stickiness), then zero-alloc fast paths. See `Documentation~/ROADMAP.md`.
 
-## This session (2026-07-18, full-library code review + release)
+## This session (2026-09-20, documentation audit)
 
-- **Full-library code review** found and fixed four correctness bugs (all with new tests):
-  - `SetLoops(0)` / `SetRemainingCycles(0)` produced `loopCount = 0`, which no completion check satisfies → clamped (0 counts the in-progress cycle as the last).
-  - Bulk ops (`FT.Kill`/`KillAll`/`PauseAll`/`ResumeAll`) shared one static snapshot pair; a nested bulk op from an `OnKill`/`OnPause` callback corrupted the outer iteration → pooled per-call snapshots.
-  - `CompleteAtCycleStart()` never completed a reversed tween still in cycle 0 (no lower boundary to cross) → explicit cycle-0 start path, mirroring sequences.
-  - `KillAll` flushed pool returns mid-tick when called from a callback → guarded by `TweenCommandQueue.InCallback`.
-- **Runner hardening**: PlayerLoop ticks no-op in edit mode (`UNITY_EDITOR`) so leftover hooks after play mode cannot double-advance edit-mode tweens alongside `EditorRunner`; `Install()` warns when a PlayerLoop anchor system is missing; `TweenData<T>.Step`/`SeekTo` compute the EveryLoop cycle slot in double, matching `ForceComplete`/`TotalProgress`.
-- **Docs**: `handles.md` documents the `SetRemainingCycles(0)` clamp and cycle-0 `CompleteAtCycleStart`; `Sequence.Insert` XML doc notes builder-time `SetDefaults` are not applied mid-play.
-- **Release**: `package.json` → 0.1.0, CHANGELOG dated, ROADMAP 1.17 → Done, merged to `main` (fast-forward), tagged `v0.1.0`.
+Audited the doc tree against the code; 21 findings fixed. The ones that change how work is done:
+
+- **Branch model** (user decision): `main` = last release, `develop` = integration, task branches off
+  `develop`, release = fast-forward `main` + tag. `git-strategy.md` rewritten; CI now builds `develop` too.
+- **`api/awaiters.md` and `guides/editor.md` documented unshipped API as shipped** — both now marked as
+  planned surface; `editor.md` describes what `FeatherTween.Editor` actually contains.
+- Editor preview is **M3** everywhere (was M4 in three docs). Roslyn analyzer is an **M2 candidate**
+  (was promised as a guarantee in three docs, planned nowhere). `.prompts/` + `ai-assisted:` commit
+  trailer dropped — zero commits ever used them.
+- `phases.md` preamble corrected (17 phases, closes at 1.17, no `m1.x` tags); the M2 fast-path design
+  decision moved into the M2 section.
+- Added `CLAUDE.md` (`@AGENTS.md`) so the agent guide auto-loads in Claude Code. AGENTS.md 133 → 105 lines.
 
 ## Test status
 
@@ -32,8 +37,8 @@ Last updated: 2026-07-18 (v0.1.0 released; M1 closed)
 
 - Performance tests require the consuming project to install `com.unity.test-framework.performance` (test-only dependency).
 - Abandoned (never-started) `SequenceBuilder` pins child store slots until `TweenStore.Reset()` — documented behavior (builders.md, CHANGELOG known limitations), LeakDetector warning is the mitigation.
-- **Builder buffer callback duplication** (`TransferCallbacks` duplicated between `TweenBuilderBuffer`/`SequenceBuilderBuffer`) — extract next time either changes.
-- **`Interpolators.Get<T>()` dictionary lookup per `Build()`** — valid micro-opt; fold into M2 fast paths (cache needs an `Interpolators.Reset()` version stamp).
+- Two micro-opts folded into the M2 fast-paths phase entry (`planning/phases.md`): the `TransferCallbacks` duplication between `TweenBuilderBuffer`/`SequenceBuilderBuffer`, and the `Interpolators.Get<T>()` dictionary lookup per `Build()`.
+- **Repo-side branch setup pending**: create `develop` from `main` on GitHub, make it the default branch, and set protection on both (no direct push, CI required). Until then the documented model is not enforced.
 
 ## Consumer setup reminders
 

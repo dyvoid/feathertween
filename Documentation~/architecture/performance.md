@@ -7,7 +7,6 @@ How FeatherTween stays allocation-free in the hot path and how performance is ve
 - **Tween creation**: 1 `TweenData<T>` from pool (no alloc after warmup) + 1 delegate pair (getter, setter) for generic form. Typed shortcuts may amortize delegates via cached statics where possible. `SequenceData` is not pooled (its entry array is unique per build).
 - **Per-frame step**: 0 managed alloc.
 - **Callback dispatch**: 0 alloc; single delegates, not delegate lists, not params arrays.
-- **Awaiter**: `TweenAwaiter` struct is alloc-free on the await side. The continuation registration allocates one delegate per await (standard C# state machine behavior). No `TaskCompletionSource`.
 - **`Kill(target)`** resolves through the target-indexed multimap: O(k) in the target's own tween count. `Free()` is an O(1) swap-remove from its active list via a slot→index map.
 
 ## SoA-readiness
@@ -32,6 +31,12 @@ Deterministic zero-managed-alloc assertions using `System.GC.GetAllocatedBytesFo
 - Tick cost at 1k and 10k concurrent float tweens.
 - `Start()` cost per tween.
 
-Cross-engine comparison (DOTween, PrimeTween, LitMotion) is deferred until there is a competitive claim to make; the harness structure mirrors LitMotion's `Tests.Benchmark` so it can be added apples-to-apples later.
+Cross-engine comparison (DOTween, PrimeTween, LitMotion) is planned for M2 with a documented,
+falsifiable configuration — see the "Cross-engine comparative benchmark" entry in
+[`../planning/phases.md`](../planning/phases.md). The harness structure mirrors LitMotion's
+`Tests.Benchmark` so the comparison can be added apples-to-apples.
+
+The awaiter's allocation budget is specified with the feature itself in
+[`../api/awaiters.md`](../api/awaiters.md) (M2, planned).
 
 The `Unity.PerformanceTesting` package (`com.unity.test-framework.performance`) is a test-only dependency the consuming project must install.
