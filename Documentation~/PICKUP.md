@@ -7,7 +7,11 @@ Last updated: 2026-09-20 (M2 started: `SetLink` shipped)
 
 ## Current position
 
-- **Milestone**: M1 **closed**. v0.1.0 tagged on `main` 2026-07-18; public API declared stable (semver from here).
+- **Milestone**: M1 **closed**. v0.1.0 tagged on `main` 2026-07-18.
+- **Versioning** (decided 2026-09-20, policy in `git-strategy.md`): pre-1.0, **minor versions may
+  break**; the 0.1.0 stability promise is withdrawn. `develop` carries `0.2.0-dev`; the release
+  commit drops the suffix. Release per coherent chunk — `v0.2.0` is `SetLink` + awaitables together,
+  so **do not tag until awaitables land**.
 - **Branching**: `main` tracks the last release and stays the default/landing branch; `develop` is the integration branch and the base for task branches. See `Documentation~/git-strategy.md`.
 - **M2 in flight**. `SetLink` done; **next up is Awaitables** (`TweenAwaiter` on Unity 6 native `Awaitable`, `WaitForCompletion`/`WaitForKill`/`WaitForPosition`), then the zero-alloc fast paths. See `Documentation~/ROADMAP.md`.
 

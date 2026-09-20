@@ -116,4 +116,28 @@ Enforce the strategy at the repo level on GitHub:
 ## Versioning
 
 [Semantic Versioning](https://semver.org) per Unity package convention (`package.json` `version`
-field). The public API is stable as of `v0.1.0`; breaking changes follow semver from there.
+field).
+
+**Pre-1.0, minor versions may contain breaking changes.** This is what `0.x` means in semver, and
+it is deliberate: M2-M5 carry work that may move the API or its observable behaviour (blendable
+tweens, SoA storage, the `Seek`/`Completed` question). v0.1.0 was released with a stronger promise
+than the version number implied; that promise is withdrawn rather than half-kept. In exchange,
+every break gets a `### Changed` or `### Removed` entry in `CHANGELOG.md` with a one-line migration
+note. `1.0.0` is where the stability promise gets made, earned by real usage.
+
+The version number tracks **compatibility impact, not effort**: additive API is a minor bump however
+small, and a month of internal work with no surface change is a patch. How large a release *feels*
+belongs in the changelog, not the number.
+
+### `develop` carries the next version with a `-dev` suffix
+
+`develop`'s `package.json` reads the version it is heading for, suffixed: `0.2.0-dev`. Without this
+both branches claim the same version and there is no way to tell a working copy from a release
+short of reading git history. The suffix is dropped by the release commit.
+
+### Release cadence
+
+Release when a **coherent chunk** is done and usable, not per merge and not per milestone. Per merge
+makes releases meaningless; per milestone leaves `main` — the consumer-facing landing page — stale
+for months. A milestone may therefore span several releases: M2's "production stickiness" pair
+(`SetLink` + awaitables) is `0.2.0`, and the rest of M2 follows in later versions.

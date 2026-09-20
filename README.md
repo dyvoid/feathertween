@@ -12,6 +12,9 @@ Lightweight tweening for Unity: animate transforms, UI, colors, or any value wit
 
 FeatherTween is distributed as a UPM package.
 
+> **Pre-1.0**: minor versions may contain breaking changes, as `0.x` implies in semver. Every one is
+> listed in [`CHANGELOG.md`](CHANGELOG.md) with a migration note. Pin a tag if you need stability.
+
 1. Add the repository as an embedded or scoped-registry package in your Unity project.
 2. Open `Window > Package Manager > FeatherTween > Samples` and import **Showcase** — a guided tour of the whole feature set as one scrubbable, captioned timeline with a player panel.
 

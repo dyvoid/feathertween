@@ -1,6 +1,6 @@
 {
   "name": "com.dyvoid.feathertween",
-  "version": "0.1.0",
+  "version": "0.2.0-dev",
   "displayName": "FeatherTween",
   "description": "Lightweight tweening for Unity: animate transforms, UI, colors, or any value with a single line of code, then chain tweens into sequences you can loop, reverse, pause, and scrub. No components to add, no per-frame garbage.",
   "unity": "6000.3",

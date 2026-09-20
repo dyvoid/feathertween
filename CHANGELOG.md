@@ -5,7 +5,19 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+**Pre-1.0, minor versions may contain breaking changes** — what `0.x` means in semver. Every break
+is listed here under `### Changed` or `### Removed` with a migration note. `1.0.0` is where the
+stability promise gets made.
+
 ## [Unreleased]
+
+### Changed
+
+- **Versioning policy**: the stronger-than-semver stability promise made at 0.1.0 is withdrawn. It
+  was stricter than the version number implied, it is redundant with the ADR process that actually
+  governs API changes here, and it would bind exactly the M2-M5 work most likely to need a break.
+  Nothing in the API changed; only the promise about future ones did. Full policy in
+  [`Documentation~/git-strategy.md`](Documentation~/git-strategy.md#versioning).
 
 ### Added
 
