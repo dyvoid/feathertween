@@ -37,7 +37,14 @@ Each chapter = one nested sequence, appended to the master with a label (`AddLab
 ## Player UI requirements
 
 - Seek bar bound two-way: dragging calls `Seek(time)` on the root; during playback the bar tracks `TotalProgress`. Chapter markers from labels; click a marker to seek to its label time.
-- Play/pause, reverse (toggles direction mid-flight), speed control (0.25×–4× via `SetTimeScale`), restart.
+- Play/pause as a **single fixed-position, fixed-width toggle** — it must not change slot or size
+  with playback state, or it reshuffles under the cursor while scrubbing. Replay is a separate,
+  always-present button. Plus reverse (toggles direction mid-flight) and speed control (0.25×–4×
+  via `SetTimeScale`).
+- Known rough edge: `Seek` never changes `Status` (see [`../api/handles.md`](../api/handles.md)), so a
+  timeline scrubbed to its end reads `Completed`, and `Play()` from there replays from 0 instead of
+  resuming at the playhead. The transport makes this legible rather than hiding it; resolving it
+  properly is an API-semantics question, not a sample fix.
 - The master sequence is `SetAutoKill(false)` so the movie is replayable and seekable after completion.
 
 ## Test protocol (manual, per release)

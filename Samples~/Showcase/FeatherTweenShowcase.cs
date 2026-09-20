@@ -776,21 +776,29 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 				showcase.Seek(target);
 			}
 
+			// Transport. The play/pause button keeps one slot, one fixed width and
+			// one meaning, so it cannot reshuffle under the cursor mid-drag:
+			// Pause while running, Play otherwise. Replay is its own button and
+			// never borrows that slot. Note that Play() on a timeline that has
+			// reached its end replays from 0 rather than resuming from the
+			// playhead, so scrubbing back from the end and pressing Play jumps to
+			// the start; Status in the header above reads Completed there.
 			GUILayout.BeginHorizontal();
-			if (showcase.Status == TweenStatus.Paused)
+			var running = showcase.Status == TweenStatus.Playing
+				|| showcase.Status == TweenStatus.Delayed;
+			if (GUILayout.Button(running ? "Pause" : "Play", GUILayout.Width(90f)))
 			{
-				if (GUILayout.Button("Play")) showcase.Resume();
+				if (running)
+				{
+					showcase.Pause();
+				}
+				else
+				{
+					showcase.Play();
+				}
 			}
-			else if (showcase.Status == TweenStatus.Completed)
-			{
-				if (GUILayout.Button("Replay")) showcase.Restart();
-			}
-			else
-			{
-				if (GUILayout.Button("Pause")) showcase.Pause();
-			}
+			if (GUILayout.Button("Replay")) showcase.Restart();
 			if (GUILayout.Button("Reverse")) showcase.Reverse();
-			if (GUILayout.Button("Restart")) showcase.Restart();
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();

@@ -45,6 +45,13 @@ Three decisions a future session should not silently reverse:
 
 ## Known issues / tech debt
 
+- **Open API question — `Seek` past the end leaves `Status == Completed`.** `Seek` is deliberately
+  status-neutral, so a timeline scrubbed to its end stays `Completed`; scrubbing back renders the
+  frame but never resumes, and `Play()` from there replays from 0 (`LifecycleTests
+  .Play_AfterCompletion_ReplaysFromZero` pins that). Found via the Showcase scrubber 2026-09-20; the
+  sample's transport now makes it legible rather than hiding it. Fixing it properly means deciding
+  whether `Completed` is a state or a position — if seeking backwards cleared it, `OnComplete`
+  re-firing needs an answer. Wants an ADR; do not patch it in the sample.
 - Performance tests require the consuming project to install `com.unity.test-framework.performance` (test-only dependency).
 - Abandoned (never-started) `SequenceBuilder` pins child store slots until `TweenStore.Reset()` — documented behavior (builders.md, CHANGELOG known limitations), LeakDetector warning is the mitigation.
 - Two micro-opts folded into the M2 fast-paths phase entry (`planning/phases.md`): the `TransferCallbacks` duplication between `TweenBuilderBuffer`/`SequenceBuilderBuffer`, and the `Interpolators.Get<T>()` dictionary lookup per `Build()`.
