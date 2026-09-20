@@ -9,7 +9,7 @@ Last updated: 2026-09-20 (documentation audit; branch model moved to `main`/`dev
 
 - **Milestone**: M1 **closed**. v0.1.0 tagged on `main` 2026-07-18; public API declared stable (semver from here).
 - Unity manual test protocol for the Showcase (1.17) passed by user, including the zero-alloc profiler check (FeatherTween PlayerLoop rows at 0 B GC Alloc across chapters 1–7).
-- **Branching**: `main` now tracks the last release only; `develop` is the integration branch. See `Documentation~/git-strategy.md`. **Repo-side setup still pending** (see below).
+- **Branching**: `main` tracks the last release and stays the default/landing branch; `develop` is the integration branch and the base for task branches. See `Documentation~/git-strategy.md`.
 - **Next**: M2 begins — `SetLink` + Awaitables first (production stickiness), then zero-alloc fast paths. See `Documentation~/ROADMAP.md`.
 
 ## This session (2026-09-20, documentation audit)
@@ -38,7 +38,7 @@ Audited the doc tree against the code; 21 findings fixed. The ones that change h
 - Performance tests require the consuming project to install `com.unity.test-framework.performance` (test-only dependency).
 - Abandoned (never-started) `SequenceBuilder` pins child store slots until `TweenStore.Reset()` — documented behavior (builders.md, CHANGELOG known limitations), LeakDetector warning is the mitigation.
 - Two micro-opts folded into the M2 fast-paths phase entry (`planning/phases.md`): the `TransferCallbacks` duplication between `TweenBuilderBuffer`/`SequenceBuilderBuffer`, and the `Interpolators.Get<T>()` dictionary lookup per `Build()`.
-- **Repo-side branch setup pending**: create `develop` from `main` on GitHub, make it the default branch, and set protection on both (no direct push, CI required). Until then the documented model is not enforced.
+- **Branch protection not set**: `develop` exists (created from `main` 2026-09-20). `main` stays the default branch by design — it is the consumer-facing landing page. Still needs, via GitHub settings: no direct push to either branch, PRs targeted at `develop`, CI required to merge. Until then the model is convention, not enforcement.
 
 ## Consumer setup reminders
 

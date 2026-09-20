@@ -4,8 +4,11 @@
 
 Two long-lived branches:
 
-- **`main`** — always equals the most recent tagged release. Nothing lands here except a release merge.
-- **`develop`** — the integration branch. All work merges here; it is the default branch for day-to-day development and the base for every task branch.
+- **`main`** — always equals the most recent tagged release. Nothing lands here except a release
+  merge. It stays GitHub's **default branch**: it is what a consumer lands on, so it shows stable,
+  released code and a README that describes what they can actually install.
+- **`develop`** — the integration branch. All work merges here, and every task branch is cut from
+  here. Not the default branch; contributors check it out explicitly.
 
 Work branches stay short-lived (hours, not days) and branch from `develop`.
 
@@ -102,8 +105,9 @@ Before anything merges to `develop`:
 
 Enforce the strategy at the repo level on GitHub:
 
-- `develop` is the default branch
+- `main` stays the default branch (consumer-facing landing page)
 - No direct push to `main` or `develop`
+- Open pull requests against `develop`, never `main`
 - Require fast-forward / rebase-based merges
 - Require CI to pass before merge
 

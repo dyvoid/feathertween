@@ -83,8 +83,8 @@ If a change touches behavior described in a doc and the doc is not updated, the 
 
 Full rules: [`Documentation~/git-strategy.md`](Documentation~/git-strategy.md). In brief:
 
-- `main` equals the last tagged release. **`develop` is the integration branch** — branch from it,
-  merge back into it.
+- `main` equals the last tagged release and stays the default branch for consumers.
+  **`develop` is the integration branch** — branch from it, merge back into it, PR against it.
 - Short-lived work branches (`task/2.x-name`, `fix/...`), rebased onto `develop`, fast-forward merge.
 - No squashing — atomic commits are the audit trail.
 
