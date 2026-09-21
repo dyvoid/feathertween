@@ -51,8 +51,10 @@ compiles in a project that uses UniTask and one that does not ([ADR 0013](../adr
   inside the `OnComplete` list, interleaved with your other `OnComplete` callbacks in registration
   order. Anything that ends by being **killed** — `Kill(false)`, a destroyed target, a `SetLink`
   kill, a safe-mode setter exception — has no `OnComplete` to fire and resumes from the disposal
-  hook, which runs **strictly last**: every caller invokes `OnKill` before calling
-  `TweenStore.Free`, and `Free` fires the hook at the very end.
+  hook, which runs **strictly last**: where a path fires `OnKill` at all it does so before calling
+  `TweenStore.Free`, and `Free` fires the hook at the very end. Not every kill fires `OnKill` — a
+  safe-mode setter exception without `CancelOnError` fires none, which is the case this design
+  exists for.
 - Awaiting a **builder starts it**, which also consumes it — an awaited builder cannot then be
   appended to a sequence.
 

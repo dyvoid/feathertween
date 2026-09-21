@@ -135,9 +135,12 @@ Snap timing matches the design anchor:
 `TweenStore.Free` fires a per-record disposal callback list after `OnFree()`, as the last thing it
 does. `Free` is the only route by which a record that reached a store slot can die — `Kill`, `Complete`,
 auto-kill, destroyed target, `SetLink` kill, safe-mode error cancel, sequence cascade — which makes
-it the one place a subscriber can be sure of hearing about a death however it happened. (The single
-exception never reaches a slot: a safe-mode snap failure in `TweenBuilder.Start` returns the record
-to its pool directly, before any handle exists to subscribe.) `await` is built on it
+it the one place a subscriber can be sure of hearing about a death however it happened. Two
+exceptions, neither of which fires the hook: a safe-mode snap failure in `TweenBuilder.Start`
+returns its record to the pool before it ever reaches a slot (so no handle exists to subscribe),
+and `TweenStore.Reset` clears and bumps every slot wholesale without running `OnFree` or the hook —
+which is why an `await` outstanding across a domain-reload-free play-mode transition parks. Anything
+building on this hook needs to treat `Reset` as its own case. `await` is built on it
 (ADR 0013): the user-facing `OnKill` does **not** fire on every death, notably not on a safe-mode
 setter exception without `CancelOnError`, so an awaiter hung off `OnKill` parks forever. Invoked
 inside a `TweenCommandQueue` callback scope like every other callback list, so structural calls made

@@ -72,8 +72,9 @@ Option 3 for `await`, option 2 for composition.
   an awaited builder cannot also be appended to a sequence.
 - Completing and being killed resume by different routes. `Complete()`, `Kill(true)` and a natural
   end all fire `OnComplete`, and `OneShotSignal` spends the resume there — so the disposal hook
-  no-ops afterwards. A kill has no `OnComplete`, so the hook is what resumes it, strictly after
-  `OnKill` (every caller fires `OnKill` before calling `Free`, and `Free` runs the hook last).
+  no-ops afterwards. A kill has no `OnComplete`, so the hook is what resumes it, and it runs last:
+  where a path fires `OnKill` it does so before calling `Free`, and `Free` runs the hook at the end.
+  Some kills fire no `OnKill` at all — the safe-mode setter exception this ADR exists for is one.
 - Not implemented here: `WaitForKill`, `WaitForPosition`, `WaitForElapsedLoops`. Each needs engine
   machinery that does not exist yet — a disposal hook that fires however a record dies, and a
   per-tick registry of pending playhead waits. Shipping them on top of the current callback set
