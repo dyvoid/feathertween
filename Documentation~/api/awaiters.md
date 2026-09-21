@@ -46,8 +46,9 @@ compiles in a project that uses UniTask and one that does not ([ADR 0013](../adr
   because the record's lists are cleared on pool return.
 - `TweenStore.Reset()` bumps every generation without firing anything, so an `await` outstanding
   across it parks. Only reachable with *Enter Play Mode Options → no domain reload*.
-- Continuations run inside the existing `OnComplete`/`OnKill` lists, so they interleave with a
-  tween's other callbacks in registration order rather than strictly following them.
+- On a kill path the continuation runs **strictly last**: `TweenStore.Free` fires `OnKill` (where
+  that path fires it at all) and only then the disposal hook. On a natural completion it runs inside
+  the `OnComplete` list, so it interleaves with other `OnComplete` callbacks in registration order.
 - Awaiting a **builder starts it**, which also consumes it — an awaited builder cannot then be
   appended to a sequence.
 

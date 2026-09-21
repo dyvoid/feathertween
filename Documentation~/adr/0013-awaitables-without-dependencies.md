@@ -70,8 +70,9 @@ Option 3 for `await`, option 2 for composition.
   state machine twice throws.
 - Awaiting a *builder* starts it. That is the ergonomic point of `await FT.Move(...)`, but it means
   an awaited builder cannot also be appended to a sequence.
-- Continuations run inside the existing `OnComplete`/`OnKill` callback lists, so they fire in
-  registration order among a tween's other callbacks rather than strictly after all of them.
+- On a kill the continuation fires strictly after `OnKill`, because `TweenStore.Free` runs the
+  disposal hook last. On a natural completion it fires inside the `OnComplete` list, in registration
+  order among the tween's own callbacks.
 - Not implemented here: `WaitForKill`, `WaitForPosition`, `WaitForElapsedLoops`. Each needs engine
   machinery that does not exist yet — a disposal hook that fires however a record dies, and a
   per-tick registry of pending playhead waits. Shipping them on top of the current callback set

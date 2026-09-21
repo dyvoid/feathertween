@@ -130,6 +130,18 @@ Snap timing matches the design anchor:
 - Per-frame, if `target is UnityEngine.Object o && o == null` → kill silently.
 - `SetLink(GameObject, LinkBehavior)`: `KillOnDestroy` (default), `KillOnDisable`, `PauseOnDisable`, `PauseOnDisableResumeOnEnable`, `RestartOnEnable`. The runner reads `activeInHierarchy` once per tick for each linked record — no component is attached to the user's objects (ADR 0012). The poll runs *before* the status gate, so a link-paused record is still evaluated and can resume. Links are root-level: appending a linked builder into a sequence throws.
 
+### Disposal hook
+
+`TweenStore.Free` fires a per-record disposal callback list after `OnFree()`, as the last thing it
+does. `Free` is the only route by which a record can die — `Kill`, `Complete`, auto-kill, destroyed
+target, `SetLink` kill, safe-mode error cancel, sequence cascade — which makes it the one place a
+subscriber can be sure of hearing about a death however it happened. `await` is built on it
+(ADR 0013): the user-facing `OnKill` does **not** fire on every death, notably not on a safe-mode
+setter exception without `CancelOnError`, so an awaiter hung off `OnKill` parks forever. Invoked
+inside a `TweenCommandQueue` callback scope like every other callback list, so structural calls made
+from a resumed `await` defer to end of tick. This is also the machinery the deferred `WaitForKill` /
+`WaitForPosition` work is expected to build on.
+
 ### Safe mode
 
 A try/catch wrapper around `setter(...)` and each callback invocation, compiled out entirely under the `FEATHERTWEEN_RELEASE` define (`#if`-style; verified by the release CI leg). Costs one try/catch per tween per frame when enabled. Default on in Editor, off in player builds. Toggleable per tween via `.SetSafeMode(bool)`; `SetCancelOnError(bool)` refines what happens on error.

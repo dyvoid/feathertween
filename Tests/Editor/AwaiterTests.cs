@@ -307,6 +307,38 @@ namespace dyvoid.FeatherTween.Tests
 		}
 
 		[Test]
+		public void Continuation_StructuralCallsAreDeferred_OnEveryResumePath()
+		{
+			// The deferral contract in handles.md is package-wide: a structural
+			// call made from inside a callback is queued to end of tick. A resumed
+			// await is a callback, and it must not matter which path resumed it.
+			// Auto-kill resumes from the disposal hook, non-auto-kill from
+			// OnComplete; before the hook opened a callback scope these two
+			// disagreed, which made the contract depend on SetAutoKill.
+			foreach (var autoKill in new[] { true, false })
+			{
+				TweenStore.Reset();
+				FeatherTweenRunner.Reset();
+
+				var victim = ManualTween(10f, autoKill: false);
+				var observed = true;
+				var driver = ManualTween(1f, autoKill);
+
+				driver.GetAwaiter().OnCompleted(() =>
+				{
+					victim.Kill();
+					observed = victim.IsAlive;
+				});
+
+				FeatherTweenRunner.ManualTick(1.1);
+
+				Assert.That(observed, Is.True,
+					$"autoKill={autoKill}: Kill() from a resumed await must defer, not apply immediately");
+				Assert.That(victim.IsAlive, Is.False, "and must have been applied by end of tick");
+			}
+		}
+
+		[Test]
 		public void TwoAwaitersOnOneTween_BothResume()
 		{
 			var t = ManualTween();

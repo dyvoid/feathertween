@@ -288,18 +288,56 @@ namespace dyvoid.FeatherTween.Internal
 			onDisposed.Add(cb);
 		}
 
-		// Deliberately raw: no safe-mode wrapper and no callback-depth scope. The
-		// only subscriber is the awaiter machinery, which owns what it runs, and
-		// the slot is already free by this point.
+		// Opens a callback scope like InvokeList does, and for the same reason: what
+		// runs here is the user's resumed async method body, not our own code. An
+		// earlier version skipped it on the theory that "the awaiter machinery owns
+		// what it runs" - it does not, and the omission made Kill/Complete/Restart/
+		// Reverse from a resumed await defer or not depending on SetAutoKill, since
+		// a non-auto-kill record resumes from inside InvokeOnComplete's scope and
+		// every other path resumes from here. Documentation~/api/handles.md states
+		// one deferral contract for the whole package; this keeps it true.
 		public void InvokeOnDisposed()
 		{
 			if (onDisposed == null)
 			{
 				return;
 			}
-			for (var i = 0; i < onDisposed.Count; i++)
+			TweenCommandQueue.EnterCallback();
+			try
 			{
-				onDisposed[i]?.Invoke();
+				for (var i = 0; i < onDisposed.Count; i++)
+				{
+					var cb = onDisposed[i];
+					if (cb == null)
+					{
+						continue;
+					}
+#if !FEATHERTWEEN_RELEASE
+					if (safeMode)
+					{
+						try
+						{
+							cb();
+						}
+						catch (Exception e)
+						{
+							// Logged, not routed through HandleCallbackError: the
+							// record is already freed, so there is nothing left to
+							// cancel. Swallowing here keeps a throwing continuation
+							// from unwinding out of TweenStore.Free and stranding
+							// the rest of the tick's pendingKills, which would leak
+							// their store slots for good.
+							UnityEngine.Debug.LogException(e);
+						}
+						continue;
+					}
+#endif
+					cb();
+				}
+			}
+			finally
+			{
+				TweenCommandQueue.ExitCallback();
 			}
 		}
 
