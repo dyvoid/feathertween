@@ -58,9 +58,16 @@ Option 3 for `await`, option 2 for composition.
   The zero-allocation guarantee covers steady-state ticking, not the act of awaiting.
 - The awaiter resumes on **any** terminal status — completed, cancelled, auto-killed. Callers
   distinguish outcomes by reading `tween.Status` after the await. It does not throw on cancel.
-- `OneShotSignal` guards the one case that would otherwise break: a `SetAutoKill(false)` tween that
-  completes and is killed later would fire both `OnComplete` and `OnKill` on the same continuation,
-  and resuming a state machine twice throws.
+- Registration is on `OnComplete` **plus an internal disposal hook** fired from `TweenStore.Free`,
+  not on `OnKill`. `Free` is the one chokepoint every death route passes through, which is what
+  makes the resume total. Hanging the awaiter off `OnKill` instead left `await` parked forever when
+  a safe-mode setter threw without `CancelOnError` — that path cancels and frees without firing
+  `OnKill` (the no/no/no row of the firing matrix), and it is the *default* Editor configuration.
+  The disposal hook is the same machinery ADR-wise that `WaitForKill` was deferred for; building it
+  here is what makes `await` correct, and it lowers the cost of the deferred three.
+- `OneShotSignal` collapses the two paths that legitimately fire twice: auto-kill (`OnComplete`,
+  then the free), and complete → `Restart()` → complete again on a non-auto-kill tween. Resuming a
+  state machine twice throws.
 - Awaiting a *builder* starts it. That is the ergonomic point of `await FT.Move(...)`, but it means
   an awaited builder cannot also be appended to a sequence.
 - Continuations run inside the existing `OnComplete`/`OnKill` callback lists, so they fire in

@@ -32,6 +32,10 @@ namespace dyvoid.FeatherTween.Internal
 		private List<CallbackEntry> onComplete;
 		private List<CallbackEntry> onKill;
 		private List<CallbackEntry> onRewind;
+		// Fired by TweenStore.Free, so it reaches every death route — including the
+		// ones no user-facing callback covers, like a safe-mode setter exception
+		// without CancelOnError. Awaiters hang off this; see ADR 0013.
+		private List<Action> onDisposed;
 
 		public int Direction
 		{
@@ -274,6 +278,31 @@ namespace dyvoid.FeatherTween.Internal
 			onUpdate.Add(cb);
 		}
 
+		public void AddOnDisposed(Action cb)
+		{
+			if (cb == null)
+			{
+				return;
+			}
+			onDisposed ??= new List<Action>();
+			onDisposed.Add(cb);
+		}
+
+		// Deliberately raw: no safe-mode wrapper and no callback-depth scope. The
+		// only subscriber is the awaiter machinery, which owns what it runs, and
+		// the slot is already free by this point.
+		public void InvokeOnDisposed()
+		{
+			if (onDisposed == null)
+			{
+				return;
+			}
+			for (var i = 0; i < onDisposed.Count; i++)
+			{
+				onDisposed[i]?.Invoke();
+			}
+		}
+
 		public void InvokeOnStart() => InvokeList(onStart);
 		public void InvokeOnPlay() => InvokeList(onPlay);
 		public void InvokeOnPause() => InvokeList(onPause);
@@ -438,6 +467,7 @@ namespace dyvoid.FeatherTween.Internal
 			onComplete?.Clear();
 			onKill?.Clear();
 			onRewind?.Clear();
+			onDisposed?.Clear();
 		}
 	}
 }

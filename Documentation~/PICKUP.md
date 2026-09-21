@@ -27,8 +27,10 @@ Three things a future session should not silently reverse:
   is ours. `WaitForCompletion()` returns `Awaitable` only so consumers can `AsUniTask()` it for `WhenAll`.
 - **`await` is not zero-alloc and cannot be** — the async state machine allocates per call; only the
   struct is free. Do not re-add the "zero-alloc await" claim `phases.md` used to carry.
-- **`OneShotSignal` is load-bearing**: a `SetAutoKill(false)` tween that completes then gets killed
-  fires both `OnComplete` and `OnKill`, and resuming a state machine twice throws.
+- **The awaiter hangs off `OnComplete` + an internal disposal hook fired by `TweenStore.Free`, not
+  `OnKill`.** `Free` is the one chokepoint every death route passes; `OnKill` is not — a safe-mode
+  setter exception without `CancelOnError` (the Editor default) cancels and frees without firing it,
+  which parked `await` forever in the first cut. Do not "simplify" this back to `OnKill`.
 
 **Deliberately not built**: `WaitForKill`, `WaitForPosition`, `WaitForElapsedLoops` — each needs a
 disposal hook or a per-tick pending-wait registry the engine lacks; on today's callbacks they hang.

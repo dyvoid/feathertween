@@ -36,7 +36,7 @@ Sequence seq = FT.Sequence()
     .Start();
 
 // Await a tween
-await FT.Fade(canvasGroup, 0f, 0.5f); // M2 (planned): awaitable handles
+await FT.Fade(canvasGroup, 0f, 0.5f); // awaiting a builder starts it
 ```
 
 ## API map

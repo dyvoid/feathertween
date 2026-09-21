@@ -100,7 +100,6 @@ namespace dyvoid.FeatherTween
 		/// <summary>Coroutine equivalent: <c>yield return tween.ToYieldInstruction();</c>.</summary>
 		public TweenYieldInstruction ToYieldInstruction() => new TweenYieldInstruction(id, generation);
 
-
 		/// <summary>Absolute remaining cycle count, counting the in-progress cycle as the first; negative means loop forever.</summary>
 		public void SetRemainingCycles(int cycles)
 		{

@@ -30,21 +30,7 @@ namespace dyvoid.FeatherTween
 		}
 
 		/// <summary>True when there is nothing left to wait for, so <c>await</c> continues synchronously.</summary>
-		public bool IsCompleted
-		{
-			get
-			{
-				var data = TweenStore.Get(id, generation);
-				if (data == null)
-				{
-					return true;
-				}
-				var status = data.Status;
-				return status == TweenStatus.Completed
-					|| status == TweenStatus.Cancelled
-					|| status == TweenStatus.Disposed;
-			}
-		}
+		public bool IsCompleted => AwaitOps.IsFinished(id, generation);
 
 		/// <summary>Called by the compiler; registers the continuation to run when the animation ends.</summary>
 		public void OnCompleted(Action continuation)
@@ -54,20 +40,12 @@ namespace dyvoid.FeatherTween
 				return;
 			}
 
-			var data = TweenStore.Get(id, generation);
-			if (data == null)
+			if (!AwaitOps.TryRegisterResume(id, generation, continuation))
 			{
 				// Died between the IsCompleted check and here. Nothing will fire
 				// a callback now, so resume rather than hang forever.
 				continuation();
-				return;
 			}
-
-			// Both lists: OnComplete for a natural end, OnKill for every other.
-			// OneShotSignal keeps that to a single resume.
-			var signal = new OneShotSignal(continuation);
-			data.AddOnComplete(signal.Fire);
-			data.AddOnKill(signal.Fire);
 		}
 
 		/// <summary>Called by the compiler when the await resumes. Awaiting an animation produces no value.</summary>

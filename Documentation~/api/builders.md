@@ -9,7 +9,7 @@ public struct TweenBuilder<T>
 {
     // Terminator
     public Tween Start();
-    // M2 (planned): TweenAwaiter GetAwaiter() — implicit Start on await
+    public TweenAwaiter GetAwaiter();  // await the builder; starts it
 }
 ```
 
@@ -23,6 +23,7 @@ public struct SequenceBuilder
     public SequenceBuilder SetDefaults(/* ease, loops, delay — no duration */);
     public SequenceBuilder SetTarget(object target);   // bulk-kill scope
     public SequenceBuilder SetLink(GameObject go, LinkBehavior b = LinkBehavior.KillOnDestroy);
+    public TweenAwaiter GetAwaiter();                  // await the builder; starts it
     public SequenceBuilder SetCancelBehavior(SequenceCancelBehavior b);
     public SequenceBuilder SetLoops(int count, LoopType loopType);
 

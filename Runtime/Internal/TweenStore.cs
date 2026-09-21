@@ -172,6 +172,9 @@ namespace dyvoid.FeatherTween.Internal
 			if (freed != null)
 			{
 				freed.OnFree();
+				// Every route a record can die by funnels through here, which is
+				// what makes it the right place to resume a parked await (ADR 0013).
+				freed.InvokeOnDisposed();
 				pendingPoolReturns.Add(freed);
 			}
 		}

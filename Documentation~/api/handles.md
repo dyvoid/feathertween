@@ -30,7 +30,9 @@ public readonly struct Tween : IEquatable<Tween>
     public Tween OnKill(Action cb);              // multicast
     public Tween OnStepComplete(Action cb);      // multicast
 
-    // M2 (planned): TweenAwaiter GetAwaiter() for `await tween`.
+    public TweenAwaiter GetAwaiter();               // await tween
+    public Awaitable WaitForCompletion();           // compose / AsUniTask()
+    public TweenYieldInstruction ToYieldInstruction(); // coroutines
 }
 ```
 
@@ -67,7 +69,9 @@ public readonly struct Sequence : IEquatable<Sequence>
     public Sequence OnKill(Action cb);           // multicast
     public Sequence OnStepComplete(Action cb);   // multicast
 
-    // M2 (planned): TweenAwaiter GetAwaiter() for `await sequence`.
+    public TweenAwaiter GetAwaiter();               // await sequence
+    public Awaitable WaitForCompletion();           // compose / AsUniTask()
+    public TweenYieldInstruction ToYieldInstruction(); // coroutines
 }
 ```
 
@@ -154,6 +158,11 @@ A zero-duration tween completes on the first tick after `.Start()`. `OnStart`, `
 | `SetLink` kill on an already-completed record | no          | no         | no     |
 | Setter exception + `CancelOnError`     | no             | no         | yes    |
 | Setter exception, safe mode, no `CancelOnError` (logged) | no | no    | no     |
+
+An `await` on the handle resumes on **every** row above, including the last one. It is registered on
+`OnComplete` and on an internal disposal hook fired by the store when a record is freed, rather than
+on `OnKill` — which is exactly why the no/no/no row still resumes it. See
+[`awaiters.md`](awaiters.md) and [ADR 0013](../adr/0013-awaitables-without-dependencies.md).
 
 ### Reentrancy
 

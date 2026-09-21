@@ -25,11 +25,27 @@ compiles in a project that uses UniTask and one that does not ([ADR 0013](../adr
 
 - Resumes on **any** terminal status — `Completed`, `Cancelled`, or auto-killed. Read
   `tween.Status` after the await to tell them apart; the awaiter never throws on cancel.
-- Resumes **exactly once**. A `SetAutoKill(false)` tween that completes and is killed later would
-  otherwise fire both `OnComplete` and `OnKill` into the same continuation, and resuming a state
-  machine twice throws.
+- Resumes **exactly once**, which takes a guard: auto-kill fires `OnComplete` and then frees the
+  record, and a `SetAutoKill(false)` tween that completes, is `Restart()`ed and completes again
+  fires `OnComplete` twice. Resuming a state machine twice throws.
+- Registration is on `OnComplete` plus an internal **disposal hook** fired by the store whenever a
+  record is freed — not on `OnKill`. That matters: a safe-mode setter exception without
+  `CancelOnError` (the Editor default pair) cancels and frees the tween *without* firing `OnKill`
+  at all, and an awaiter hung off `OnKill` would park forever.
 - A **dead handle resumes immediately** rather than parking forever.
 - A **paused** tween does not resume — pausing is not finishing.
+- The continuation runs **inside the tick**, with FeatherTween's callback scope open. Structural
+  calls the resumed code makes — `Kill`, `Complete`, `Restart`, `Reverse` — are therefore deferred
+  to the end of that tick, which surprises people who read `await` as "back on my own stack". For
+  the same reason, `Restart(); await tween;` written inside a callback falls straight through: the
+  restart has not been applied yet when the compiler tests `IsCompleted`.
+- **Repeated awaits on a reusable tween accumulate.** There is no way to unregister a callback, so
+  each `await` on a `SetAutoKill(false)` tween you restart in a loop leaves two spent entries behind
+  forever. The continuation itself is released as soon as it fires, but the list is not. Awaiting a
+  long-lived tween thousands of times will grow memory; awaiting one that auto-kills will not,
+  because the record's lists are cleared on pool return.
+- `TweenStore.Reset()` bumps every generation without firing anything, so an `await` outstanding
+  across it parks. Only reachable with *Enter Play Mode Options → no domain reload*.
 - Continuations run inside the existing `OnComplete`/`OnKill` lists, so they interleave with a
   tween's other callbacks in registration order rather than strictly following them.
 - Awaiting a **builder starts it**, which also consumes it — an awaited builder cannot then be

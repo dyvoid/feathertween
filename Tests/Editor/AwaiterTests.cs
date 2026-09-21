@@ -1,5 +1,8 @@
 using System;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 using dyvoid.FeatherTween;
 using dyvoid.FeatherTween.Internal;
 
@@ -86,11 +89,12 @@ namespace dyvoid.FeatherTween.Tests
 		}
 
 		[Test]
-		public void OnCompleted_ResumesExactlyOnce_WhenCompletedThenKilled()
+		public void OnCompleted_ResumesExactlyOnce_AcrossRestartAndSecondCompletion()
 		{
-			// The case OneShotSignal exists for: with autoKill off the record
-			// survives completion, so a later Kill would fire OnKill on the same
-			// continuation and resume an already-resumed state machine.
+			// One of the two cases OneShotSignal exists for. A SetAutoKill(false)
+			// record survives completion, so Restart + complete again fires
+			// OnComplete a second time on the same list. Without the guard that
+			// resumes an already-resumed state machine, which throws.
 			var t = ManualTween(autoKill: false);
 			var resumed = 0;
 			t.GetAwaiter().OnCompleted(() => resumed++);
@@ -98,8 +102,50 @@ namespace dyvoid.FeatherTween.Tests
 			FeatherTweenRunner.ManualTick(1.1);
 			Assert.That(resumed, Is.EqualTo(1));
 
-			t.Kill();
-			Assert.That(resumed, Is.EqualTo(1), "second resume would throw inside a real async method");
+			t.Restart();
+			FeatherTweenRunner.ManualTick(1.1);
+			Assert.That(resumed, Is.EqualTo(1), "a second resume would throw inside a real async method");
+		}
+
+		[Test]
+		public void OnCompleted_ResumesExactlyOnce_OnAutoKill()
+		{
+			// The other case: auto-kill fires OnComplete and then frees the record,
+			// which fires the disposal hook the awaiter is also registered on.
+			var t = ManualTween();
+			var resumed = 0;
+			t.GetAwaiter().OnCompleted(() => resumed++);
+
+			FeatherTweenRunner.ManualTick(1.1);
+
+			Assert.That(t.IsAlive, Is.False, "auto-killed, so it went through TweenStore.Free too");
+			Assert.That(resumed, Is.EqualTo(1));
+		}
+
+		[Test]
+		[Category("RequiresSafeMode")] // the safe-mode wrapper is compiled out under FEATHERTWEEN_RELEASE
+		public void OnCompleted_ResumesWhenASafeModeSetterThrows_WithoutCancelOnError()
+		{
+			// Editor defaults: SafeMode on, CancelOnError off. That path sets
+			// Cancelled and frees the record WITHOUT firing OnKill (the no/no/no
+			// row of the firing matrix), so an awaiter registered on OnKill would
+			// park forever. The disposal hook is what makes this resume.
+			var v = 0f;
+			var t = FT.To(() => v, _ => throw new InvalidOperationException("setter blew up"), 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetSafeMode(true)
+				.SetCancelOnError(false)
+				.Start();
+
+			LogAssert.Expect(LogType.Exception, new Regex("setter blew up"));
+
+			var resumed = 0;
+			t.GetAwaiter().OnCompleted(() => resumed++);
+
+			FeatherTweenRunner.ManualTick(0.1);
+
+			Assert.That(t.IsAlive, Is.False, "the setter exception killed it");
+			Assert.That(resumed, Is.EqualTo(1), "an await here used to park forever");
 		}
 
 		[Test]

@@ -183,7 +183,6 @@ namespace dyvoid.FeatherTween
 		/// <summary>Coroutine equivalent: <c>yield return sequence.ToYieldInstruction();</c>.</summary>
 		public TweenYieldInstruction ToYieldInstruction() => new TweenYieldInstruction(id, generation);
 
-
 		// Late subscriptions on a dead handle are no-ops: the handle cannot know
 		// whether its record completed or was killed, so firing either callback
 		// would be a guess (phase 1.15; Documentation~/api/handles.md).
