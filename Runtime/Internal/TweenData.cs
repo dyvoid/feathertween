@@ -291,11 +291,15 @@ namespace dyvoid.FeatherTween.Internal
 		// Opens a callback scope like InvokeList does, and for the same reason: what
 		// runs here is the user's resumed async method body, not our own code. An
 		// earlier version skipped it on the theory that "the awaiter machinery owns
-		// what it runs" - it does not, and the omission made Kill/Complete/Restart/
-		// Reverse from a resumed await defer or not depending on SetAutoKill, since
-		// a non-auto-kill record resumes from inside InvokeOnComplete's scope and
-		// every other path resumes from here. Documentation~/api/handles.md states
-		// one deferral contract for the whole package; this keeps it true.
+		// what it runs" - it does not, and the omission split the deferral contract
+		// by how the animation ended. Anything that ends by COMPLETING (natural end,
+		// Complete(), Kill(true)) resumes from InvokeOnComplete, inside its scope;
+		// OneShotSignal spends the resume there, so this hook then no-ops. Anything
+		// that ends by being KILLED (Kill(false), destroyed target, SetLink kill,
+		// safe-mode setter throw) has no OnComplete to fire and resumes from here -
+		// at depth 0 without this scope, which applied Kill/Complete/Restart/Reverse
+		// inline instead of deferring. Documentation~/api/handles.md states one
+		// deferral contract for the whole package; this keeps it true.
 		public void InvokeOnDisposed()
 		{
 			if (onDisposed == null)

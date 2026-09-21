@@ -307,35 +307,54 @@ namespace dyvoid.FeatherTween.Tests
 		}
 
 		[Test]
-		public void Continuation_StructuralCallsAreDeferred_OnEveryResumePath()
+		public void Continuation_StructuralCallsDefer_WhenResumedByAKill()
 		{
-			// The deferral contract in handles.md is package-wide: a structural
-			// call made from inside a callback is queued to end of tick. A resumed
-			// await is a callback, and it must not matter which path resumed it.
-			// Auto-kill resumes from the disposal hook, non-auto-kill from
-			// OnComplete; before the hook opened a callback scope these two
-			// disagreed, which made the contract depend on SetAutoKill.
-			foreach (var autoKill in new[] { true, false })
+			// The resume path that actually goes through the disposal hook. A
+			// natural completion does NOT: OneShotSignal spends the resume in
+			// OnComplete, and the hook then no-ops. So the discriminator is
+			// completed vs killed, not autoKill.
+			//
+			// handles.md states one deferral contract for the package: a structural
+			// call made from inside a callback is queued to end of tick. Before the
+			// hook opened a callback scope this path applied it inline instead.
+			var victim = ManualTween(10f, autoKill: false);
+			var driver = ManualTween(10f);
+			var observedInside = true;
+
+			driver.GetAwaiter().OnCompleted(() =>
 			{
-				TweenStore.Reset();
-				FeatherTweenRunner.Reset();
+				victim.Kill();
+				observedInside = victim.IsAlive;
+			});
 
-				var victim = ManualTween(10f, autoKill: false);
-				var observed = true;
-				var driver = ManualTween(1f, autoKill);
+			driver.Kill();
 
-				driver.GetAwaiter().OnCompleted(() =>
-				{
-					victim.Kill();
-					observed = victim.IsAlive;
-				});
+			Assert.That(observedInside, Is.True,
+				"Kill() from a resumed await must defer, not apply inline");
+			Assert.That(victim.IsAlive, Is.False,
+				"and must have been drained once the callback scope closed");
+		}
 
-				FeatherTweenRunner.ManualTick(1.1);
+		[Test]
+		public void Continuation_StructuralCallsDefer_WhenResumedByCompletion()
+		{
+			// The other resume path, for the same contract. This one already
+			// deferred before the fix, because OnComplete runs inside InvokeList's
+			// scope — it is here so the two paths are pinned as behaving alike.
+			var victim = ManualTween(10f, autoKill: false);
+			var driver = ManualTween(1f);
+			var observedInside = true;
 
-				Assert.That(observed, Is.True,
-					$"autoKill={autoKill}: Kill() from a resumed await must defer, not apply immediately");
-				Assert.That(victim.IsAlive, Is.False, "and must have been applied by end of tick");
-			}
+			driver.GetAwaiter().OnCompleted(() =>
+			{
+				victim.Kill();
+				observedInside = victim.IsAlive;
+			});
+
+			FeatherTweenRunner.ManualTick(1.1);
+
+			Assert.That(observedInside, Is.True);
+			Assert.That(victim.IsAlive, Is.False);
 		}
 
 		[Test]
