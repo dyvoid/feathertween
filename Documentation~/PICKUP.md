@@ -3,7 +3,7 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-09-20 (M2 started: `SetLink` shipped)
+Last updated: 2026-09-21 (`SetLink` merged; awaitables on `task/2.1-awaitables`)
 
 ## Current position
 
@@ -13,39 +13,37 @@ Last updated: 2026-09-20 (M2 started: `SetLink` shipped)
   commit drops the suffix. Release per coherent chunk — `v0.2.0` is `SetLink` + awaitables together,
   so **do not tag until awaitables land**.
 - **Branching**: `main` tracks the last release and stays the default/landing branch; `develop` is the integration branch and the base for task branches. See `Documentation~/git-strategy.md`.
-- **M2 in flight**. `SetLink` done; **next up is Awaitables** (`TweenAwaiter` on Unity 6 native `Awaitable`, `WaitForCompletion`/`WaitForKill`/`WaitForPosition`), then the zero-alloc fast paths. See `Documentation~/ROADMAP.md`.
+- **M2 in flight**. `SetLink` merged to `develop`; awaitables on `task/2.1-awaitables`. After the
+  v0.2.0 release: zero-alloc fast paths. See `Documentation~/ROADMAP.md`.
 
-## This session (2026-09-20, M2.1 SetLink)
+## This session (2026-09-21, M2.2 awaitables)
 
-Shipped `SetLink(GameObject, LinkBehavior)` on both builders — the pooled-object footgun `SetTarget`
-auto-kill cannot cover, since pooling disables objects instead of destroying them. Behaviors:
-`KillOnDestroy` (default), `KillOnDisable`, `PauseOnDisable`, `PauseOnDisableResumeOnEnable`,
-`RestartOnEnable`; all still kill on destruction. Semantics and rationale: `api/builders.md`, ADR 0012.
+`await tween` / `await sequence` / `await FT.Move(...)`, plus `WaitForCompletion()` → `Awaitable` and
+`ToYieldInstruction()` for coroutines. Semantics: `api/awaiters.md`. Rationale: ADR 0013.
 
-Three decisions a future session should not silently reverse:
-- **Polling, not a helper component** (ADR 0012) — **settled by measurement, do not reopen without
-  new data**. The poll costs ~26-30 ns per linked record per tick (two scales agreeing, numbers in
-  the ADR), so the DOTween-style helper component buys nothing worth its scene-graph cost. It sits
-  before the status gate in `TickActiveCore`, so a link-paused record is still evaluated and resumes.
-- **Link state is seeded active**, so a tween started on an already-inactive object sees a disable edge
-  on its first tick.
-- **Links are root-level**: appending a linked builder or nested sequence throws, because in the
-  parent-sequence model a child has no independent status to pause or restart.
+Three things a future session should not silently reverse:
 
-`Tests/Editor/LinkTests.cs` (14 tests); the `GameObject` stub gained `SetActive`/`activeInHierarchy`.
+- **No UniTask and no `Awaitable` dependency.** `await` binds to any `GetAwaiter()`, so `TweenAwaiter`
+  is ours. `WaitForCompletion()` returns `Awaitable` only so consumers can `AsUniTask()` it for `WhenAll`.
+- **`await` is not zero-alloc and cannot be** — the async state machine allocates per call; only the
+  struct is free. Do not re-add the "zero-alloc await" claim `phases.md` used to carry.
+- **`OneShotSignal` is load-bearing**: a `SetAutoKill(false)` tween that completes then gets killed
+  fires both `OnComplete` and `OnKill`, and resuming a state machine twice throws.
+
+**Deliberately not built**: `WaitForKill`, `WaitForPosition`, `WaitForElapsedLoops` — each needs a
+disposal hook or a per-tick pending-wait registry the engine lacks; on today's callbacks they hang.
 
 ## Test status
 
-- Compile-check harness: **230 green + 218 in the FEATHERTWEEN_RELEASE leg** (2026-09-20, PR #4;
-  216/204 before `LinkTests`). 0 skipped in both legs, so all 14 link tests really ran.
+- Compile-check harness at the `SetLink` merge: **230 green + 218 in the FEATHERTWEEN_RELEASE leg**
+  (2026-09-20, PR #4). The 20 new `AwaiterTests` have **not run anywhere yet** — CI on the awaitables
+  PR is their first execution.
 - Note for future sessions in this container: there is no .NET SDK here and the egress policy blocks
   the installer, so the harness cannot be run locally. CI on a PR is the only way to execute it.
 - Doc-check leg (CS1591 as error on Runtime): green; wired into CI.
-- Unity: Showcase manual protocol + zero-alloc profiler check passed by user 2026-07-18; edit-mode tick guard sanity-checked in the editor (enter/exit play, edit-mode tweens advance at normal speed).
-- Unity, `SetLink` (2026-09-20): 244 EditMode tests green (231 Editor + 13 Performance; `ReleaseModeTests`
-  needs the define, so it is absent). In play mode, `PauseOnDisableResumeOnEnable` held a tween for a
-  5-second disable and resumed it at the same value; a same-frame disable/enable had no effect at all,
-  confirming the polling blind spot ADR 0012 documents. The 5 PlayMode tests were not run.
+- Unity: Showcase manual protocol + zero-alloc profiler check passed 2026-07-18. `SetLink` verified
+  2026-09-20 — 244 EditMode green, play-mode pause/resume confirmed, and the ADR 0012 same-frame
+  blind spot reproduced. **The 5 PlayMode tests have not been run in either pass.**
 
 ## Known issues / tech debt
 
@@ -58,7 +56,6 @@ Three decisions a future session should not silently reverse:
   re-firing needs an answer. Wants an ADR; do not patch it in the sample.
 - Performance tests require the consuming project to install `com.unity.test-framework.performance` (test-only dependency).
 - Abandoned (never-started) `SequenceBuilder` pins child store slots until `TweenStore.Reset()` — documented behavior (builders.md, CHANGELOG known limitations), LeakDetector warning is the mitigation.
-- Two micro-opts folded into the M2 fast-paths phase entry (`planning/phases.md`): the `TransferCallbacks` duplication between `TweenBuilderBuffer`/`SequenceBuilderBuffer`, and the `Interpolators.Get<T>()` dictionary lookup per `Build()`.
 - **Branch protection not set**: `develop` exists (created from `main` 2026-09-20). `main` stays the default branch by design — it is the consumer-facing landing page. Still needs, via GitHub settings: no direct push to either branch, PRs targeted at `develop`, CI required to merge. Until then the model is convention, not enforcement.
 
 ## Consumer setup reminders

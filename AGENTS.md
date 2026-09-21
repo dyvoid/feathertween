@@ -85,7 +85,10 @@ Full rules: [`Documentation~/git-strategy.md`](Documentation~/git-strategy.md). 
 
 - `main` equals the last tagged release and stays the default branch for consumers.
   **`develop` is the integration branch** — branch from it, merge back into it, PR against it.
-- Short-lived work branches (`task/2.x-name`, `fix/...`), rebased onto `develop`, fast-forward merge.
+- Short-lived work branches, rebased onto `develop`, fast-forward merge. **Branch names always say
+  what the work is** — `task/2.1-awaitables`, `fix/sequence-leak` — never a generated slug or a
+  restatement of the prompt. This applies to agent-created branches too: rename rather than accept
+  a default.
 - No squashing — atomic commits are the audit trail.
 
 ## Key Documents

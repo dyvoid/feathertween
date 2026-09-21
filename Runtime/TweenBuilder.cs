@@ -80,6 +80,14 @@ namespace dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>
+		/// Makes <c>await FT.Move(...)</c> work: consumes the builder with <see cref="Start"/> and
+		/// awaits the resulting handle. The compiler calls this, you do not. Note that awaiting a
+		/// builder starts it — that is the point, but it means an awaited builder cannot
+		/// also be appended to a sequence.
+		/// </summary>
+		public TweenAwaiter GetAwaiter() => Start().GetAwaiter();
+
 		/// <summary>Try/catch around setter and callback invocations. Default on in the Editor, off in player builds; <c>FEATHERTWEEN_RELEASE</c> compiles the wrapper out entirely.</summary>
 		public TweenBuilder<T> SetSafeMode(bool value)
 		{

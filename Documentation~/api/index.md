@@ -41,7 +41,7 @@ await FT.Fade(canvasGroup, 0f, 0.5f); // M2 (planned): awaitable handles
 
 ## API map
 
-Every page below documents shipped API, except the one marked planned.
+Every page below documents shipped API; the awaiters page additionally carries the still-planned `TweenSettings` design.
 
 | Topic | Document |
 |-------|----------|
@@ -51,7 +51,7 @@ Every page below documents shipped API, except the one marked planned.
 | Generic tweens and typed shortcuts | [tweens.md](tweens.md) |
 | Sequences and `Position` | [sequences.md](sequences.md) |
 | Easings (`EaseRef`, `Easing.X(...)`) | [easings.md](easings.md) |
-| Awaiters and `TweenSettings` — **planned, M2** | [awaiters.md](awaiters.md) |
+| Awaiters (shipped) and `TweenSettings` (**planned, M2**) | [awaiters.md](awaiters.md) |
 | Filters and bulk operations | [filters.md](filters.md) |
 | Custom value types (`IInterpolator<T>`) | [interpolators.md](interpolators.md) |
 

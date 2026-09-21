@@ -67,6 +67,13 @@ namespace dyvoid.FeatherTween
 			return this;
 		}
 
+		/// <summary>
+		/// Makes <c>await FT.Sequence()...</c> work: consumes the builder with <see cref="Start"/>
+		/// and awaits the resulting handle. Awaiting a builder starts it, so an awaited builder
+		/// cannot also be nested into another sequence.
+		/// </summary>
+		public TweenAwaiter GetAwaiter() => Start().GetAwaiter();
+
 		/// <summary>Defers playback by <paramref name="seconds"/> before the first cycle. Negative values throw.</summary>
 		public SequenceBuilder SetDelay(float seconds)
 		{

@@ -285,7 +285,15 @@ Composed demo reproducible against DOTween / PrimeTween reference recordings. Pe
 **Planned — production stickiness (do these first in M2)**:
 
 - ~~`SetLink(GameObject, LinkBehavior)`~~ — **shipped 2026-09-20**. `KillOnDestroy` (default), `KillOnDisable`, `PauseOnDisable`, `PauseOnDisableResumeOnEnable`, `RestartOnEnable`. The runner polls `activeInHierarchy` per linked record rather than attaching a helper component (ADR 0012); links are root-level, so a linked builder appended into a sequence throws.
-- Awaitables: `TweenAwaiter` for `await tween` (zero-alloc, main-thread resume), built on Unity 6's native `Awaitable` since the package targets 6000.3. Pooled `CustomYieldInstruction` for coroutine `yield return tween.WaitForCompletion()`. Plus `Tween.WaitForKill`, `WaitForPosition`, `WaitForElapsedLoops`.
+- ~~Awaitables~~ — **`await` shipped 2026-09-21**, with three corrections to the plan above it.
+  (a) Not built on `Awaitable`: `await` binds to any `GetAwaiter()`, so `TweenAwaiter` is our own
+  struct and core depends on neither `Awaitable` nor UniTask (ADR 0013). `WaitForCompletion()` does
+  return `Awaitable`, for composition and `AsUniTask()`. (b) Not zero-alloc, and it cannot be —
+  the C# async state machine allocates per call; only the awaiter struct itself is free. (c) The
+  coroutine path is `ToYieldInstruction()` (that name was taken by the `Awaitable` method) and it
+  is not pooled — Unity gives no signal for when it is done with a yield instruction.
+  **Still planned**: `WaitForKill`, `WaitForPosition`, `WaitForElapsedLoops`, each blocked on engine
+  machinery that does not exist (a disposal hook, a per-tick pending-wait registry).
 
 **Candidates**:
 

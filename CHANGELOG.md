@@ -21,6 +21,14 @@ stability promise gets made.
 
 ### Added
 
+- **`await tween` / `await sequence`**, with no dependency on UniTask *or* `UnityEngine.Awaitable`:
+  `GetAwaiter()` on `Tween`, `Sequence`, `TweenBuilder<T>` and `SequenceBuilder` returns FeatherTween's
+  own `TweenAwaiter` struct, so the same code compiles with or without UniTask in the project
+  (ADR 0013). Awaiting a builder starts it. Resumes on any terminal status, exactly once, and a dead
+  handle resumes immediately instead of hanging. `WaitForCompletion()` returns a `UnityEngine.Awaitable`
+  for composing with Unity's async APIs or converting via `AsUniTask()`; `ToYieldInstruction()` covers
+  coroutines. The awaiter struct allocates nothing — the surrounding async state machine does, as it
+  does for every `await` in C#.
 - **`SetLink(GameObject, LinkBehavior)`** on `TweenBuilder<T>` and `SequenceBuilder`: ties an
   animation's lifetime to a `GameObject`'s active state, which is what object pooling needs —
   `SetTarget` auto-kill only fires for *destroyed* objects. Behaviors: `KillOnDestroy` (default),

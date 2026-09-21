@@ -165,6 +165,25 @@ namespace dyvoid.FeatherTween
 		/// <summary>Stops and frees the sequence and its children; with <paramref name="complete"/> it first jumps to its end state.</summary>
 		public void Kill(bool complete = false) => TweenOps.Kill(id, generation, complete);
 
+		/// <summary>
+		/// Makes <c>await sequence</c> work; the compiler calls this, you do not. Resumes when the
+		/// sequence ends, completed or killed, and immediately if the handle is already dead.
+		/// No UniTask or <c>Awaitable</c> dependency — see ADR 0013.
+		/// </summary>
+		public TweenAwaiter GetAwaiter() => new TweenAwaiter(id, generation);
+
+		/// <summary>
+		/// An <c>Awaitable</c> that completes when the sequence ends, for composing with Unity's own
+		/// async APIs or converting to UniTask with <c>AsUniTask()</c>. Prefer <c>await sequence</c>
+		/// directly when you just want to wait. Each call returns a fresh <c>Awaitable</c>; never
+		/// await the same instance twice, as Unity pools them.
+		/// </summary>
+		public UnityEngine.Awaitable WaitForCompletion() => AwaitOps.WaitForEnd(id, generation);
+
+		/// <summary>Coroutine equivalent: <c>yield return sequence.ToYieldInstruction();</c>.</summary>
+		public TweenYieldInstruction ToYieldInstruction() => new TweenYieldInstruction(id, generation);
+
+
 		// Late subscriptions on a dead handle are no-ops: the handle cannot know
 		// whether its record completed or was killed, so firing either callback
 		// would be a guess (phase 1.15; Documentation~/api/handles.md).

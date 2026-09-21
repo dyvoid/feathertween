@@ -82,6 +82,25 @@ namespace dyvoid.FeatherTween
 		/// <summary>Stops and frees the tween; with <paramref name="complete"/> it first jumps to its end values.</summary>
 		public void Kill(bool complete = false) => TweenOps.Kill(id, generation, complete);
 
+		/// <summary>
+		/// Makes <c>await tween</c> work; the compiler calls this, you do not. Resumes when the
+		/// tween ends, completed or killed, and immediately if the handle is already dead.
+		/// No UniTask or <c>Awaitable</c> dependency — see ADR 0013.
+		/// </summary>
+		public TweenAwaiter GetAwaiter() => new TweenAwaiter(id, generation);
+
+		/// <summary>
+		/// An <c>Awaitable</c> that completes when the tween ends, for composing with Unity's own
+		/// async APIs or converting to UniTask with <c>AsUniTask()</c>. Prefer <c>await tween</c>
+		/// directly when you just want to wait. Each call returns a fresh <c>Awaitable</c>; never
+		/// await the same instance twice, as Unity pools them.
+		/// </summary>
+		public UnityEngine.Awaitable WaitForCompletion() => AwaitOps.WaitForEnd(id, generation);
+
+		/// <summary>Coroutine equivalent: <c>yield return tween.ToYieldInstruction();</c>.</summary>
+		public TweenYieldInstruction ToYieldInstruction() => new TweenYieldInstruction(id, generation);
+
+
 		/// <summary>Absolute remaining cycle count, counting the in-progress cycle as the first; negative means loop forever.</summary>
 		public void SetRemainingCycles(int cycles)
 		{

@@ -41,7 +41,8 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Extension method asmdef | Candidate | Optional `transform.PAMove(...)` wrappers |
 | Value modifiers | Planned | Optional `Func<T,T>` post-processor applied to the eased value before the setter: snap-to-grid, rounding, angle wrap, clamp |
 | `yoyoEase` | Planned | Separate optional `EaseRef` for the return leg of a Yoyo cycle |
-| Awaitables | Planned | `TweenAwaiter` on Unity 6 native `Awaitable`, `WaitForCompletion`, `WaitForKill`, `WaitForPosition` |
+| Awaitables | Done | `await tween` via our own `TweenAwaiter` struct — no UniTask *or* `Awaitable` dependency (ADR 0013); `WaitForCompletion()` returns `Awaitable` for composition/`AsUniTask`; `ToYieldInstruction()` for coroutines |
+| `WaitForKill` / `WaitForPosition` / `WaitForElapsedLoops` | Planned | Deferred from the awaitables work: each needs a disposal hook or a per-tick registry of pending playhead waits |
 | Improved safe-mode reporting | Candidate | Collected per-frame diagnostics |
 | Roslyn analyzer | Candidate | Compile-time diagnostics for the two footguns the runtime can only warn about after the fact: a builder that is never consumed by `Start()`/`Clear()`, and a non-static lambda in a target-capture callback overload |
 

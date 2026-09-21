@@ -1,41 +1,96 @@
-# Awaiters and TweenSettings — planned surface (M2)
+# Awaiters and `TweenSettings`
 
-> **None of this ships in v0.1.0.** Awaitables and `TweenSettings` are M2 `Planned`
-> ([`ROADMAP.md`](../ROADMAP.md)); the code samples below will not compile against the current
-> package. This page is the design intent the M2 implementation is held to, kept here so the
-> shape is settled before it is built. Every other page under `api/` documents shipped API.
+Awaiting an animation ships as of `0.2.0-dev`. `TweenSettings` (the second half of this page) is
+still **planned** M2 surface and will not compile yet.
 
-## Core awaiter (planned)
-
-Both `TweenBuilder<T>` and `Tween` expose `GetAwaiter()` returning a `TweenAwaiter` struct (implements `INotifyCompletion`). The builder's awaiter calls `.Start()` internally before returning the handle's awaiter.
+## `await` — no dependency on anything
 
 ```csharp
-await FT.Move(transform, p, 1f);                  // builder.GetAwaiter() starts implicitly
-Tween t = FT.Move(transform, p, 1f).Start();
-await t;                                                // await an already-running handle
+await FT.Move(transform, p, 1f);         // awaiting a builder starts it
+await FT.Move(transform, p, 1f).Start(); // or await a running handle
+await sequence;                          // sequences too
 ```
 
-The awaiter resolves on **any** terminal status: `Completed`, `Cancelled`, or auto-killed (target destroyed). The continuation fires **exactly once** at the terminal transition. Within a single tick the firing order is fixed: `OnStepComplete` (per-loop boundary if applicable) → `OnComplete` (if completed normally) → `OnKill` (if killed, including auto-kill) → awaiter continuation. Users differentiate outcomes by checking `tween.Status` after `await`. The bare core awaiter does not throw on cancel.
+`await` binds to any type exposing `GetAwaiter()`, so FeatherTween satisfies it with its own
+`TweenAwaiter` struct and references **neither UniTask nor `UnityEngine.Awaitable`**. The same code
+compiles in a project that uses UniTask and one that does not ([ADR 0013](../adr/0013-awaitables-without-dependencies.md)).
 
-Allocation: the `TweenAwaiter` struct is alloc-free on the await side. Registering the continuation allocates one delegate per await (standard C# state machine behavior). No `TaskCompletionSource`.
+| Member | On |
+| ------ | -- |
+| `GetAwaiter()` | `Tween`, `Sequence`, `TweenBuilder<T>`, `SequenceBuilder` |
+| `WaitForCompletion()` → `Awaitable` | `Tween`, `Sequence` |
+| `ToYieldInstruction()` → `CustomYieldInstruction` | `Tween`, `Sequence` |
+
+### Semantics
+
+- Resumes on **any** terminal status — `Completed`, `Cancelled`, or auto-killed. Read
+  `tween.Status` after the await to tell them apart; the awaiter never throws on cancel.
+- Resumes **exactly once**. A `SetAutoKill(false)` tween that completes and is killed later would
+  otherwise fire both `OnComplete` and `OnKill` into the same continuation, and resuming a state
+  machine twice throws.
+- A **dead handle resumes immediately** rather than parking forever.
+- A **paused** tween does not resume — pausing is not finishing.
+- Continuations run inside the existing `OnComplete`/`OnKill` lists, so they interleave with a
+  tween's other callbacks in registration order rather than strictly following them.
+- Awaiting a **builder starts it**, which also consumes it — an awaited builder cannot then be
+  appended to a sequence.
+
+### Allocation, honestly
+
+The `TweenAwaiter` struct allocates nothing. The `await` around it does: the C# compiler emits an
+async state machine per call, plus this package adds one `OneShotSignal` and two delegates to
+register the continuation. Genuinely allocation-free `await` needs a pooled state machine via a
+custom method builder — that is what UniTask does and what this does not. FeatherTween's
+zero-allocation guarantee covers **steady-state ticking**, not the act of awaiting.
+
+## Composing several animations
+
+There is no `WhenAll` here, and it is mostly not missed: compose the animations into a `Sequence`
+and await that. The result stays seekable, reversible and killable as one unit, which `WhenAll`
+cannot give you.
+
+```csharp
+await FT.Sequence()
+    .Append(FT.Move(a, p1, 1f))
+    .Join(FT.Move(b, p2, 1f))
+    .Start();
+```
+
+When you genuinely need task composition, `WaitForCompletion()` hands back a `UnityEngine.Awaitable`
+that converts:
+
+```csharp
+await UniTask.WhenAll(
+    a.WaitForCompletion().AsUniTask(),
+    b.WaitForCompletion().AsUniTask());
+```
+
+Each call returns a fresh `Awaitable`. **Never await the same instance twice** — Unity pools them.
+
+## Coroutines
+
+```csharp
+yield return tween.ToYieldInstruction();
+```
+
+Poll-based (`keepWaiting`), so it cannot strand a coroutine if the tween dies in a way no callback
+covers. Not pooled: Unity holds a yield instruction across frames with no signal for when it is
+done with it, so recycling one risks handing a live coroutine an instruction that now belongs to a
+different tween. One allocation per coroutine wait; `await` is the lighter path.
+
+## Not implemented yet
+
+`WaitForKill`, `WaitForPosition` and `WaitForElapsedLoops` are still planned. Each needs engine
+machinery that does not exist: a disposal hook that fires however a record dies, and a per-tick
+registry of pending playhead waits. Built on the current callback set they would produce awaits that
+hang — `WaitForKill` on an auto-killing tween never sees `OnKill`.
 
 ## UniTask integration (M3 candidate)
 
-A separate asmdef `FeatherTween.UniTask` with a `FEATHERTWEEN_UNITASK` define would add cancellation-aware await semantics. The M2 awaiter targets Unity 6's native `Awaitable`, so this ships only if a consumer needs UniTask interop.
-
-```csharp
-public static UniTask ToUniTask(this Tween t,
-    TweenCancelBehavior cancelBehavior = TweenCancelBehavior.Kill,
-    CancellationToken cancellationToken = default);
-
-public static UniTask ToUniTask<T>(this TweenBuilder<T> b,
-    TweenCancelBehavior cancelBehavior = TweenCancelBehavior.Kill,
-    CancellationToken cancellationToken = default);   // calls .Start() internally
-```
-
-Cancellation behaviors: `Kill`, `Complete`, `Pause`, `KillAndThrow`, `CompleteAndCancelAwait`.
-
-Core does **not** reference UniTask. The bare `await tween;` path uses the core awaiter.
+A separate `FeatherTween.UniTask` asmdef behind a `FEATHERTWEEN_UNITASK` define would add
+cancellation-aware await semantics (`TweenCancelBehavior`: `Kill`, `Complete`, `Pause`,
+`KillAndThrow`, `CompleteAndCancelAwait`). It ships only if a consumer needs more than `AsUniTask()`
+on `WaitForCompletion()` already gives them. Core will not reference UniTask either way.
 
 ## `TweenSettings` (planned)
 

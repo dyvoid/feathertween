@@ -28,6 +28,13 @@ experiment/soa-storage
 fix/playhead-reset-on-restart
 ```
 
+**A branch name always names the work.** `task/2.1-awaitables`, not `claude/whats-next-rof1tk` and
+not a restatement of whatever the request happened to be. The prefix says the kind of work
+(`task/`, `fix/`, `experiment/`), the rest says what changes. This binds agents as much as people:
+an agent handed a generated branch name renames it before the first commit rather than living with
+it, since the branch name outlives the session that produced it and is what a reader scanning
+`git log --graph` or a PR list actually sees.
+
 ---
 
 ## Merging

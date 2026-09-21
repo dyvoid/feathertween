@@ -373,6 +373,34 @@ namespace UnityEngine
 	}
 
 	public static class GameObjectExtensionsForStub { }
+
+	// Unity 6 async surface. The harness never awaits these — it only type-checks
+	// the package against them — so the bodies do nothing beyond recording that
+	// completion was signalled.
+	public class Awaitable
+	{
+		// Auto-property, not a field: the harness never reads it, and a plain
+		// field assigned-but-never-read trips CS0414.
+		internal bool Completed { get; set; }
+	}
+
+	public class AwaitableCompletionSource
+	{
+		private readonly Awaitable awaitable = new Awaitable();
+		public Awaitable Awaitable => awaitable;
+		public void SetResult() { awaitable.Completed = true; }
+		public bool TrySetResult() { awaitable.Completed = true; return true; }
+		public void SetCanceled() { awaitable.Completed = true; }
+		public void Reset() { awaitable.Completed = false; }
+	}
+
+	public abstract class CustomYieldInstruction : System.Collections.IEnumerator
+	{
+		public abstract bool keepWaiting { get; }
+		public object Current => null;
+		public bool MoveNext() => keepWaiting;
+		public void Reset() { }
+	}
 }
 
 namespace UnityEngine.UI
