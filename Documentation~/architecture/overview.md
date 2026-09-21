@@ -133,7 +133,7 @@ Snap timing matches the design anchor:
 ### Disposal hook
 
 `TweenStore.Free` fires a per-record disposal callback list after `OnFree()`, as the last thing it
-does. `Free` is the only route by which a record that reached a store slot can die — `Kill`, `Complete`,
+does. `Free` is all but the only route by which a record can die — `Kill`, `Complete`,
 auto-kill, destroyed target, `SetLink` kill, safe-mode error cancel, sequence cascade — which makes
 it the one place a subscriber can be sure of hearing about a death however it happened. Two
 exceptions, neither of which fires the hook: a safe-mode snap failure in `TweenBuilder.Start`
