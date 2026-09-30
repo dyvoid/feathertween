@@ -3,20 +3,28 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-09-21 (`SetLink` merged; awaitables on `task/2.1-awaitables`)
+Last updated: 2026-09-30 (`SetLink` + awaitables merged; Showcase catching up on `task/showcase-link-and-await`)
 
 ## Current position
 
 - **Milestone**: M1 **closed**. v0.1.0 tagged on `main` 2026-07-18.
 - **Versioning** (decided 2026-09-20, policy in `git-strategy.md`): pre-1.0, **minor versions may
   break**; the 0.1.0 stability promise is withdrawn. `develop` carries `0.2.0-dev`; the release
-  commit drops the suffix. Release per coherent chunk — `v0.2.0` is `SetLink` + awaitables together,
-  so **do not tag until awaitables land**.
+  commit drops the suffix. Release per coherent chunk — `v0.2.0` is `SetLink` + awaitables together.
+  Both are on `develop`; tag once the Showcase update below lands and has had its editor pass.
 - **Branching**: `main` tracks the last release and stays the default/landing branch; `develop` is the integration branch and the base for task branches. See `Documentation~/git-strategy.md`.
-- **M2 in flight**. `SetLink` merged to `develop`; awaitables on `task/2.1-awaitables`. After the
-  v0.2.0 release: zero-alloc fast paths. See `Documentation~/ROADMAP.md`.
+- **M2 in flight**. `SetLink` (PR #4) and awaitables (PR #5) merged to `develop`. After the v0.2.0
+  release: zero-alloc fast paths. See `Documentation~/ROADMAP.md`.
 
-## This session (2026-09-21, M2.2 awaitables)
+## This session (2026-09-30, Showcase catch-up)
+
+The Showcase still advertised the v0.1.0 feature set. Its playground (chapter 8, the only
+off-timeline chapter) now has P3 (`SetLink` pause/resume with a toggle and `Status` readout) and P4
+(the same rise/punch/settle chain as `await` and as a coroutine). Spec and test-protocol step 7 in
+`design/showcase-sample.md`. **Needs a visual pass in the editor** — layout and readability were not
+checked in Unity; the GUI panel grew from 330 to 400 px tall.
+
+## Previous session (2026-09-21, M2.2 awaitables)
 
 `await tween` / `await sequence` / `await FT.Move(...)`, plus `WaitForCompletion()` → `Awaitable` and
 `ToYieldInstruction()` for coroutines. Semantics: `api/awaiters.md`. Rationale: ADR 0013.
@@ -37,9 +45,9 @@ disposal hook or a per-tick pending-wait registry the engine lacks; on today's c
 
 ## Test status
 
-- Compile-check harness at the `SetLink` merge: **230 green + 218 in the FEATHERTWEEN_RELEASE leg**
-  (2026-09-20, PR #4). The 20 new `AwaiterTests` have **not run anywhere yet** — CI on the awaitables
-  PR is their first execution.
+- Compile-check harness: green on CI at the awaitables merge (PR #5), including the 24
+  `AwaiterTests`. Awaitables have **not** been exercised in real Unity — the stub `Awaitable` is a
+  no-op, so `WaitForCompletion()`'s real completion is untested.
 - Note for future sessions in this container: there is no .NET SDK here and the egress policy blocks
   the installer, so the harness cannot be run locally. CI on a PR is the only way to execute it.
 - Doc-check leg (CS1591 as error on Runtime): green; wired into CI.

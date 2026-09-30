@@ -36,6 +36,9 @@ stability promise gets made.
   reads `activeInHierarchy` once per tick per linked record; no component is attached to your
   objects (ADR 0012). Links are root-level — appending a linked builder into a sequence throws, so
   link the sequence instead.
+- **Showcase playground** demonstrates both: a `SetLink(PauseOnDisableResumeOnEnable)` cube with an
+  enable/disable toggle and a live `Status` readout, and a three-step chain written once with
+  `await` and once as a coroutine.
 
 ## [0.1.0] - 2026-07-18
 

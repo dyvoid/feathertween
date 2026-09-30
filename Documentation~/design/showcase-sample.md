@@ -19,7 +19,7 @@ Every screen states its intent in an on-screen caption, including expected outco
 Everything time-composable lives on the master timeline. Two categories don't, and the boundary is itself an honest illustration of the library's model:
 
 - **Infinite loops** never appear open-ended inside the movie (an open window would make the movie unendable). They appear as bounded excerpts via `SetRemainingCycles(int)` / `CompleteAtCycleEnd()` — which conveniently *demonstrates those APIs*.
-- **Imperative/interactive features** (kill-by-target, bulk ops, button-triggered tweens) live in the final playground chapter, where the movie parks its playhead and hands over buttons.
+- **Imperative/interactive features** (kill-by-target, bulk ops, button-triggered tweens, `SetLink`, `await`/coroutine chains) live in the final playground chapter, where the movie parks its playhead and hands over buttons. A GameObject toggled off, or an await in flight, is an event rather than a function of the playhead, so neither can be scrubbed.
 
 ## Chapters
 
@@ -33,6 +33,8 @@ Each chapter = one nested sequence, appended to the master with a label (`AddLab
 6. **Control surface (meta-chapter)** — a mini-player *inside the movie* drives a small child sequence: seeks it, reverses it, scales its time, stops an infinite yoyo with `CompleteAtCycleEnd()`. Demonstrates that control ops compose — the outer scrubber can scrub a chapter that is itself scrubbing.
 7. **Typed shortcuts** — every shipped shortcut (`Move`/`LocalMove`/`Scale`/`Rotate`/`LocalRotate`/`Fade`/`Color`/`FillAmount`) doing its literal thing on labeled targets.
 8. **Playground (finale, off-timeline)** — the movie pauses at its last label. Buttons: punch-style one-shots, `Kill(target)` vs `Kill(target, complete: true)` on running tweens, `IsTweening` readout, `KillAll`, global time-scale slider. A "replay" button seeks the master back to 0.
+   - **`SetLink` (P3)** — an infinite yoyo linked with `PauseOnDisableResumeOnEnable`, a Disable/Enable toggle for its GameObject, and a readout of the handle's `Status` (reads `Paused` while disabled, resumes from the same position on enable). Replay re-enables P3.
+   - **Await / coroutine (P4)** — the same three-step chain (rise, punch, settle) written once as `async void` with `await FT.…` and once as a coroutine yielding `ToYieldInstruction()`, with a step readout that advances only as each tween finishes. A kill mid-chain resumes the await rather than parking it, so the chain carries on; Replay's full rebuild strands an in-flight chain via a token.
 
 ## Player UI requirements
 
@@ -55,6 +57,7 @@ Each chapter = one nested sequence, appended to the master with a label (`AddLab
 4. Seek directly to each chapter marker from both directions.
 5. Run at 4× and 0.25× — no desync between lanes or captions.
 6. Profiler: zero per-frame managed alloc during chapters 1–7 playback.
+7. Playground: start P3, disable it mid-flight (readout `Paused`, cube hidden), enable it (resumes from the same spot, readout `Playing`). Run each P4 chain; the readout steps 1/3 → 2/3 → 3/3 → done in time with the motion, and the chain buttons stay disabled while one is running.
 
 ## Constraints
 

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,9 +22,11 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 	// the timeline (the boundary is part of the demonstration):
 	//   - infinite loops appear only as bounded excerpts (chapter 6 stops one
 	//     with CompleteAtCycleEnd);
-	//   - imperative features (kill-by-target, bulk ops, one-shots) live in the
-	//     final playground chapter, where the timeline parks at an AddPause and
-	//     hands over buttons.
+	//   - imperative features (kill-by-target, bulk ops, one-shots, SetLink,
+	//     await/coroutine chains) live in the final playground chapter, where
+	//     the timeline parks at an AddPause and hands over buttons. A
+	//     GameObject toggled off or an await in flight is an event, not a
+	//     function of the playhead, so neither can be scrubbed.
 	public class FeatherTweenShowcase : MonoBehaviour
 	{
 		private struct Chapter
@@ -44,6 +47,12 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 		private const float ComposeContent = 3f;
 		private const float ControlContent = 4f;
 		private const float ShortcutContent = 3f;
+
+		// Playground lower row: P3 (SetLink) and P4 (await / coroutine chain).
+		private static readonly Vector3 P3Home = new Vector3(-3f, -1.5f, 0f);
+		private static readonly Vector3 P3Far = new Vector3(0f, -1.5f, 0f);
+		private static readonly Vector3 P4Home = new Vector3(3f, -1.5f, 0f);
+		private static readonly Vector3 P4Up = new Vector3(3f, -0.3f, 0f);
 
 		private const float OffscreenX = 16f;       // chapter groups slide in from +X, out to -X
 
@@ -67,7 +76,11 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 		private GameObject scMove, scLocalMove, scScale, scRotate, scLocalRotate;
 		private CanvasGroup uiFadeGroup;
 		private Image uiColorImage, uiFadeImage, uiFillImage;
-		private GameObject playP1, playP2;
+		private GameObject playP1, playP2, playP3, playP4;
+		private Tween p3Tween;                      // the linked yoyo, kept for its Status readout
+		private string chainStep = "idle";
+		private int chainToken;                     // bumped on rebuild so an in-flight chain stands down
+		private bool chainBusy;
 
 		private Sequence showcase;                  // the master timeline
 		private Sequence controlInner;              // chapter 6's driven sequence (deliberately detached)
@@ -82,6 +95,7 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 
 		private void OnDestroy()
 		{
+			chainToken++;            // an await resumed by the teardown kills must not touch P4
 			showcase.Kill();
 			controlInner.Kill();
 			foreach (var go in spawned)
@@ -196,6 +210,8 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 			// 8. Playground targets.
 			playP1 = Spawn(groups[7], PrimitiveType.Cube, new Vector3(-1.5f, 0.5f, 0f), UnityEngine.Color.green, "PlaygroundP1");
 			playP2 = Spawn(groups[7], PrimitiveType.Cube, new Vector3(1.5f, 0.5f, 0f), UnityEngine.Color.cyan, "PlaygroundP2");
+			playP3 = Spawn(groups[7], PrimitiveType.Cube, P3Home, UnityEngine.Color.yellow, "PlaygroundP3_Linked");
+			playP4 = Spawn(groups[7], PrimitiveType.Cube, P4Home, UnityEngine.Color.magenta, "PlaygroundP4_Chain");
 		}
 
 		private static UnityEngine.Color TitleColor(int i)
@@ -680,7 +696,11 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 					"The timeline has parked itself at an AddPause — imperative features do not " +
 					"live on a timeline. Use the playground buttons: punch one-shots, Kill vs " +
 					"Kill(complete:true) on a spinning target, IsTweening readouts, KillAll and " +
-					"the global time-scale slider. Replay seeks the master back to 0.",
+					"the global time-scale slider. Yellow P3: an infinite yoyo with SetLink(" +
+					"PauseOnDisableResumeOnEnable) — toggle P3 off mid-flight, its tween reads Paused; " +
+					"toggle it on and it resumes from the same spot. Magenta P4: rise, punch, settle as " +
+					"three awaited tweens (or three yielded ones) — the step readout advances only as " +
+					"each finishes. Replay seeks the master back to 0.",
 				Start = totalDuration,
 			});
 
@@ -759,7 +779,7 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 
 		private void OnGUI()
 		{
-			GUILayout.BeginArea(new Rect(10f, 10f, 560f, 330f), GUI.skin.box);
+			GUILayout.BeginArea(new Rect(10f, 10f, 560f, 400f), GUI.skin.box);
 
 			var time = CurrentTime;
 			var chapter = CurrentChapter(time);
@@ -874,10 +894,92 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 			}
 			GUILayout.EndHorizontal();
 
+			// SetLink: the tween polls P3's activeInHierarchy each tick (ADR 0012).
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Start P3 (linked yoyo)") && !FT.IsTweening(playP3.transform))
+			{
+				p3Tween = FT.LocalMove(playP3.transform, P3Far, 1f)
+					.From(P3Home)
+					.SetLoops(-1, LoopType.Yoyo)
+					.SetEase(Easing.InOutSine())
+					.SetLink(playP3, LinkBehavior.PauseOnDisableResumeOnEnable)
+					.Start();
+			}
+			if (GUILayout.Button(playP3.activeSelf ? "Disable P3" : "Enable P3", GUILayout.Width(100f)))
+			{
+				playP3.SetActive(!playP3.activeSelf);
+			}
+			GUILayout.Label($"P3 tween: {p3Tween.Status}", GUILayout.Width(140f));
+			GUILayout.EndHorizontal();
+
+			// Await / coroutine: the same three-step chain written both ways.
+			GUI.enabled = !chainBusy;
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("P4 chain (await)"))
+			{
+				RunAwaitChain();
+			}
+			if (GUILayout.Button("P4 chain (coroutine)"))
+			{
+				StartCoroutine(RunCoroutineChain());
+			}
+			GUI.enabled = true;
+			GUILayout.Label(chainStep, GUILayout.Width(180f));
+			GUILayout.EndHorizontal();
+
 			GUILayout.BeginHorizontal();
 			GUILayout.Label($"global scale {FT.GlobalTimeScale:0.00}x", GUILayout.Width(130f));
 			FT.GlobalTimeScale = GUILayout.HorizontalSlider(FT.GlobalTimeScale, 0f, 2f);
 			GUILayout.EndHorizontal();
+		}
+
+		// Each step resumes when its tween finishes. A kill (KillAll, say)
+		// resumes the await too — it never parks forever — so the chain simply
+		// carries on with its next step. The token check is for Replay's
+		// rebuild, which destroys P4 under an in-flight chain.
+		private async void RunAwaitChain()
+		{
+			var token = BeginChain();
+			chainStep = "await 1/3: rise";
+			await FT.LocalMove(playP4.transform, P4Up, 0.5f).From(P4Home).SetEase(Easing.OutCubic());
+			if (token != chainToken) return;
+			chainStep = "await 2/3: punch";
+			await FT.Scale(playP4.transform, 1.5f, 0.15f).From(Vector3.one).SetLoops(2, LoopType.Yoyo);
+			if (token != chainToken) return;
+			chainStep = "await 3/3: settle";
+			await FT.LocalMove(playP4.transform, P4Home, 0.5f).From(P4Up).SetEase(Easing.OutBounce());
+			if (token != chainToken) return;
+			EndChain("await chain done");
+		}
+
+		private IEnumerator RunCoroutineChain()
+		{
+			var token = BeginChain();
+			chainStep = "yield 1/3: rise";
+			yield return FT.LocalMove(playP4.transform, P4Up, 0.5f).From(P4Home).SetEase(Easing.OutCubic())
+				.Start().ToYieldInstruction();
+			if (token != chainToken) yield break;
+			chainStep = "yield 2/3: punch";
+			yield return FT.Scale(playP4.transform, 1.5f, 0.15f).From(Vector3.one).SetLoops(2, LoopType.Yoyo)
+				.Start().ToYieldInstruction();
+			if (token != chainToken) yield break;
+			chainStep = "yield 3/3: settle";
+			yield return FT.LocalMove(playP4.transform, P4Home, 0.5f).From(P4Up).SetEase(Easing.OutBounce())
+				.Start().ToYieldInstruction();
+			if (token != chainToken) yield break;
+			EndChain("coroutine chain done");
+		}
+
+		private int BeginChain()
+		{
+			chainBusy = true;
+			return ++chainToken;
+		}
+
+		private void EndChain(string message)
+		{
+			chainBusy = false;
+			chainStep = message;
 		}
 
 		// Replay seeks the master back to 0 — unless KillAll destroyed it, in
@@ -885,6 +987,7 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 		private void ReplayShowcase()
 		{
 			FT.GlobalTimeScale = 1f;
+			playP3.SetActive(true);
 			if (showcase.IsAlive)
 			{
 				showcase.Seek(0f);
@@ -901,6 +1004,9 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 			}
 			spawned.Clear();
 			speed = 1f;
+			chainToken++;            // strands any in-flight chain before P4 is destroyed
+			chainBusy = false;
+			chainStep = "idle";
 			SpawnCast();
 			BuildShowcase();
 		}

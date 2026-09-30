@@ -276,7 +276,10 @@ namespace UnityEngine
 	{
 		public void Invoke(string method, float time) { }
 		public static void Destroy(Object o) { }
+		public Coroutine StartCoroutine(System.Collections.IEnumerator routine) => new Coroutine();
 	}
+
+	public sealed class Coroutine { }
 
 	public class Transform : Component
 	{
