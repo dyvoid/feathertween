@@ -235,6 +235,24 @@ namespace dyvoid.FeatherTween.Internal
 			}
 		}
 
+		// SeekTo works in post-delay time, but a parent's window for this sequence
+		// starts before the delay (SequenceBuilder.ConsumeSequence folds the
+		// delay into the window length). Without this offset a parent seek
+		// rendered a nested delayed sequence 'delay' seconds ahead of what forward
+		// playback shows at the same parent time.
+		public override void SeekWindow(double windowTime, bool fireCallbacks)
+		{
+			if (windowTime >= delay)
+			{
+				SeekTo(windowTime - delay, fireCallbacks);
+				return;
+			}
+			// Inside the delay: rest at playhead 0, as a reversed sequence does
+			// when it re-enters its delay, with the unelapsed part still to run.
+			SeekTo(0d, fireCallbacks);
+			delayRemaining = delay - windowTime;
+		}
+
 		private float CycleProgress()
 		{
 			if (duration <= 0d)
@@ -532,7 +550,7 @@ namespace dyvoid.FeatherTween.Internal
 			}
 			else
 			{
-				child.SeekTo(next - e.Start, fireCallbacks: false);
+				child.SeekWindow(next - e.Start, fireCallbacks: false);
 				if (!e.Infinite && next >= e.End)
 				{
 					child.Status = TweenStatus.Completed;
@@ -583,7 +601,7 @@ namespace dyvoid.FeatherTween.Internal
 				// replay snaps again (Documentation~/api/handles.md).
 				if (e.Entered || e.Finished)
 				{
-					child.SeekTo(0d, fire);
+					child.SeekWindow(0d, fire);
 					e.Entered = false;
 					e.Finished = false;
 					child.ResetPlayhead();
@@ -609,7 +627,7 @@ namespace dyvoid.FeatherTween.Internal
 			{
 				child.Status = TweenStatus.Playing;
 			}
-			child.SeekTo(to - e.Start, fire);
+			child.SeekWindow(to - e.Start, fire);
 		}
 
 		// Re-arms every entry for a fresh forward pass (loop wrap, Restart).
@@ -662,7 +680,7 @@ namespace dyvoid.FeatherTween.Internal
 				}
 				if (!e.Infinite)
 				{
-					child.SeekTo(e.Length, fireCallbacks: false);
+					child.SeekWindow(e.Length, fireCallbacks: false);
 					child.Status = TweenStatus.Completed;
 					e.Finished = true;
 				}

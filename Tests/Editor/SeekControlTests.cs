@@ -170,6 +170,53 @@ namespace dyvoid.FeatherTween.Tests
 
 		// --- Sequence loops ---
 
+
+		[Test]
+		public void SequenceSeek_IntoNestedDelayedSequence_MatchesForwardPlayback()
+		{
+			// Pure function of time: a parent seek must land a nested sequence
+			// that has its own delay exactly where forward playback has it.
+			foreach (var t in new[] { 0.25, 0.75, 1.0, 1.4 })
+			{
+				var reference = 0f;
+				var seeked = 0f;
+				var referenceSeq = BuildOuterWithDelayedInner(v => reference = v);
+				var seekedSeq = BuildOuterWithDelayedInner(v => seeked = v);
+				seekedSeq.Pause();                // parked, so the tick below moves only the reference
+
+				FeatherTweenRunner.ManualTick(t);
+				seekedSeq.Seek(1.5f);             // scrub away first, so the seek back does real work
+				seekedSeq.Seek((float)t);
+
+				Assert.That(seeked, Is.EqualTo(reference).Within(1e-3f), $"seek to {t}");
+				referenceSeq.Kill();
+				seekedSeq.Kill();
+			}
+		}
+
+		[Test]
+		public void SequenceReverse_ThroughNestedDelayedSequence_MatchesForwardPlayback()
+		{
+			var v = 0f;
+			var seq = BuildOuterWithDelayedInner(x => v = x);
+
+			FeatherTweenRunner.ManualTick(1.4);           // parent t = 1.4 -> inner playhead 0.9
+			Assert.That(v, Is.EqualTo(0.9f).Within(1e-3f));
+
+			seq.Reverse();
+			FeatherTweenRunner.ManualTick(0.4);           // parent t = 1.0 -> inner playhead 0.5
+			Assert.That(v, Is.EqualTo(0.5f).Within(1e-3f), "reverse lands where forward playback was at t=1.0");
+		}
+
+		private static Sequence BuildOuterWithDelayedInner(Action<float> setter)
+		{
+			var inner = FT.Sequence().SetDelay(0.5f);
+			inner.Append(FT.FromTo(setter, 0f, 1f, 1f));
+			var outer = ManualSequence().SetAutoKill(false);
+			outer.Append(inner);
+			return outer.Start();
+		}
+
 		[Test]
 		public void SequenceSetLoops_Restart_ChildrenReplayWithRearmedSnaps()
 		{

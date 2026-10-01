@@ -83,6 +83,16 @@ namespace dyvoid.FeatherTween.Internal
 		// order (OnStepComplete forward, OnRewind backward). Never changes Status.
 		public virtual void SeekTo(double seconds, bool fireCallbacks) { }
 
+		// Seek in the time of the window a parent sequence gives this record,
+		// which starts at window time 0. A tween's SeekTo already counts from
+		// there (its FirstLoop delay was absorbed into the window start, an
+		// EveryLoop delay lives inside the cycle slot); a nested sequence keeps
+		// its own delay inside the window and overrides this.
+		public virtual void SeekWindow(double windowTime, bool fireCallbacks)
+		{
+			SeekTo(windowTime, fireCallbacks);
+		}
+
 		// Deferred start-value capture: root tweens resolve at Start(), sequenced
 		// children resolve when the parent playhead first crosses their window.
 		public virtual void ResolveStartValues() { }
