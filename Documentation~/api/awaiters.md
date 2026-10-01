@@ -103,10 +103,11 @@ different tween. One allocation per coroutine wait; `await` is the lighter path.
 
 ## Not implemented yet
 
-`WaitForKill`, `WaitForPosition` and `WaitForElapsedLoops` are still planned. Each needs engine
-machinery that does not exist: a disposal hook that fires however a record dies, and a per-tick
-registry of pending playhead waits. Built on the current callback set they would produce awaits that
-hang — `WaitForKill` on an auto-killing tween never sees `OnKill`.
+`WaitForKill`, `WaitForPosition` and `WaitForElapsedLoops` are still planned. `WaitForKill` can now
+build on the disposal hook that `await` introduced, which fires however a record dies — the
+user-facing `OnKill` cannot carry it, since an auto-killing tween never fires `OnKill`.
+`WaitForPosition` and `WaitForElapsedLoops` still need a per-tick registry of pending playhead
+waits, which the engine does not have.
 
 ## UniTask integration (M3 candidate)
 

@@ -98,7 +98,7 @@ There is no `Scheduled` state. A tween only exists as a `Tween` handle after `.S
 - **Late subscriptions on a dead handle are no-ops**: `OnComplete`/`OnKill`/`OnStepComplete` on a dead `Tween`/`Sequence` do nothing. A dead handle cannot know whether its record completed or was killed, so firing either callback would be a guess; "OnComplete fires only on actual completion" and "OnKill fires only on actual kills" hold unconditionally.
 - **`Complete()` syncs the playhead**: on a non-autokill tween, a later `Seek` starts from the completed position (`TotalProgress` reads 1 after `Complete()`).
 - **Reverse through delay**: the initial delay is part of the timeline. A reversed tween/sequence counts the delay back down before reaching playhead 0, then holds there (`Delayed`). Infinite loops never hold: they wrap backward per ADR 0009 — a `FirstLoop` delay sits before cycle 0 and is not re-entered by the wrap, while an `EveryLoop` delay lives inside the cycle slot and is passed through backward.
-- `SetTimeScale` rejects negative values: throws in safe mode, clamps to 0 in release. Direction is owned exclusively by `Reverse()`.
+- `SetTimeScale` rejects negative values with `ArgumentOutOfRangeException`, in every build — nothing silently clamps ([conventions](../guides/conventions.md)). Direction is owned exclusively by `Reverse()`.
 - Engine-wide time control lives on the static class:
 
 ```csharp
@@ -136,7 +136,7 @@ Valid status transitions:
 
 `Reverse`, `Seek`, and `SetTimeScale` do not transition status; they mutate `_localTime` / direction / scale within the current status.
 
-A zero-duration tween completes on the first tick after `.Start()`. `OnStart`, `OnUpdate(1f)`, `OnComplete` fire in order. A negative duration throws at `.Start()`.
+A zero-duration tween completes on the first tick after `.Start()`. `OnStart`, `OnUpdate(1f)`, `OnComplete` fire in order. A negative duration throws at the creation call (`FT.To`/`From`/`FromTo`).
 
 `Kill(complete: true)` on a sequence walks the playhead to the end, ticking children with callbacks firing normally, then disposes. `Kill(false)` disposes immediately; only `OnKill` fires (per child, in registration order).
 
@@ -155,7 +155,7 @@ A zero-duration tween completes on the first tick after `.Start()`. `OnStart`, `
 | `Kill(false)`                          | no             | no         | yes    |
 | Auto-kill (`UnityEngine.Object` dies)  | no             | no         | yes    |
 | `SetLink` kill (linked object destroyed, or disabled under `KillOnDisable`) | no | no | yes |
-| `SetLink` kill on an already-completed record | no          | no         | no     |
+| Auto-kill or `SetLink` kill on an already-completed record | no | no   | no     |
 | Setter exception + `CancelOnError`     | no             | no         | yes    |
 | Setter exception, safe mode, no `CancelOnError` (logged) | no | no    | no     |
 
@@ -166,7 +166,11 @@ on `OnKill` — which is exactly why the no/no/no row still resumes it. See
 
 ### Reentrancy
 
-Structural mutation invoked from inside a callback (`Kill`, `Complete`, sequence `Insert`, `AddLabel`, `Restart`, `Reverse` on another tween or self) is **deferred** to a per-tick command buffer drained at the end of the tick. Setter calls remain synchronous so values written in callbacks land in the same frame. Reading state (`Status`, `TotalProgress`, etc.) inside a callback is allowed and reflects current state.
+Structural mutation invoked from inside a callback (`Kill`, `Complete`, sequence `Insert`, `Restart`, `Reverse` on another tween or self) is **deferred** to a per-tick command buffer drained at the end of the tick. Setter calls remain synchronous so values written in callbacks land in the same frame. `Pause`, `Resume`, `Play`, `Seek` and `SetTimeScale` are not structural and also run synchronously. Reading state (`Status`, `TotalProgress`, etc.) inside a callback is allowed and reflects current state.
+
+Starting a new tween from a callback is immediate and safe: the runner steps a snapshot of the active list taken before the tick, so the new tween first steps on the next tick. Ticking itself is not reentrant: `FT.ManualTick` called from inside a callback, setter or getter throws `InvalidOperationException` instead of corrupting the tick in progress.
+
+Setters and getters are not callbacks: they run outside the deferral scope, so a structural call made from one applies immediately. Keep them to value reads and writes.
 
 ## Seek
 
@@ -175,4 +179,4 @@ Structural mutation invoked from inside a callback (`Kill`, `Complete`, sequence
 - **`fireCallbacks = false` (default)**: jumps the playhead to the target time and renders a single sample at that position. Intermediate loops are not simulated. `AppendCallback` and `AddPause` between current and target time do not fire.
 - **`fireCallbacks = true`**: walks loop boundaries between current and target time, in temporal order (forward seek issues `OnStepComplete` per crossed boundary; backward seek issues `OnRewind`). `AppendCallback` and `AddPause` are crossed in order; `AddPause` halts the seek at the pause and leaves the playhead there.
 - **From-snap**: backward seek past `child._start` re-arms `_snapPending`, so a subsequent forward crossing snaps again.
-- **Loop math**: target time is reduced modulo total duration when finite; clamped to `0` and `Duration` outside `[0, Duration]` for finite tweens, or wrapped for infinite loops.
+- **Loop math**: a finite tween or sequence clamps the target to `[0, total]`, where total spans every loop. An infinite loop accepts any non-negative time and lands in the cycle that time falls in.

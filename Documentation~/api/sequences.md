@@ -20,7 +20,7 @@ sb.Insert(Position.AtLabel("intro", +0.3f), nextTweenBuilder);
 Sequence seq = sb.Start();
 ```
 
-`Append`/`Insert`/`Join` accept unstarted `TweenBuilder<T>` or `SequenceBuilder` values. Passing a started handle throws.
+`Append`/`Insert`/`Join` accept unstarted `TweenBuilder<T>` or `SequenceBuilder` values; no overload takes a started handle.
 
 ## `Position` type
 
@@ -36,7 +36,7 @@ public readonly struct Position
 }
 ```
 
-`seq.Append(...)` is sugar for `seq.Insert(Position.End, ...)`.
+`Append` is **not** sugar for `Insert(Position.End, ...)`. It places the child at the *append cursor*: the end of the most recent `Append` or `AppendInterval` (shifted along by any `Prepend`). `Insert` never moves the cursor, so after `Append(a)` then `Insert(5f, longTween)`, a further `Append(b)` starts right where `a` ended, not after `longTween`. `Position.End` is the sequence's current duration, which does count inserted children — use `Insert(Position.End, child)` to place a child after everything. `AppendCallback` uses the cursor too; `Join` starts alongside the most recent `Append`.
 
 ## Sequence invariants
 
@@ -46,7 +46,7 @@ public readonly struct Position
 - `Insert(time: t)` with `t < 0` throws. The sequence's own delay is the only way to defer.
 - `Insert(time: t)` with `t > current duration` extends the sequence's duration to `t + child.duration`.
 - `Start()` on an empty sequence produces a zero-duration `Sequence` that completes on its first tick.
-- Mid-play insertion: a `Sequence` handle's `Insert(...)` accepts new children at any position. If the position is at or before the playhead, the child will not tick until `Restart` or `Seek` revisits that range.
+- Mid-play insertion: a `Sequence` handle's `Insert(time, child)` accepts new children at any position. If the position is at or before the playhead, the child will not tick until `Restart` or `Seek` revisits that range. A child carrying `SetLink` throws, as it does at build time.
 - **Cascading auto-kill policy** (`SequenceCancelBehavior`, set via `SequenceBuilder.SetCancelBehavior`):
   - `ContinueOnChildAutoKill` (default): if a child auto-kills, the parent treats it as completed at the current parent-local time and continues. Other children are unaffected.
   - `KillSequenceOnChildAutoKill`: any child auto-kill propagates `Kill(false)` to the parent.
@@ -55,7 +55,7 @@ public readonly struct Position
 
 ## Nesting
 
-A sequence can contain tweens, other sequences, callbacks, intervals, labels, and pauses. Inserted children get `autoKill = false`; their delay is absorbed into the insertion offset. Infinite-loop children keep the `-1` sentinel internally; sequence duration math treats them as infinite.
+A sequence can contain tweens, other sequences, callbacks, intervals, labels, and pauses. Inserted children get `autoKill = false`. A child tween's `FirstLoop` delay is absorbed into its start time; a nested sequence keeps its own delay at the front of its window, and seeking or reversing the parent accounts for it. Infinite-loop children keep the `-1` sentinel internally; sequence duration math treats them as infinite.
 
 ## Reverse and yoyo
 

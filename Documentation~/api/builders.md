@@ -13,7 +13,7 @@ public struct TweenBuilder<T>
 }
 ```
 
-`TweenBuilder<T>` copies **alias** the same backing record: mutating one copy mutates all copies. After `.Start()`, every alias is invalid; further calls throw in Editor / safe mode and no-op in release. This surfaces a forgotten copy as a programming error early.
+`TweenBuilder<T>` copies **alias** the same backing record: mutating one copy mutates all copies. After `.Start()`, every alias is invalid; further calls throw `InvalidOperationException` in every build, `FEATHERTWEEN_RELEASE` included. This surfaces a forgotten copy as a programming error early.
 
 ## `SequenceBuilder`
 
@@ -117,7 +117,7 @@ FT.Move(enemy.transform, dest, 1f)
 - **Implementation**: the runner reads `activeInHierarchy` once per tick for each linked record. No
   component is attached to your objects; see [ADR 0012](../adr/0012-setlink-polling.md).
 
-`SequenceBuilder.SetDefaults` cascades `ease`, `loops`, and `delay` into **subsequently** appended child builders that have not explicitly overridden them. Duration is not cascaded because every creation method requires an explicit duration.
+`SequenceBuilder.SetDefaults` cascades `ease`, `loops`, and `delay` into **subsequently** appended child builders that have not explicitly overridden them. Duration is not cascaded because every creation method requires an explicit duration. The cascaded values follow the same rules as setting them on the child: `loops: 0` means one cycle, and a negative `delay` throws.
 
 ## From / FromTo
 

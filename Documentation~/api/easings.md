@@ -36,7 +36,7 @@ public enum EaseType
     InBounce,  OutBounce,  InOutBounce,
     Curve,         // delegates to the AnimationCurve slot
     Custom,        // delegates to the Func<float,float> slot
-    BounceExact,   // amplitude in user units (meters/degrees)
+    BounceExact,   // amplitude scales rebound depth (unitless; 1 = standard bounce)
 }
 ```
 
@@ -60,7 +60,7 @@ public static class Easing
 }
 ```
 
-`EaseRef` is a readonly struct, so every factory call is stack construction — zero heap allocation, parametric or not. The hot path indexes a static function table by `EaseType`, so there is no virtual dispatch.
+`EaseRef` is a readonly struct, so every factory call is stack construction — zero heap allocation, parametric or not. The hot path is one `switch` over `EaseType`, so there is no virtual dispatch.
 
 ## Usage
 
@@ -73,4 +73,4 @@ public static class Easing
 .SetEase(Easing.Custom(t => t * t))
 ```
 
-`Curve` reads the `EaseRef.Curve` slot at evaluation time. `Custom` reads `EaseRef.Custom`. All other types use the static eval table.
+`Curve` reads the `EaseRef.Curve` slot at evaluation time. `Custom` reads `EaseRef.Custom`. All other types are closed-form cases of that switch.

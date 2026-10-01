@@ -15,7 +15,7 @@ Set on the builder:
 .OnRewind(Action)
 ```
 
-`OnComplete`/`OnKill` additionally have zero-alloc target-capture overloads (see below). Implemented as direct delegates, not delegate lists or params arrays, so invocation allocates zero managed bytes.
+`OnComplete`/`OnKill` additionally have zero-alloc target-capture overloads (see below). Each slot is a list of delegates, allocated on its first subscription and iterated by index, so invocation allocates zero managed bytes.
 
 ## Late subscription
 
@@ -29,7 +29,7 @@ public Tween OnStepComplete(Action cb); // multicast
 
 Other callbacks (`OnUpdate`, `OnStart`, `OnPlay`, `OnPause`, `OnRewind`) must be set during build.
 
-Both builder-side and handle-side subscriptions for the completion-shaped events are **multicast**: each call appends to one invocation list per slot. Multiple builder-side `OnComplete` calls on the same builder append in call order; the second does not overwrite the first. Handlers fire in registration order. The list is allocated lazily on second subscription and pooled on tween recycle.
+Both builder-side and handle-side subscriptions for the completion-shaped events are **multicast**: each call appends to one invocation list per slot. Multiple builder-side `OnComplete` calls on the same builder append in call order; the second does not overwrite the first. Handlers fire in registration order. The list is allocated on first subscription and stays with the pooled record, cleared rather than freed when the tween recycles.
 
 ## Capture discipline
 
