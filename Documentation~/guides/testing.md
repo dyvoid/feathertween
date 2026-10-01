@@ -23,7 +23,9 @@ Run via the Unity **Test Runner** window (Window > General > Test Runner) or hea
 
 `tools~/compile-check/` (tilde suffix: Unity ignores the folder, like `Samples~`) compiles Runtime + Samples + EditMode tests against a
 minimal `UnityEngine` stub and runs the EditMode suite via NUnitLite in well
-under a second. CI runs this on every push (`.github/workflows/ci.yml`).
+under a second. CI runs this on every push to `main` or `develop` and on every pull request
+(`.github/workflows/ci.yml`); a push to a task branch alone does not run it. Locally it needs
+only a .NET 8 SDK.
 
 ```sh
 dotnet run --project tools~/compile-check/FeatherTween.TestRunner.csproj -c Release -- --noresult --where "cat != RequiresUnity"

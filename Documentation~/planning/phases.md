@@ -292,8 +292,9 @@ Composed demo reproducible against DOTween / PrimeTween reference recordings. Pe
   the C# async state machine allocates per call; only the awaiter struct itself is free. (c) The
   coroutine path is `ToYieldInstruction()` (that name was taken by the `Awaitable` method) and it
   is not pooled — Unity gives no signal for when it is done with a yield instruction.
-  **Still planned**: `WaitForKill`, `WaitForPosition`, `WaitForElapsedLoops`, each blocked on engine
-  machinery that does not exist (a disposal hook, a per-tick pending-wait registry).
+  **Still planned**: `WaitForKill`, `WaitForPosition`, `WaitForElapsedLoops`. The disposal hook the
+  awaitables work added unblocks `WaitForKill`; the two playhead waits still need a per-tick
+  pending-wait registry.
 
 **Candidates**:
 
@@ -313,9 +314,8 @@ Composed demo reproducible against DOTween / PrimeTween reference recordings. Pe
 - Speed-based tweens (`FT.PositionAtSpeed`, etc.)
 - Path tweens (Linear, CatmullRom) and `LookAt` modes — ship as a separate asmdef (`FeatherTween.Paths`) to protect the minimal-core goal
 - Blendable tweens (additive) — **requires an ADR before commitment**: additive composition means multiple writers per property, which cuts against the one-setter-per-tween storage model; this is the only roadmap item that could force an architectural rework
-- All parametric eases live (`Easing.OutBack(overshoot)`, `Easing.BounceExact(amp)`, `Easing.Elastic(s, p)`)
 - `TweenAssetSO` for shared presets
-- UniTask asmdef (weakened case: M2 awaitables target Unity 6 native `Awaitable`; only ship if a consumer actually needs UniTask interop)
+- UniTask asmdef (weakened case: M2's `await` needs no dependency and `WaitForCompletion()` converts via `AsUniTask()`, ADR 0013; only ship if a consumer actually needs cancellation-aware UniTask interop)
 
 ## M4 — GSAP parity sugar
 

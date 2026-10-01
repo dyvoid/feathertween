@@ -79,3 +79,11 @@ Option 3 for `await`, option 2 for composition.
   machinery that does not exist yet — a disposal hook that fires however a record dies, and a
   per-tick registry of pending playhead waits. Shipping them on top of the current callback set
   would produce awaits that hang (`WaitForKill` on an auto-killing tween never sees `OnKill`).
+
+## Addendum (2026-10-01): the deferred waits after this ADR
+
+The last Consequences bullet lists "a disposal hook that fires however a record dies" as missing
+machinery. This ADR built exactly that hook (`TweenStore.Free` → `InvokeOnDisposed`) a few bullets
+earlier; the bullet predates it. As of this ADR, `WaitForKill` is unblocked and can register on the
+hook the way `await` does. `WaitForPosition` and `WaitForElapsedLoops` remain blocked on a per-tick
+registry of pending playhead waits.

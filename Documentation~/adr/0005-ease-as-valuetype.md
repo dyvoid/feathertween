@@ -27,3 +27,14 @@ The ease and its parameters travel together. The tween stores one `EaseRef`. New
 - **Positive**: Adding a new ease is a single factory method; no plumbing changes.
 - **Negative**: `EaseRef` must be sized to fit the largest parameterized ease.
 - **Mitigation**: The set of built-in eases is bounded; custom eases can use the `Custom` delegate path if they need large state.
+
+## Addendum (2026-10-01): factory names as shipped
+
+The factory list above is the pre-M1 sketch. The decision (an `EaseRef` value type carrying its own
+parameters) shipped unchanged; the names did not. As shipped (see `Documentation~/api/easings.md`):
+
+- Elastic is three factories, `InElastic` / `OutElastic` / `InOutElastic(amplitude = 1, period = 0.3)`;
+  there is no `Easing.Elastic`.
+- `BounceExact(amplitude)` takes a **unitless** multiplier on rebound depth (1 = standard bounce),
+  not an amplitude in meters.
+- `Custom` takes a plain `Func<float, float>`; there is no `EaseFunction` delegate type.

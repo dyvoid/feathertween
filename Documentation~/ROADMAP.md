@@ -42,7 +42,7 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Value modifiers | Planned | Optional `Func<T,T>` post-processor applied to the eased value before the setter: snap-to-grid, rounding, angle wrap, clamp |
 | `yoyoEase` | Planned | Separate optional `EaseRef` for the return leg of a Yoyo cycle |
 | Awaitables | Done | `await tween` via our own `TweenAwaiter` struct — no UniTask *or* `Awaitable` dependency (ADR 0013); `WaitForCompletion()` returns `Awaitable` for composition/`AsUniTask`; `ToYieldInstruction()` for coroutines |
-| `WaitForKill` / `WaitForPosition` / `WaitForElapsedLoops` | Planned | Deferred from the awaitables work: each needs a disposal hook or a per-tick registry of pending playhead waits |
+| `WaitForKill` / `WaitForPosition` / `WaitForElapsedLoops` | Planned | Deferred from the awaitables work. `WaitForKill` can build on the disposal hook that work added; the two playhead waits still need a per-tick registry of pending waits |
 | Improved safe-mode reporting | Candidate | Collected per-frame diagnostics |
 | Roslyn analyzer | Candidate | Compile-time diagnostics for the two footguns the runtime can only warn about after the fact: a builder that is never consumed by `Start()`/`Clear()`, and a non-static lambda in a target-capture callback overload |
 
@@ -51,7 +51,7 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | Feature | Status | Description |
 |---------|--------|-------------|
 | Editor preview window | Candidate | Scrubber = 1.10 `Seek` + existing editor ticking |
-| UniTask integration | Candidate | Weakened case (M2 awaitables use native `Awaitable`); only if a consumer needs it |
+| UniTask integration | Candidate | Weakened case: `await tween` needs no dependency and `WaitForCompletion()` already converts via `AsUniTask()` (ADR 0013); only if a consumer needs cancellation-aware awaits |
 | Stagger helpers | Candidate | `FT.Stagger(targets, ...)` |
 | Speed-based tweens | Candidate | `FT.PositionAtSpeed`, etc. |
 | Path tweens | Candidate | Linear / CatmullRom paths, `LookAt` modes; separate `FeatherTween.Paths` asmdef |

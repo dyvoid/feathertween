@@ -17,7 +17,7 @@ How FeatherTween's design choices compare to DOTween, GSAP, PrimeTween, and LitM
 | Eases                | enum + curve + delegate  | string + parameterized        | enum + curve + Easing factories     | enum + curve (native, Burst-friendly)    | `EaseRef` via `Easing.X(...)` factories      |
 | Hot loop             | managed                  | managed (JS)                  | managed                             | [BurstCompile] IJobParallelFor           | managed (M1–M4), Burst job (M5)              |
 | Auto-kill            | yes, per frame           | n/a                           | yes, per frame                      | manual via SetLink                       | yes, per frame for UnityEngine.Object        |
-| Awaitable            | Task + coroutine yield   | promise (then)                | async/await + yield                 | MotionAwaiter + UniTask                  | core struct awaiter (M2 planned)             |
+| Awaitable            | Task + coroutine yield   | promise (then)                | async/await + yield                 | MotionAwaiter + UniTask                  | core struct awaiter + `Awaitable` + yield    |
 | Designer serialize   | TweenParams-ish          | n/a                           | `TweenSettings<T>` + inspector      | `SerializableMotionSettings<T,O>`        | `TweenSettings<T>` + drawer (M2 planned)     |
 | Safe mode            | yes                      | implicit JS try/catch         | yes (auto on destroy)               | per-tween CancelOnError                  | yes, default on in editor + per-tween        |
 | Status granularity   | IsPlaying/IsComplete     | n/a                           | isAlive only                        | full enum (Scheduled→Disposed)            | full `TweenStatus` enum                      |
@@ -30,5 +30,6 @@ How FeatherTween's design choices compare to DOTween, GSAP, PrimeTween, and LitM
 - Unity package: `com.dyvoid.feathertween`
 - Minimum Unity: 6000.3
 
-A `FeatherTween.UniTask` asmdef is an M3 candidate only — the M2 awaiter targets Unity 6's native
-`Awaitable`, which weakens the case for a UniTask dependency.
+A `FeatherTween.UniTask` asmdef is an M3 candidate only — `await tween` binds to FeatherTween's own
+awaiter struct and `WaitForCompletion()` returns Unity 6's native `Awaitable` (ADR 0013), which
+weakens the case for a UniTask dependency.
