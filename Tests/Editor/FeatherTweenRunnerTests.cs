@@ -144,5 +144,33 @@ namespace dyvoid.FeatherTween.Tests
 			}
 			return count;
 		}
+
+		[Test]
+		public void ManualTick_FromInsideAnotherTick_Throws_AndOuterTickStaysIntact()
+		{
+			var m = 0f;
+			FT.To(() => m, x => m = x, 10f, 10f).SetUpdate(UpdatePhase.Manual).Start();
+			var u1 = 0f;
+			var u2 = 0f;
+			Exception nested = null;
+			FT.To(() => u1, x => u1 = x, 10f, 10f)
+				.OnUpdate(_ =>
+				{
+					try { FT.ManualTick(1.0); }
+					catch (Exception e) { nested = e; }
+				})
+				.Start();
+			FT.To(() => u2, x => u2 = x, 10f, 10f).Start();
+
+			FeatherTweenRunner.TickEditorDelta(1.0);
+
+			Assert.That(nested, Is.InstanceOf<InvalidOperationException>());
+			Assert.That(m, Is.EqualTo(0f), "the nested tick must not run: it would overwrite the outer tick's snapshot");
+			Assert.That(u1, Is.EqualTo(1f).Within(1e-4f));
+			Assert.That(u2, Is.EqualTo(1f).Within(1e-4f), "every tween in the outer tick still steps exactly once");
+
+			FT.ManualTick(1.0);
+			Assert.That(m, Is.EqualTo(1f).Within(1e-4f), "ticking works again once the outer tick returned");
+		}
 	}
 }

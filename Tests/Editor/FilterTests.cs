@@ -298,5 +298,67 @@ namespace dyvoid.FeatherTween.Tests
 			Assert.That(killedInCallback, Is.True);
 			Assert.That(FT.IsTweening(target), Is.False, "bulk kill from callback drained at end of tick");
 		}
+
+		[Test]
+		public void KillAll_FromSetterMidTick_DoesNotRecycleTheSteppingRecord()
+		{
+			// A setter runs outside any callback scope, so it is the one place user
+			// code can free records synchronously mid-tick. Recycling them there
+			// handed the stepping record to the next Start(), whose OnComplete then
+			// fired from the old tween's completion.
+			var completions = 0;
+			var startedFromSetter = false;
+			FT.To(() => 0f, _ =>
+				{
+					if (startedFromSetter)
+					{
+						return;
+					}
+					startedFromSetter = true;
+					FT.KillAll();
+					FT.To(() => 0f, x => { }, 1f, 10f)
+						.SetUpdate(UpdatePhase.Manual)
+						.OnComplete(() => completions++)
+						.Start();
+				}, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(1.0);   // completes the first tween; its setter runs once
+
+			Assert.That(completions, Is.Zero, "the 10s tween started from the setter has not completed");
+			Assert.That(TweenStore.ActiveManual.Count, Is.EqualTo(1), "and it is still alive");
+		}
+
+		[Test]
+		public void SelfKillFromSetter_ThenSlotReused_EndOfTickFreeSparesTheNewTenant()
+		{
+			// The runner queues the completing tween for an end-of-tick free. If
+			// the tween was already freed mid-step and its slot re-rented, that
+			// queued free must not land on the new tenant.
+			Tween self = default;
+			Tween tenant = default;
+			self = FT.To(() => 0f, v =>
+				{
+					if (v >= 1f)
+					{
+						self.Kill();
+					}
+				}, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.OnUpdate(_ =>
+				{
+					if (!tenant.IsAlive)
+					{
+						tenant = FT.To(() => 0f, x => { }, 1f, 10f).SetUpdate(UpdatePhase.Manual).Start();
+					}
+				})
+				.Start();
+
+			FeatherTweenRunner.ManualTick(1.0);
+
+			Assert.That(tenant.Id, Is.EqualTo(self.Id), "precondition: the freed slot was re-rented (LIFO free list)");
+			Assert.That(tenant.IsAlive, Is.True, "the generation-checked end-of-tick free spared the new tenant");
+		}
 	}
 }

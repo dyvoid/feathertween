@@ -148,9 +148,10 @@ namespace dyvoid.FeatherTween
 			{
 				ReturnBulk(snapshot);
 			}
-			// Recycling freed records is only safe when nothing is mid-step; from
-			// inside a callback (mid-tick) the runner flushes at end of tick.
-			if (!TweenCommandQueue.InCallback)
+			// Recycling freed records is only safe when nothing is mid-step. From
+			// inside a callback, or from a setter/getter mid-tick (which runs
+			// outside any callback scope), the runner flushes at end of tick.
+			if (!TweenCommandQueue.InCallback && !FeatherTweenRunner.IsTicking)
 			{
 				TweenStore.FlushPoolReturns();
 			}

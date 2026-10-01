@@ -15,11 +15,21 @@ namespace dyvoid.FeatherTween.Internal
 		private static RootSequenceData rootManual;
 
 		private static readonly List<int> pendingKills = new List<int>(64);
+		private static readonly List<uint> pendingKillGens = new List<uint>(64);
 		private static readonly List<int> tickSnapshotIds = new List<int>(256);
 		private static readonly List<uint> tickSnapshotGens = new List<uint>(256);
 
 		private static int mainThreadId;
 		private static bool installed;
+
+		// True while a phase is being ticked. The tick works on shared static
+		// scratch lists (snapshot, pending kills) and owns the deferred-command
+		// drain, so a second tick started from inside the first one - a callback
+		// or setter calling FT.ManualTick - would overwrite the outer snapshot
+		// mid-iteration and drain the outer tick's commands early.
+		private static bool ticking;
+
+		internal static bool IsTicking => ticking;
 
 		// Engine-side rate control, applied at the hidden roots so it composes
 		// recursively with per-tween TimeScale. Distinct from Unity's
@@ -88,6 +98,8 @@ namespace dyvoid.FeatherTween.Internal
 			rootFixed = new RootSequenceData(UpdatePhase.Fixed);
 			rootManual = new RootSequenceData(UpdatePhase.Manual);
 			pendingKills.Clear();
+			pendingKillGens.Clear();
+			ticking = false;
 			globalTimeScale = 1f;
 			scaleUpdate = 1f;
 			scaleLate = 1f;
@@ -138,6 +150,7 @@ namespace dyvoid.FeatherTween.Internal
 		public static void ManualTick(double deltaTime)
 		{
 			AssertMainThread();
+			ThrowIfTicking();
 			var root = globalTimeScale * scaleManual;
 			var scaled = deltaTime * root;
 			rootManual.Advance(scaled, scaled);
@@ -148,6 +161,7 @@ namespace dyvoid.FeatherTween.Internal
 		internal static void TickEditorDelta(double deltaTime)
 		{
 			AssertMainThread();
+			ThrowIfTicking();
 			var root = globalTimeScale * scaleUpdate;
 			var scaled = deltaTime * root;
 			rootUpdate.Advance(scaled, scaled);
@@ -175,6 +189,7 @@ namespace dyvoid.FeatherTween.Internal
 				return;
 			}
 			AssertMainThread();
+			ThrowIfTicking();
 			var root = globalTimeScale * scaleUpdate;
 			double scaled = Time.deltaTime * root;
 			double unscaled = Time.unscaledDeltaTime * root;
@@ -190,6 +205,7 @@ namespace dyvoid.FeatherTween.Internal
 				return;
 			}
 			AssertMainThread();
+			ThrowIfTicking();
 			var root = globalTimeScale * scaleLate;
 			double scaled = Time.deltaTime * root;
 			double unscaled = Time.unscaledDeltaTime * root;
@@ -205,6 +221,7 @@ namespace dyvoid.FeatherTween.Internal
 				return;
 			}
 			AssertMainThread();
+			ThrowIfTicking();
 			var root = globalTimeScale * scaleFixed;
 			double scaled = Time.fixedDeltaTime * root;
 			double unscaled = Time.fixedUnscaledDeltaTime * root;
@@ -215,6 +232,7 @@ namespace dyvoid.FeatherTween.Internal
 
 		private static void TickActive(List<int> active, double scaledDt, double unscaledDt)
 		{
+			ticking = true;
 			TweenCommandQueue.BeginTick();
 			try
 			{
@@ -227,6 +245,17 @@ namespace dyvoid.FeatherTween.Internal
 				// Recycle freed records only after the drain: deferred commands may
 				// free more tweens, and nothing is mid-step anymore.
 				TweenStore.FlushPoolReturns();
+				ticking = false;
+			}
+		}
+
+		private static void ThrowIfTicking()
+		{
+			if (ticking)
+			{
+				throw new InvalidOperationException(
+					"[FeatherTween] A tick is already in progress. FT.ManualTick cannot be called from "
+					+ "inside a FeatherTween callback, setter or getter; call it from your own update loop.");
 			}
 		}
 
@@ -235,6 +264,7 @@ namespace dyvoid.FeatherTween.Internal
 			// Stale entries can survive a tick aborted by an exception (safe mode
 			// off); freeing them now could kill unrelated tweens in re-used slots.
 			pendingKills.Clear();
+			pendingKillGens.Clear();
 			tickSnapshotIds.Clear();
 			tickSnapshotGens.Clear();
 			for (var i = 0; i < active.Count; i++)
@@ -264,7 +294,7 @@ namespace dyvoid.FeatherTween.Internal
 					{
 						data.Status = TweenStatus.Cancelled;
 						data.InvokeOnKill();
-						pendingKills.Add(id);
+						QueueKill(id, tickSnapshotGens[i]);
 						continue;
 					}
 				}
@@ -281,7 +311,7 @@ namespace dyvoid.FeatherTween.Internal
 						data.Status = TweenStatus.Cancelled;
 						data.InvokeOnKill();
 					}
-					pendingKills.Add(id);
+					QueueKill(id, tickSnapshotGens[i]);
 					continue;
 				}
 
@@ -298,7 +328,7 @@ namespace dyvoid.FeatherTween.Internal
 
 				if (data.Status == TweenStatus.Completed && data.AutoKill)
 				{
-					pendingKills.Add(id);
+					QueueKill(id, tickSnapshotGens[i]);
 				}
 			}
 
@@ -306,10 +336,22 @@ namespace dyvoid.FeatherTween.Internal
 			{
 				for (var i = 0; i < pendingKills.Count; i++)
 				{
-					TweenStore.Free(pendingKills[i]);
+					// Generation-checked: if something freed the record earlier in
+					// the tick and its slot was re-rented, the new tenant survives.
+					if (TweenStore.IsAlive(pendingKills[i], pendingKillGens[i]))
+					{
+						TweenStore.Free(pendingKills[i]);
+					}
 				}
 				pendingKills.Clear();
+				pendingKillGens.Clear();
 			}
+		}
+
+		private static void QueueKill(int id, uint generation)
+		{
+			pendingKills.Add(id);
+			pendingKillGens.Add(generation);
 		}
 
 		private static bool InsertAfter<TAnchor>(ref PlayerLoopSystem loop, Type newType, PlayerLoopSystem.UpdateFunction update)
