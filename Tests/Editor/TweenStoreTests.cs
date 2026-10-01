@@ -178,5 +178,17 @@ namespace dyvoid.FeatherTween.Tests
 			Assert.That(TweenStore.Capacity, Is.EqualTo(grown), "SetCapacity must not shrink.");
 		}
 
+
+		[Test]
+		public void NextCapacity_DoublesUntilCovered_AndNeverOverflows()
+		{
+			Assert.That(TweenStore.NextCapacity(128, 129), Is.EqualTo(256));
+			Assert.That(TweenStore.NextCapacity(128, 1000), Is.EqualTo(1024));
+			Assert.That(TweenStore.NextCapacity(128, 128), Is.EqualTo(128));
+			// Doubling 128 past 2^30 used to overflow to a negative, then to 0,
+			// and spin forever.
+			Assert.That(TweenStore.NextCapacity(128, int.MaxValue), Is.EqualTo(int.MaxValue));
+			Assert.That(TweenStore.NextCapacity(1 << 30, (1 << 30) + 1), Is.EqualTo((1 << 30) + 1));
+		}
 	}
 }

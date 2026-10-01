@@ -82,13 +82,21 @@ namespace dyvoid.FeatherTween.Internal
 				return;
 			}
 
-			var newCapacity = data.Length;
-			while (newCapacity < capacity)
-			{
-				newCapacity *= 2;
-			}
+			Grow(NextCapacity(data.Length, capacity));
+		}
 
-			Grow(newCapacity);
+		// Doubles from current until it covers required. Doubling past
+		// int.MaxValue / 2 would overflow to a negative and then to 0, which
+		// never covers anything and spun the old loop forever; jump straight to
+		// the request instead and let the allocation itself succeed or fail.
+		internal static int NextCapacity(int current, int required)
+		{
+			var next = current < 1 ? 1 : current;
+			while (next < required)
+			{
+				next = next > int.MaxValue / 2 ? required : next * 2;
+			}
+			return next;
 		}
 
 		public static (int id, uint generation) Allocate()
@@ -98,7 +106,7 @@ namespace dyvoid.FeatherTween.Internal
 
 			if (freeList.Count == 0)
 			{
-				Grow(data.Length * 2);
+				Grow(NextCapacity(data.Length, data.Length + 1));
 #if UNITY_EDITOR
 				Debug.LogWarning($"[FeatherTween] TweenStore grew to {data.Length}. Consider FT.SetCapacity to pre-size.");
 #endif
