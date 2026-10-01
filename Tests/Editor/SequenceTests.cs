@@ -148,6 +148,35 @@ namespace dyvoid.FeatherTween.Tests
 			Assert.That(seq.Duration, Is.EqualTo(1f).Within(1e-4f), "explicit SetLoops(1) wins over default");
 		}
 
+
+		[Test]
+		public void DefaultsCascade_ZeroLoops_ClampsToOneCycle_LikeSetLoops()
+		{
+			var a = 0f;
+			var steps = 0;
+			var sb = ManualSequence().SetDefaults(loops: 0);
+			sb.Append(FloatTween(() => a, v => a = v, 1f, 1f).OnStepComplete(() => steps++));
+			sb.AppendInterval(3f);
+			var seq = sb.Start();
+
+			Assert.That(seq.Duration, Is.EqualTo(4f).Within(1e-4f), "child window is one 1s cycle, not zero");
+			for (var i = 0; i < 8; i++)
+			{
+				FeatherTweenRunner.ManualTick(0.5);
+			}
+			Assert.That(steps, Is.EqualTo(1), "a cascaded 0 must not loop the child for the rest of the sequence");
+			Assert.That(a, Is.EqualTo(1f).Within(1e-3f));
+		}
+
+		[Test]
+		public void DefaultsCascade_NegativeDelay_Throws()
+		{
+			var sb = ManualSequence();
+			Assert.Throws<ArgumentOutOfRangeException>(() => sb.SetDefaults(delay: -0.5f),
+				"negative time inputs throw everywhere else (conventions.md); the cascade used to clamp silently");
+			sb.Start();
+		}
+
 		[Test]
 		public void SameBuilder_AppendedTwice_Throws()
 		{

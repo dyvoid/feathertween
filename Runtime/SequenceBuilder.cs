@@ -118,7 +118,7 @@ namespace dyvoid.FeatherTween
 			return this;
 		}
 
-		/// <summary>Default ease/loops/delay applied to children appended after this call (frozen per child at append). No duration default: every creation method requires an explicit duration (ADR 0010).</summary>
+		/// <summary>Default ease/loops/delay applied to children appended after this call (frozen per child at append). <paramref name="loops"/> follows <c>SetLoops</c> (0 means one cycle, negative loops forever); a negative <paramref name="delay"/> throws. No duration default: every creation method requires an explicit duration (ADR 0010).</summary>
 		public SequenceBuilder SetDefaults(
 			EaseRef? ease = null,
 			int? loops = null,
@@ -126,6 +126,10 @@ namespace dyvoid.FeatherTween
 			float? delay = null)
 		{
 			ValidateOrThrow();
+			if (delay < 0f)
+			{
+				throw new ArgumentOutOfRangeException(nameof(delay), "Default delay cannot be negative.");
+			}
 			buffer.SetDefaults(ease, loops, loopType, delay);
 			return this;
 		}

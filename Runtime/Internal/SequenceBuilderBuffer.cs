@@ -183,13 +183,17 @@ namespace dyvoid.FeatherTween.Internal
 			}
 			if (loops.HasValue)
 			{
-				defaultLoops = loops.Value < 0 ? -1 : loops.Value;
+				// Same normalization as TweenBuilder.SetLoops: a cascaded loop
+				// count of 0 would never satisfy a completion check, and the
+				// child would loop for as long as its parent kept stepping it.
+				defaultLoops = loops.Value < 0 ? -1 : (loops.Value == 0 ? 1 : loops.Value);
 				defaultLoopType = loopType;
 				hasDefaultLoops = true;
 			}
 			if (childDelay.HasValue)
 			{
-				defaultDelay = childDelay.Value < 0f ? 0f : childDelay.Value;
+				// Negative values are rejected by SequenceBuilder.SetDefaults.
+				defaultDelay = childDelay.Value;
 				hasDefaultDelay = true;
 			}
 		}
