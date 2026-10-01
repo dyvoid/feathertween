@@ -18,6 +18,14 @@ stability promise gets made.
   governs API changes here, and it would bind exactly the M2-M5 work most likely to need a break.
   Nothing in the API changed; only the promise about future ones did. Full policy in
   [`Documentation~/git-strategy.md`](Documentation~/git-strategy.md#versioning).
+- **`FT.ManualTick` throws `InvalidOperationException` when a tick is already in progress**, i.e.
+  when called from inside a FeatherTween callback, setter or getter. It used to run a nested tick
+  that overwrote the outer tick's snapshot: manual tweens were stepped twice and later tweens of
+  the outer phase skipped. *Migration*: call `FT.ManualTick` from your own update loop.
+- **`SequenceBuilder.SetDefaults(delay:)` throws on a negative value** instead of clamping it to 0,
+  like every other time input. *Migration*: pass 0 or a positive delay.
+- **Mid-play `Sequence.Insert` throws on a child carrying `SetLink`**, matching build-time
+  composition. The link used to be dropped silently. *Migration*: link the sequence itself.
 
 ### Added
 
@@ -40,6 +48,23 @@ stability promise gets made.
   enable/disable toggle and a live `Status` readout, and a three-step chain written once with
   `await` and once as a coroutine.
 
+### Fixed
+
+- A `SetAutoKill(false)` tween that had completed fired `OnKill` when its target was destroyed. A
+  completed record now disposes without callbacks, as `Kill()` and `SetLink` already did.
+- `Complete()` / `Kill(true)` on a sequence that killed itself during the walk (a destroyed child
+  under `KillSequenceOnChildAutoKill`, or an entry-callback error with `SetCancelOnError`) fired
+  `OnStepComplete` after `OnKill`.
+- Seeking or reversing a sequence that contains a nested sequence with its own `SetDelay` rendered
+  the nested one `delay` seconds ahead of forward playback.
+- `SetDefaults(loops: 0)` cascaded a loop count of 0, and the child looped for as long as its parent
+  ran. It now means one cycle, like `SetLoops(0)`.
+- `FT.KillAll()` called from a setter or getter mid-tick recycled the record still being stepped, so
+  the next `Start()` could re-rent it.
+- A record freed mid-tick whose slot was re-rented in the same tick could take the new tween down
+  with it at the end-of-tick free.
+- `FT.SetCapacity` with a value above 2^30 never returned.
+
 ## [0.1.0] - 2026-07-18
 
 Initial release. The public API is declared stable at this version; breaking
@@ -61,7 +86,7 @@ changes from here on follow semantic versioning.
 - **Ease system**: full standard ease set as `Easing.X()` value-type factories
   (`EaseRef`), parametric `OutBack(overshoot)` / `Elastic(amplitude, period)` /
   `BounceExact(amplitude)`, `Easing.Curve(AnimationCurve)`, and
-  `Easing.Custom(EaseFunction)`.
+  `Easing.Custom(Func<float, float>)`.
 - **Loops, delays, direction**: `SetLoops(count | -1, loopType)` with
   `Restart` / `Yoyo` / `Rewind` / `Incremental`; `SetDelay(seconds, delayType)`
   with `FirstLoop` / `EveryLoop`; `Reverse()` through delays and loop
