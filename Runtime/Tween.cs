@@ -55,7 +55,7 @@ namespace dyvoid.FeatherTween
 			this.generation = generation;
 		}
 
-		/// <summary>Starts playback if the tween was created paused or is delayed.</summary>
+		/// <summary>Resumes a paused tween (fires <c>OnPlay</c>); replays a completed one from the start. No-op while playing or delayed.</summary>
 		public void Play() => TweenOps.Play(id, generation);
 
 		/// <summary>Halts playback, keeping the playhead; resume with <see cref="Resume"/>.</summary>

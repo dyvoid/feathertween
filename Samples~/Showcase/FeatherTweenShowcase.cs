@@ -585,8 +585,9 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 
 		private void PingCallback()
 		{
-			// One-shot started from a sequence callback. Reentrancy-safe: the
-			// engine defers the structural start to the end of the tick.
+			// One-shot started from a sequence callback. Safe mid-tick: the runner
+			// ticks a snapshot of the active list taken before callbacks ran, so
+			// the new tween first steps on the next tick.
 			FT.Scale(pingSphere.transform, 1.8f, 0.15f)
 				.SetLoops(2, LoopType.Yoyo)
 				.SetTarget(pingSphere)

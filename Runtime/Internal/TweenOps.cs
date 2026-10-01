@@ -129,8 +129,8 @@ namespace dyvoid.FeatherTween.Internal
 		}
 
 		// Negative scale rejected: direction is owned exclusively by Reverse()
-		// (Documentation~/api/handles.md). Throws today; the throw-in-safe-mode / clamp-in-release split
-		// lands with safe mode in phase 1.13.
+		// (Documentation~/api/handles.md). Throws in every build, like every
+		// other invalid time input (Documentation~/guides/conventions.md).
 		public static void SetTimeScale(int id, uint gen, float scale)
 		{
 			if (scale < 0f)

@@ -1,5 +1,6 @@
 // Minimal UnityEngine surface so the package Runtime compiles outside Unity.
-// Syntax/type check only — never executed.
+// The EditMode suite executes against it, so members that tests reach must
+// behave plausibly; see README.md for the rules.
 #pragma warning disable 1591 // stubs carry no XML docs; the DocCheck leg gates Runtime only
 using System;
 

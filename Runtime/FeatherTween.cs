@@ -22,7 +22,9 @@ namespace dyvoid.FeatherTween
 		/// <summary>
 		/// Advances the <see cref="UpdatePhase.Manual"/> phase by
 		/// <paramref name="deltaTime"/> seconds. Manual tweens tick only here;
-		/// no other phase is affected. Main thread only.
+		/// no other phase is affected. Main thread only, and not from inside a
+		/// FeatherTween callback, setter or getter: a tick already in progress
+		/// makes it throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		public static void ManualTick(double deltaTime)
 		{
@@ -237,8 +239,9 @@ namespace dyvoid.FeatherTween
 		// endpoint value(s), then duration (Documentation~/guides/conventions.md).
 
 		/// <summary>
-		/// Animates from the current value (read via <paramref name="getter"/> when
-		/// playback begins) to <paramref name="to"/> over <paramref name="duration"/> seconds.
+		/// Animates from the current value to <paramref name="to"/> over <paramref name="duration"/>
+		/// seconds. The start value is read via <paramref name="getter"/> at <c>Start()</c> for a root
+		/// tween (before any delay), or when the parent playhead reaches it inside a sequence.
 		/// </summary>
 		public static TweenBuilder<T> To<T>(Func<T> getter, Action<T> setter, T to, float duration)
 		{
