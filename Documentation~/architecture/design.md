@@ -29,7 +29,7 @@ The anchors below are the contract the implementation is held to. Changing one r
 
 ## Design principles (locked anchors)
 
-1. **Static-method API**: typed shortcuts live as static methods on `FeatherTween` (`FT.Move(transform, ...)`), not as extension methods on Unity types. Avoids namespace pollution on `Transform`/`CanvasGroup`/etc. and gives one discoverable entry point. A small optional `FeatherTween.Extensions` asmdef in a later milestone can re-add DOTween-style extension wrappers for users who prefer them.
+1. **Static-method API**: typed shortcuts live as static methods on `FT` (`FT.Move(transform, ...)`), not as extension methods on Unity types. Avoids namespace pollution on `Transform`/`CanvasGroup`/etc. and gives one discoverable entry point. A small optional `FeatherTween.Extensions` asmdef in a later milestone can re-add DOTween-style extension wrappers for users who prefer them.
 2. **Builder/handle split with explicit `.Start()`**.
    - `FT.X(...)` returns a `TweenBuilder<T>` struct; copies alias the same pooled backing record.
    - After `.Start()` or sequence consumption, every builder alias is invalid.
@@ -40,15 +40,15 @@ The anchors below are the contract the implementation is held to. Changing one r
 4. **PlayerLoop injection runner**, no MonoBehaviour. Edit-mode capable via `EditorApplication.update`.
 5. **Three update phases from M1**: `Update`, `LateUpdate`, `FixedUpdate`. Plus a `Manual` mode that takes an explicit `deltaTime`.
 6. **Ease as `EaseRef` value type** produced by `Easing.X(...)` factories. The ease and its parameters travel together; the tween stores one `EaseRef`. Plug new eases in without API change.
-7. **`[Serializable] TweenSettings` and `TweenSettings<T>`** structs for designer-facing inspector workflows. The generic form bundles `startValue`/`endValue` plus a `WithDirection(bool toEndValue)` helper for show/hide style toggles.
-8. **Custom awaiter** (`await tween;`, zero managed alloc per await). Deferred to M2; core callback surface covers the same use cases. UniTask asmdef remains optional for cancellation ergonomics.
+7. **`[Serializable] TweenSettings` and `TweenSettings<T>`** structs for designer-facing inspector workflows. The generic form bundles `startValue`/`endValue` plus a `WithDirection(bool toEndValue)` helper for show/hide style toggles. *Planned for M2; not shipped.*
+8. **Custom awaiter** (`await tween;`). Shipped in M2 as FeatherTween's own `TweenAwaiter` struct, with no UniTask or `Awaitable` dependency ([ADR 0013](../adr/0013-awaitables-without-dependencies.md)). The original "zero managed alloc per await" goal is withdrawn: the struct allocates nothing, but the C# async state machine around it does. A UniTask asmdef remains an optional M3 candidate for cancellation ergonomics.
 9. **Per-frame auto-kill** for `UnityEngine.Object` targets (`obj == null` check).
 10. **SoA-friendly internal layout** to keep a future Burst path cheap; not a public concern.
-11. **Parent-sequence model from M1**: every animation has `_start`, `_end`, `_timeScale`, `_parent`. A hidden root sequence owned by the runner contains all top-level tweens. Nested sequences shipped in M1 with no structural change, as the model predicted. The public type is named `Sequence` to avoid clashing with Unity's `Timeline` package.
+11. **Parent-sequence model from M1**: every animation is driven by a parent timeline, and a hidden root per update phase, owned by the runner, drives all top-level tweens. As built, a child's window lives on its parent's entry and children carry no parent pointer ([ADR 0006](../adr/0006-parent-sequence-model.md) addendum). Nested sequences shipped in M1 with no structural change, as the model predicted. The public type is named `Sequence` to avoid clashing with Unity's `Timeline` package.
 12. **`Position` value type from M1**: typed `End`, `AtTime`, `AtLabel`, `AfterPrevious`, `WithPrevious`. The GSAP string DSL (`"+=0.3"`, `"<"`, `">"`) is added later as a pure `Position.Parse` sugar, no plumbing changes.
 13. **`From` / `FromTo` are core builder methods**, not extensions. A **root tween** snaps at `.Start()` regardless of its own `SetDelay` (delay only defers interpolation, not the snap). A **sequenced child** with a parent-imposed offset `> 0` snaps when the parent playhead first crosses `child._start`; the child's own `SetDelay` further offsets interpolation but not the snap.
 14. **Safe mode** (try/catch around tween step and callbacks) included from M1. Default `true` in Editor, `false` in release builds.
-15. **Zero-alloc target-capture overloads** for every callback and every generic creation method. A `<TTarget>(TTarget target, Action<TTarget, ...> action)` overload sits next to each plain delegate overload, so users can write static lambdas that receive the target as a parameter and eliminate closure allocations.
+15. **Zero-alloc target-capture overloads** for every callback and every generic creation method. A `<TTarget>(TTarget target, Action<TTarget, ...> action)` overload sits next to each plain delegate overload, so users can write static lambdas that receive the target as a parameter and eliminate closure allocations. *Status: M1 shipped them for `OnComplete`/`OnKill` only; the remaining callbacks and creation-side state passing are open M2 candidates ([ROADMAP](../ROADMAP.md)).*
 16. **Extensible value-type support via `IInterpolator<T>`**: users can register interpolators for custom blittable types without forking the core. M1 ships built-ins for `float`, `Vector2/3/4`, `Color`, `Quaternion`, `int`.
 
 ---

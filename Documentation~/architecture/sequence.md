@@ -6,7 +6,7 @@ M1 ships all of these.
 
 All signatures accept builders, never started handles.
 
-- `Append(TweenBuilder<T>)` — at end
+- `Append(TweenBuilder<T>)` — at the append cursor, which `Insert` does not move (see [api/sequences.md](../api/sequences.md))
 - `Append(SequenceBuilder)` — nested
 - `AppendInterval(seconds)`
 - `AppendCallback(Action)`
@@ -33,15 +33,15 @@ There are no alias names (former `Chain`/`Group` were removed in the ADR 0011 co
   - `KillSequenceOnChildAutoKill`: any child auto-kill propagates `Kill(false)` to the parent. The parent's `OnKill` fires; remaining children are killed in turn.
   - The parent does not auto-kill from its own target unless `SetTarget` was called and that target is destroyed.
 - **Frozen child duration**: a child's duration (and ease, loops, delay) is captured at append time and frozen. Subsequent changes to the source builder (already invalidated) or to `SetDefaults` cascade do not retroactively update the sequence. Live duration recomputation is out of scope for v1.
-- **Storage of heterogeneous children**: `Append/Insert/Join` consume the builder's backing record into a typed `TweenData<T>` slot in `TweenStore` and the sequence stores only the resulting `int` id. No boxing of generic structs; the sequence's child list is `int[]`.
+- **Storage of heterogeneous children**: `Append/Insert/Join` consume the builder's backing record into a typed `TweenData<T>` slot in `TweenStore`; the sequence stores the slot id and generation plus the child's window in a `SequenceChildEntry`. No boxing of generic structs; the child list is a `SequenceChildEntry[]` sorted by start time.
 - Sequence reverse and yoyo follow the rules in [overview.md](overview.md).
 
 ## Nesting rules
 
 - A sequence can contain tweens, sequences, callbacks, intervals, labels, pauses.
-- Inserted children get `autoKill = false`, `delay` absorbed into insertion offset.
-- A finite looping child's window spans **all** of its cycles: `[_start, _start + delay + duration × loops]`. This holds for tween children and nested sequence children alike.
-- Infinite-loop children (`SetLoops(-1)`) keep the `-1` sentinel internally; sequence duration math treats them as `∞`. The sequence's own duration is the max of finite children's `[_start, _end]` ranges; an infinite child does not extend the sequence's reported `Duration`. Inspector / serialization paths clamp to a UI-visible cap.
+- Inserted children get `autoKill = false`. A tween child's `FirstLoop` delay is absorbed into its start time; a nested sequence keeps its delay at the front of its window, and the parent's seeks and backward walks offset into the nested timeline by it.
+- A finite looping child's window spans **all** of its cycles: `[start, start + duration × loops]` for a tween (plus `delay × loops` with an `EveryLoop` delay), `[start, start + delay + duration × loops]` for a nested sequence.
+- Infinite-loop children (`SetLoops(-1)`) keep the `-1` sentinel internally; sequence duration math treats them as `∞`. The sequence's own duration is the max of finite children's window ends; an infinite child does not extend the sequence's reported `Duration`.
 - A child can only have one parent (enforced by single-use builder).
 - **Manual phase**: children inherit `UpdatePhase` from their parent sequence. A `Manual` sequence cannot contain `Update`-phase children, and vice versa. Phase mismatch at `Append/Insert` throws.
 
@@ -52,7 +52,7 @@ There are no alias names (former `Chain`/`Group` were removed in the ADR 0011 co
 ## Label resolution timing
 
 - `SequenceBuilder.Insert(Position.AtLabel("x"))`: resolved at `.Start()`. Unresolved labels at start throw.
-- `Sequence.AddLabel(name, time)` on the handle (post-start): defines a label visible only to **subsequent** handle-side `Insert` calls. Existing inserts are not retroactively rebound.
+- There is no handle-side `AddLabel`: labels live on the builder only, and the handle's mid-play `Insert(time, child)` takes an absolute time.
 
 ## String position DSL
 

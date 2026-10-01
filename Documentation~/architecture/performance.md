@@ -4,14 +4,14 @@ How FeatherTween stays allocation-free in the hot path and how performance is ve
 
 ## Allocation budget
 
-- **Tween creation**: 1 `TweenData<T>` from pool (no alloc after warmup) + 1 delegate pair (getter, setter) for generic form. Typed shortcuts may amortize delegates via cached statics where possible. `SequenceData` is not pooled (its entry array is unique per build).
+- **Tween creation**: 1 `TweenData<T>` from pool (no alloc after warmup) + 1 delegate pair (getter, setter) for generic form. Typed shortcuts allocate the same closure pair today (the lambda baseline); hand-written zero-alloc shortcut paths are M2. `SequenceData` is not pooled (its entry array is unique per build).
 - **Per-frame step**: 0 managed alloc.
-- **Callback dispatch**: 0 alloc; single delegates, not delegate lists, not params arrays.
+- **Callback dispatch**: 0 alloc; each slot is a list allocated on first subscription, kept with the pooled record, and iterated by index — no params arrays, no multicast-delegate combining.
 - **`Kill(target)`** resolves through the target-indexed multimap: O(k) in the target's own tween count. `Free()` is an O(1) swap-remove from its active list via a slot→index map.
 
 ## SoA-readiness
 
-Hot fields (`_start, _end, _localTime, _duration, _timeScale, _easeParamA, _easeParamB`) sit at the top of `TweenData` in a struct-of-floats region. The M5 SoA split into `NativeArray<TweenHot>` + managed sidecar does not break public API.
+Hot fields (start/end values, `localTime`, duration, time scale, the `EaseRef` parameters) are plain fields behind trivial accessors, so the M5 SoA split into `NativeArray<TweenHot>` + managed sidecar is a mechanical extraction that does not break public API. They are not yet grouped into one contiguous region; that is part of the M5 work.
 
 ## Benchmark methodology
 
@@ -37,6 +37,7 @@ falsifiable configuration — see the "Cross-engine comparative benchmark" entry
 `Tests.Benchmark` so the comparison can be added apples-to-apples.
 
 The awaiter's allocation budget is specified with the feature itself in
-[`../api/awaiters.md`](../api/awaiters.md) (M2, planned).
+[`../api/awaiters.md`](../api/awaiters.md): the awaiter struct is free, the async state machine
+around it is not, so `await` sits outside the zero-alloc guarantee.
 
 The `Unity.PerformanceTesting` package (`com.unity.test-framework.performance`) is a test-only dependency the consuming project must install.
