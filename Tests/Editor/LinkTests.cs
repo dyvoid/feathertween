@@ -302,5 +302,20 @@ namespace dyvoid.FeatherTween.Tests
 				() => FT.Sequence().SetLink(null),
 				Throws.ArgumentNullException);
 		}
+
+		[Test]
+		public void HandleInsert_LinkedChild_Throws()
+		{
+			var go = new UnityEngine.GameObject("link");
+			var v = 0f;
+			var sb = FT.Sequence().SetUpdate(UpdatePhase.Manual);
+			sb.AppendInterval(2f);
+			var seq = sb.Start();
+
+			Assert.Throws<InvalidOperationException>(() => seq.Insert(0f,
+					FT.To(() => v, x => v = x, 1f, 1f).SetLink(go, LinkBehavior.KillOnDisable)),
+				"mid-play Insert follows the build-time rule: a detached child is never polled, so the link would be dropped");
+			UnityEngine.Object.DestroyImmediate(go);
+		}
 	}
 }

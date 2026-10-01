@@ -120,6 +120,16 @@ namespace dyvoid.FeatherTween
 					"[FeatherTween] Child builder was already consumed (started or appended elsewhere).");
 			}
 
+			// Same rule as build-time composition: a child has no status of its
+			// own for a link to drive, and a detached child is never polled, so
+			// the link would be dropped silently.
+			if (childBuffer.HasLink)
+			{
+				TweenBuilderBufferPool<T>.Return(childBuffer);
+				throw new InvalidOperationException(
+					"[FeatherTween] SetLink is not valid on a sequence child; link the sequence itself.");
+			}
+
 			if (!childBuffer.PhaseExplicit)
 			{
 				childBuffer.ApplyInheritedPhase(data.Phase, data.IgnoreTimeScale);
