@@ -76,6 +76,17 @@ All of these return the builder so they can be chained.
 .SetCancelOnError(bool)                     // setter exception: kill silently + OnKill; callback exception: log + cancel
 ```
 
+### Loop types
+
+| `LoopType` | Odd cycles on a tween | On a sequence |
+| ---------- | --------------------- | ------------- |
+| `Restart` | play forward from the start value again | same |
+| `Yoyo` | play end → start, applying the ease **forward** (an `OutCubic` tween decelerates into both ends) | the timeline walks backward, so children replay time-reversed |
+| `Rewind` | replay the previous cycle **backward in time**: the ease is mirrored (an `OutCubic` tween leaves the end slowly and arrives at the start fast) | identical to `Yoyo` |
+| `Incremental` | every cycle adds `end - start` on top of the last landing value | treated as `Restart` |
+
+With a symmetric ease (`Linear`, `InOutQuad`, …) `Yoyo` and `Rewind` produce the same motion.
+
 ## `SetLink` — surviving object pooling
 
 `SetTarget` auto-kill only covers a *destroyed* `UnityEngine.Object`. Pooled objects are never

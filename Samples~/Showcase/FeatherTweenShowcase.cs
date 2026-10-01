@@ -319,7 +319,8 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 				BuildEasesChapter());
 
 			AddChapter(master, "4. Loops and delays", LoopsContent,
-				"Four lanes, 1s cycles: Restart teleports home; Yoyo ping-pongs; Rewind snaps back; " +
+				"Four lanes, 1s cycles: Restart teleports home; Yoyo ping-pongs, easing out at both ends; " +
+				"Rewind replays each cycle backward in time (eases out going right, eases IN coming back); " +
 				"Incremental adds +1.5 per cycle and must LAND EXACTLY ON THE MARKER (x=3) after 4 cycles. " +
 				"Below: FirstLoop delays once, EveryLoop delays before EVERY cycle — the countdown bars " +
 				"drain exactly while their cube waits.",
@@ -483,7 +484,9 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 			var ch = FT.Sequence();
 			// Loop-type lanes: 1s cycles. Restart/Yoyo/Rewind run 4 bounded cycles
 			// in [0,4]; Incremental adds (end-start)=+1.5 per cycle:
-			// -3 -> -1.5 -> 0 -> 1.5 -> 3, landing on the marker.
+			// -3 -> -1.5 -> 0 -> 1.5 -> 3, landing on the marker. Yoyo and Rewind
+			// share an asymmetric ease: a symmetric one like InOutQuad reads the
+			// same reversed in time, and the two lanes would look identical.
 			ch.Append(FT.LocalMove(loopRestart.transform, new Vector3(0f, 3f, 0f), 1f)
 				.From(new Vector3(-3f, 3f, 0f))
 				.SetLoops(4, LoopType.Restart)
@@ -491,11 +494,11 @@ namespace dyvoid.FeatherTween.Samples.Showcase
 			ch.Join(FT.LocalMove(loopYoyo.transform, new Vector3(0f, 2f, 0f), 1f)
 				.From(new Vector3(-3f, 2f, 0f))
 				.SetLoops(4, LoopType.Yoyo)
-				.SetEase(Easing.InOutQuad()));
+				.SetEase(Easing.OutCubic()));
 			ch.Join(FT.LocalMove(loopRewind.transform, new Vector3(0f, 1f, 0f), 1f)
 				.From(new Vector3(-3f, 1f, 0f))
 				.SetLoops(4, LoopType.Rewind)
-				.SetEase(Easing.InOutQuad()));
+				.SetEase(Easing.OutCubic()));
 			ch.Join(FT.LocalMove(loopIncremental.transform, new Vector3(-1.5f, 0f, 0f), 1f)
 				.From(new Vector3(-3f, 0f, 0f))
 				.SetLoops(4, LoopType.Incremental)

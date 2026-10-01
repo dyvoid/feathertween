@@ -15,3 +15,4 @@
 | [0011](0011-api-consistency-pass.md) | API consistency pass (subject-first creation, getter-less `FromTo`) | Accepted |
 | [0012](0012-setlink-polling.md) | `SetLink` polls `activeInHierarchy` instead of attaching a component | Accepted |
 | [0013](0013-awaitables-without-dependencies.md) | Awaitables depend on neither UniTask nor `Awaitable` | Accepted |
+| [0014](0014-rewind-is-time-reversed.md) | `LoopType.Rewind` replays cycles backward in time | Accepted |

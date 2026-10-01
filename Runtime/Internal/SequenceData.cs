@@ -62,8 +62,12 @@ namespace dyvoid.FeatherTween.Internal
 			this.loopCount = loopCount == 0 ? 1 : loopCount;
 			// Incremental has no sequence-level meaning (children re-snap from
 			// current values on each cycle, so relative children shift naturally);
-			// treat it as Restart.
-			this.loopType = loopType == LoopType.Yoyo ? LoopType.Yoyo : LoopType.Restart;
+			// treat it as Restart. A sequence's Yoyo already walks odd cycles
+			// backward in time, so every child replays time-reversed: that is
+			// exactly Rewind, and the two share one code path here.
+			this.loopType = loopType == LoopType.Yoyo || loopType == LoopType.Rewind
+				? LoopType.Yoyo
+				: LoopType.Restart;
 			delayRemaining = delay;
 			for (var i = 0; i < entries.Length; i++)
 			{

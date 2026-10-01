@@ -458,7 +458,7 @@ namespace dyvoid.FeatherTween.Internal
 			{
 				FireStartIfPending();
 				GetCycleEnds(cycleIndex, out var cycleFrom, out var cycleTo);
-				var easedT = ease.Evaluate(tInCycle);
+				var easedT = EaseInCycle(cycleIndex, tInCycle);
 				var value = interpolator.Lerp(cycleFrom, cycleTo, easedT);
 				if (!ApplySetter(value))
 				{
@@ -573,7 +573,7 @@ namespace dyvoid.FeatherTween.Internal
 			if (setter != null)
 			{
 				GetCycleEnds(cycleIndex, out var cycleFrom, out var cycleTo);
-				var easedT = ease.Evaluate(tInCycle);
+				var easedT = EaseInCycle(cycleIndex, tInCycle);
 				if (!ApplySetter(interpolator.Lerp(cycleFrom, cycleTo, easedT)))
 				{
 					return;
@@ -585,11 +585,26 @@ namespace dyvoid.FeatherTween.Internal
 			}
 		}
 
+		// Eased progress from cycleFrom toward cycleTo. Rewind shares Yoyo's
+		// swapped endpoints on odd cycles but replays the forward cycle backward
+		// in time, so its progress is the mirrored ease: Lerp(end, start,
+		// 1 - ease(1 - t)) equals Lerp(start, end, ease(1 - t)), the forward
+		// sample at 1 - t. Yoyo applies the ease forward on the return leg too.
+		private float EaseInCycle(int cycleIndex, float t)
+		{
+			if (loopType == LoopType.Rewind && (cycleIndex & 1) == 1)
+			{
+				return 1f - ease.Evaluate(1f - t);
+			}
+			return ease.Evaluate(t);
+		}
+
 		private void GetCycleEnds(int cycleIndex, out T cycleFrom, out T cycleTo)
 		{
 			switch (loopType)
 			{
 				case LoopType.Yoyo:
+				case LoopType.Rewind:
 					if ((cycleIndex & 1) == 1)
 					{
 						cycleFrom = endValue;

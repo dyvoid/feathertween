@@ -24,6 +24,11 @@ stability promise gets made.
   the outer phase skipped. *Migration*: call `FT.ManualTick` from your own update loop.
 - **`SequenceBuilder.SetDefaults(delay:)` throws on a negative value** instead of clamping it to 0,
   like every other time input. *Migration*: pass 0 or a positive delay.
+- **`LoopType.Rewind` is implemented** ([ADR 0014](Documentation~/adr/0014-rewind-is-time-reversed.md)).
+  It shipped in 0.1.0 as an enum value with no implementation, behaving exactly like `Restart`. It
+  now replays odd cycles backward in time, mirroring the ease (`Yoyo` applies the ease forward on
+  the return leg); on a sequence it is the same as `Yoyo`. *Migration*: code that used `Rewind`
+  and relied on the `Restart` behavior should use `Restart`.
 - **Mid-play `Sequence.Insert` throws on a child carrying `SetLink`**, matching build-time
   composition. The link used to be dropped silently. *Migration*: link the sequence itself.
 

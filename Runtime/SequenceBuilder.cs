@@ -86,7 +86,7 @@ namespace dyvoid.FeatherTween
 			return this;
 		}
 
-		/// <summary>Sequence-level looping. Yoyo traverses children in reverse window order on odd cycles; Incremental has no sequence-level meaning and is treated as Restart. Negative <paramref name="count"/> loops forever.</summary>
+		/// <summary>Sequence-level looping. Yoyo walks the timeline backward on odd cycles, so children replay time-reversed in reverse window order; Rewind is the same thing for a sequence. Incremental has no sequence-level meaning and is treated as Restart. Negative <paramref name="count"/> loops forever.</summary>
 		public SequenceBuilder SetLoops(int count, LoopType loopType = LoopType.Restart)
 		{
 			ValidateOrThrow();

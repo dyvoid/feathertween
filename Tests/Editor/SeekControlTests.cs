@@ -284,6 +284,29 @@ namespace dyvoid.FeatherTween.Tests
 			Assert.That(seq.Status, Is.EqualTo(TweenStatus.Completed).Or.EqualTo(TweenStatus.Disposed));
 		}
 
+
+		[Test]
+		public void SequenceSetLoops_Rewind_MatchesYoyo()
+		{
+			// A sequence's Yoyo already replays its children backward in time,
+			// which is what Rewind means; the two must be indistinguishable.
+			var yoyo = 0f;
+			var rewind = 0f;
+			var y = ManualSequence().SetLoops(2, LoopType.Yoyo);
+			y.Append(FloatTween(() => yoyo, x => yoyo = x, 1f, 1f).SetEase(Easing.InQuad()));
+			y.Start();
+			var r = ManualSequence().SetLoops(2, LoopType.Rewind);
+			r.Append(FloatTween(() => rewind, x => rewind = x, 1f, 1f).SetEase(Easing.InQuad()));
+			r.Start();
+
+			foreach (var step in new[] { 0.25, 0.5, 0.5, 0.25, 0.5 })
+			{
+				FeatherTweenRunner.ManualTick(step);
+				Assert.That(rewind, Is.EqualTo(yoyo).Within(1e-5f));
+			}
+			Assert.That(rewind, Is.EqualTo(0f).Within(1e-4f), "and it ends back at the start");
+		}
+
 		[Test]
 		public void SequenceSetLoops_Infinite_KeepsCycling()
 		{

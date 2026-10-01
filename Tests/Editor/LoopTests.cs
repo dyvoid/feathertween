@@ -38,6 +38,78 @@ namespace dyvoid.FeatherTween.Tests
 			Assert.That(v, Is.EqualTo(0f).Within(1e-3f), "yoyo finishes back at start");
 		}
 
+
+		[Test]
+		public void Rewind_ReturnLeg_IsTimeReversed_UnlikeYoyo()
+		{
+			// InQuad is asymmetric, so the two return legs differ: Yoyo applies
+			// the ease forward from end to start, Rewind replays cycle 0 backward.
+			var yoyo = 0f;
+			var rewind = 0f;
+			FT.To(() => yoyo, x => yoyo = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetEase(Easing.InQuad())
+				.SetLoops(2, LoopType.Yoyo)
+				.Start();
+			FT.To(() => rewind, x => rewind = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetEase(Easing.InQuad())
+				.SetLoops(2, LoopType.Rewind)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.25);
+			Assert.That(rewind, Is.EqualTo(0.0625f).Within(1e-4f), "cycle 0 plays forward like any loop type");
+			Assert.That(yoyo, Is.EqualTo(0.0625f).Within(1e-4f));
+
+			FeatherTweenRunner.ManualTick(1.5);    // t = 1.75: cycle 1, 0.75 in
+			Assert.That(rewind, Is.EqualTo(0.0625f).Within(1e-4f),
+				"Rewind at 0.75 into the return leg shows cycle 0 at 0.25: InQuad(0.25)");
+			Assert.That(yoyo, Is.EqualTo(0.4375f).Within(1e-4f),
+				"Yoyo eases forward from the end: 1 - InQuad(0.75)");
+
+			FeatherTweenRunner.ManualTick(0.25);
+			Assert.That(rewind, Is.EqualTo(0f).Within(1e-4f), "Rewind ends back at the start value");
+			Assert.That(yoyo, Is.EqualTo(0f).Within(1e-4f));
+		}
+
+		[Test]
+		public void Rewind_SeekAndComplete_AgreeWithPlayback()
+		{
+			var v = 0f;
+			var t = FT.To(() => v, x => v = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetEase(Easing.OutCubic())
+				.SetLoops(3, LoopType.Rewind)
+				.SetAutoKill(false)
+				.Start();
+
+			t.Seek(1.25f);
+			Assert.That(v, Is.EqualTo(1f - 0.25f * 0.25f * 0.25f).Within(1e-4f),
+				"seek into the return leg samples cycle 0 at 1 - 0.25: OutCubic(0.75)");
+
+			t.Seek(2.5f, fireCallbacks: true);
+			Assert.That(v, Is.EqualTo(1f - 0.5f * 0.5f * 0.5f).Within(1e-4f), "cycle 2 plays forward again");
+
+			t.Complete();
+			Assert.That(v, Is.EqualTo(1f).Within(1e-4f), "3 cycles end on a forward cycle: the end value");
+
+
+			// Two cycles end on the return leg: back at the start value, and the
+			// final OnUpdate still reads 1, progress being measured toward that
+			// cycle's own end value.
+			var w = 0f;
+			var last = -1f;
+			FT.To(() => w, x => w = x, 1f, 1f)
+				.SetUpdate(UpdatePhase.Manual)
+				.SetEase(Easing.OutCubic())
+				.SetLoops(2, LoopType.Rewind)
+				.OnUpdate(p => last = p)
+				.Start();
+			FeatherTweenRunner.ManualTick(2.5);
+			Assert.That(w, Is.EqualTo(0f).Within(1e-4f));
+			Assert.That(last, Is.EqualTo(1f).Within(1e-4f));
+		}
+
 		[Test]
 		public void Incremental_AddsDeltaEachCycle()
 		{
