@@ -292,8 +292,14 @@ namespace dyvoid.FeatherTween.Internal
 					var uo = data.Target as UnityEngine.Object;
 					if (uo == null)
 					{
-						data.Status = TweenStatus.Cancelled;
-						data.InvokeOnKill();
+						// Same rule as the link kill below and TweenOps.Kill: a
+						// completed record is at its terminal value and disposes
+						// without callbacks (Documentation~/api/handles.md).
+						if (data.Status != TweenStatus.Completed)
+						{
+							data.Status = TweenStatus.Cancelled;
+							data.InvokeOnKill();
+						}
 						QueueKill(id, tickSnapshotGens[i]);
 						continue;
 					}

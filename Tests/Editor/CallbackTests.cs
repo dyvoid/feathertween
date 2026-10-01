@@ -428,5 +428,27 @@ namespace dyvoid.FeatherTween.Tests
 			FeatherTweenRunner.ManualTick(1.0);
 			Assert.That(pauses, Is.EqualTo(1), "AddPause halting the sequence fires OnPause");
 		}
+
+		[Test]
+		public void DestroyedTarget_OnAlreadyCompleted_DisposesWithoutCallbacks()
+		{
+			var go = new UnityEngine.GameObject("FeatherTween_Test_CompletedTarget");
+			var log = new List<string>();
+			var t = ManualTween()
+				.SetAutoKill(false)
+				.SetTarget(go)
+				.OnComplete(() => log.Add("complete"))
+				.OnKill(() => log.Add("kill"))
+				.Start();
+
+			FeatherTweenRunner.ManualTick(1.5);
+			Assert.That(t.Status, Is.EqualTo(TweenStatus.Completed));
+
+			UnityEngine.Object.DestroyImmediate(go);
+			FeatherTweenRunner.ManualTick(0.1);
+			Assert.That(log, Is.EqualTo(new[] { "complete" }),
+				"a completed record is at its terminal value: disposal, not a kill (same rule as Kill() and SetLink)");
+			Assert.That(t.IsAlive, Is.False);
+		}
 	}
 }
