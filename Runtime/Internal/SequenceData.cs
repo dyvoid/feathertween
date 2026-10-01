@@ -718,7 +718,13 @@ namespace dyvoid.FeatherTween.Internal
 				var c = CurrentCycle(forward: true);
 				target = (c + 1) * duration;
 			}
-			AdvanceTo(target, fire: true, haltOnPause: false, out _);
+			if (!AdvanceTo(target, fire: true, haltOnPause: false, out _))
+			{
+				// Killed itself mid-walk (child auto-kill policy or an entry
+				// callback error): it already fired OnKill and was freed, so no
+				// completion-shaped callback may follow. Callers see Cancelled.
+				return;
+			}
 			// The final cycle boundary is a loop end like any other (Documentation~/api/handles.md);
 			// intermediate boundaries fired inside the walk.
 			InvokeOnStepComplete();

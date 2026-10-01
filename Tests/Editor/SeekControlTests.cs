@@ -394,6 +394,32 @@ namespace dyvoid.FeatherTween.Tests
 
 		// --- Mid-play Insert ---
 
+
+		[Test]
+		public void SequenceKillComplete_SelfKilledMidWalk_FiresNoCompletionCallbacks()
+		{
+			var go = new UnityEngine.GameObject("FeatherTween_Test_KillMidWalk");
+			var a = 0f;
+			var b = 0f;
+			var log = new List<string>();
+			var sb = ManualSequence()
+				.SetCancelBehavior(SequenceCancelBehavior.KillSequenceOnChildAutoKill)
+				.OnStepComplete(() => log.Add("step"))
+				.OnComplete(() => log.Add("complete"))
+				.OnKill(() => log.Add("kill"));
+			sb.Append(FloatTween(() => a, v => a = v, 1f, 1f));
+			sb.Append(FloatTween(() => b, v => b = v, 1f, 1f).SetTarget(go));
+			var seq = sb.Start();
+
+			FeatherTweenRunner.ManualTick(0.5);
+			UnityEngine.Object.DestroyImmediate(go);
+			seq.Kill(complete: true);
+
+			Assert.That(log, Is.EqualTo(new[] { "kill" }),
+				"the walk hit the dead child and killed the sequence; nothing completion-shaped may follow OnKill");
+			Assert.That(seq.IsAlive, Is.False);
+		}
+
 		[Test]
 		public void SequenceInsert_MidPlay_NewChildPlaysInWindow()
 		{
