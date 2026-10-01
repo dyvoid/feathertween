@@ -43,7 +43,7 @@ one that matches the shipped surface — `Documentation~/api/` is authoritative 
 
 ### Phase 1.3 — Builder/handle split and lifecycle
 
-**Deliverable**: `TweenBuilder<T>` struct + pooled backing class. Aliasing semantics per design anchor. `.Start()` consumes the buffer and registers a `TweenData<T>` **stub** that only carries the lifecycle state machine — no interpolation logic yet. Use-after-consume throws in safe mode, no-ops in release. Finalizer leak detection via `ConcurrentQueue<int>` drained by the runner. `TweenStatus` transitions per lifecycle docs.
+**Deliverable**: `TweenBuilder<T>` struct + pooled backing class. Aliasing semantics per design anchor. `.Start()` consumes the buffer and registers a `TweenData<T>` **stub** that only carries the lifecycle state machine — no interpolation logic yet. Use-after-consume throws in safe mode, no-ops in release (superseded: it throws in every build, see the ADR 0002 amendment). Finalizer leak detection via `ConcurrentQueue<int>` drained by the runner. `TweenStatus` transitions per lifecycle docs.
 
 **Tests**:
 
