@@ -116,6 +116,11 @@ namespace dyvoid.FeatherTween.Internal
 			}
 
 			var loop = PlayerLoop.GetCurrentPlayerLoop();
+			// 'installed' is a static and the player loop is engine state; the two
+			// can disagree (a domain reload resets the flag, and whether the loop
+			// is rebuilt with it is Unity's business). Strip any hooks already
+			// present so a second install can never tick a phase twice per frame.
+			RemoveHooks(ref loop);
 			var ok = InsertAfter<Update.ScriptRunBehaviourUpdate>(ref loop, typeof(FeatherTweenUpdate), TickUpdate);
 			ok &= InsertAfter<PreLateUpdate.ScriptRunBehaviourLateUpdate>(ref loop, typeof(FeatherTweenLateUpdate), TickLate);
 			ok &= InsertAfter<FixedUpdate.ScriptRunBehaviourFixedUpdate>(ref loop, typeof(FeatherTweenFixedUpdate), TickFixed);
@@ -140,11 +145,16 @@ namespace dyvoid.FeatherTween.Internal
 			}
 
 			var loop = PlayerLoop.GetCurrentPlayerLoop();
+			RemoveHooks(ref loop);
+			PlayerLoop.SetPlayerLoop(loop);
+			installed = false;
+		}
+
+		private static void RemoveHooks(ref PlayerLoopSystem loop)
+		{
 			Remove(ref loop, typeof(FeatherTweenUpdate));
 			Remove(ref loop, typeof(FeatherTweenLateUpdate));
 			Remove(ref loop, typeof(FeatherTweenFixedUpdate));
-			PlayerLoop.SetPlayerLoop(loop);
-			installed = false;
 		}
 
 		public static void ManualTick(double deltaTime)
@@ -261,8 +271,6 @@ namespace dyvoid.FeatherTween.Internal
 
 		private static void TickActiveCore(List<int> active, double scaledDt, double unscaledDt)
 		{
-			// Stale entries can survive a tick aborted by an exception (safe mode
-			// off); freeing them now could kill unrelated tweens in re-used slots.
 			pendingKills.Clear();
 			pendingKillGens.Clear();
 			tickSnapshotIds.Clear();
@@ -274,6 +282,23 @@ namespace dyvoid.FeatherTween.Internal
 				tickSnapshotGens.Add(TweenStore.GetGeneration(snapId));
 			}
 
+			try
+			{
+				StepSnapshot(scaledDt, unscaledDt);
+			}
+			finally
+			{
+				// In a finally: with safe mode off, a throwing callback or setter
+				// aborts the tick. Tweens that completed earlier in it are already
+				// queued here, and dropping the queue would leave them Completed in
+				// their slots for good - the status gate skips them, so nothing
+				// would ever free them.
+				FreePendingKills();
+			}
+		}
+
+		private static void StepSnapshot(double scaledDt, double unscaledDt)
+		{
 			for (var i = 0; i < tickSnapshotIds.Count; i++)
 			{
 				var id = tickSnapshotIds[i];
@@ -322,6 +347,16 @@ namespace dyvoid.FeatherTween.Internal
 				}
 
 				var status = data.Status;
+				if (status == TweenStatus.Completed && data.AutoKill)
+				{
+					// Completed with auto-kill on is never a resting state: the
+					// free follows the completion in the same tick or the same
+					// Complete() call. Finding one here means that free was cut
+					// off by an exception thrown out of its OnComplete (safe mode
+					// off); collect it now instead of leaking the slot.
+					QueueKill(id, tickSnapshotGens[i]);
+					continue;
+				}
 				if (status == TweenStatus.Paused
 					|| status == TweenStatus.Completed
 					|| status == TweenStatus.Cancelled
@@ -337,21 +372,21 @@ namespace dyvoid.FeatherTween.Internal
 					QueueKill(id, tickSnapshotGens[i]);
 				}
 			}
+		}
 
-			if (pendingKills.Count > 0)
+		private static void FreePendingKills()
+		{
+			for (var i = 0; i < pendingKills.Count; i++)
 			{
-				for (var i = 0; i < pendingKills.Count; i++)
+				// Generation-checked: if something freed the record earlier in
+				// the tick and its slot was re-rented, the new tenant survives.
+				if (TweenStore.IsAlive(pendingKills[i], pendingKillGens[i]))
 				{
-					// Generation-checked: if something freed the record earlier in
-					// the tick and its slot was re-rented, the new tenant survives.
-					if (TweenStore.IsAlive(pendingKills[i], pendingKillGens[i]))
-					{
-						TweenStore.Free(pendingKills[i]);
-					}
+					TweenStore.Free(pendingKills[i]);
 				}
-				pendingKills.Clear();
-				pendingKillGens.Clear();
 			}
+			pendingKills.Clear();
+			pendingKillGens.Clear();
 		}
 
 		private static void QueueKill(int id, uint generation)
@@ -413,7 +448,8 @@ namespace dyvoid.FeatherTween.Internal
 					Array.Copy(system.subSystemList, 0, newList, 0, i);
 					Array.Copy(system.subSystemList, i + 1, newList, i, system.subSystemList.Length - i - 1);
 					system.subSystemList = newList;
-					return;
+					i--; // keep scanning: remove every occurrence, not just the first
+					continue;
 				}
 				Remove(ref system.subSystemList[i], target);
 			}
