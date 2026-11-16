@@ -42,14 +42,7 @@ namespace dyvoid.FeatherTween.Internal
 		private readonly List<Action> callbacks = new List<Action>();
 		private readonly Dictionary<string, double> labels = new Dictionary<string, double>();
 		private readonly List<PendingLabelRef> pendingLabels = new List<PendingLabelRef>();
-		private List<CallbackEntry> onStart;
-		private List<CallbackEntry> onPlay;
-		private List<CallbackEntry> onPause;
-		private List<Action<float>> onUpdate;
-		private List<CallbackEntry> onStepComplete;
-		private List<CallbackEntry> onComplete;
-		private List<CallbackEntry> onKill;
-		private List<CallbackEntry> onRewind;
+		private readonly BuilderCallbacks lifecycle = new BuilderCallbacks();
 
 		private double cursor;
 		private double maxEnd;
@@ -62,6 +55,7 @@ namespace dyvoid.FeatherTween.Internal
 
 		public uint Generation => generation;
 		public bool Released => released;
+		public BuilderCallbacks Lifecycle => lifecycle;
 
 		public UpdatePhase Phase
 		{
@@ -315,7 +309,18 @@ namespace dyvoid.FeatherTween.Internal
 			for (var i = 0; i < entries.Count; i++)
 			{
 				var e = entries[i];
-				if (e.Kind == SequenceChildKind.Tween && TweenStore.IsAlive(e.Id, e.Gen))
+				if (e.Kind != SequenceChildKind.Tween)
+				{
+					continue;
+				}
+				var child = TweenStore.Get(e.Id, e.Gen);
+				if (child is SequenceData nested)
+				{
+					// Silent all the way down: a plain Free would cascade through
+					// OnFree and fire OnKill on grandchildren that never started.
+					nested.DisposeUnstarted();
+				}
+				else if (child != null)
 				{
 					TweenStore.Free(e.Id);
 				}
@@ -333,46 +338,6 @@ namespace dyvoid.FeatherTween.Internal
 			lastAddedStart = 0d;
 			lastAddedEnd = 0d;
 			orderCounter = 0;
-		}
-
-		public void AddOnStart(Action cb) => Add(ref onStart, cb);
-		public void AddOnPlay(Action cb) => Add(ref onPlay, cb);
-		public void AddOnPause(Action cb) => Add(ref onPause, cb);
-		public void AddOnStepComplete(Action cb) => Add(ref onStepComplete, cb);
-		public void AddOnComplete(Action cb) => Add(ref onComplete, cb);
-		public void AddOnKill(Action cb) => Add(ref onKill, cb);
-		public void AddOnRewind(Action cb) => Add(ref onRewind, cb);
-
-		public void AddOnComplete(CallbackEntry entry)
-		{
-			onComplete ??= new List<CallbackEntry>();
-			onComplete.Add(entry);
-		}
-
-		public void AddOnKill(CallbackEntry entry)
-		{
-			onKill ??= new List<CallbackEntry>();
-			onKill.Add(entry);
-		}
-
-		public void AddOnUpdate(Action<float> cb)
-		{
-			if (cb == null)
-			{
-				return;
-			}
-			onUpdate ??= new List<Action<float>>();
-			onUpdate.Add(cb);
-		}
-
-		private static void Add(ref List<CallbackEntry> list, Action cb)
-		{
-			if (cb == null)
-			{
-				return;
-			}
-			list ??= new List<CallbackEntry>();
-			list.Add(CallbackEntry.FromAction(cb));
 		}
 
 		public SequenceData Build()
@@ -419,47 +384,9 @@ namespace dyvoid.FeatherTween.Internal
 			}
 			data.SafeMode = safeMode;
 			data.CancelOnError = cancelOnError;
-			TransferCallbacks(data);
+			lifecycle.TransferTo(data);
 			data.Status = delay > 0f ? TweenStatus.Delayed : TweenStatus.Playing;
 			return data;
-		}
-
-		// Direct loops, no method-group arguments: converting data.AddOnX to a
-		// delegate allocates even when the list is null (Documentation~/architecture/performance.md).
-		private void TransferCallbacks(TweenData data)
-		{
-			if (onStart != null)
-			{
-				for (var i = 0; i < onStart.Count; i++) data.AddOnStart(onStart[i].Plain);
-			}
-			if (onPlay != null)
-			{
-				for (var i = 0; i < onPlay.Count; i++) data.AddOnPlay(onPlay[i].Plain);
-			}
-			if (onPause != null)
-			{
-				for (var i = 0; i < onPause.Count; i++) data.AddOnPause(onPause[i].Plain);
-			}
-			if (onStepComplete != null)
-			{
-				for (var i = 0; i < onStepComplete.Count; i++) data.AddOnStepComplete(onStepComplete[i].Plain);
-			}
-			if (onComplete != null)
-			{
-				for (var i = 0; i < onComplete.Count; i++) data.AddOnComplete(onComplete[i]);
-			}
-			if (onKill != null)
-			{
-				for (var i = 0; i < onKill.Count; i++) data.AddOnKill(onKill[i]);
-			}
-			if (onRewind != null)
-			{
-				for (var i = 0; i < onRewind.Count; i++) data.AddOnRewind(onRewind[i].Plain);
-			}
-			if (onUpdate != null)
-			{
-				for (var i = 0; i < onUpdate.Count; i++) data.AddOnUpdate(onUpdate[i]);
-			}
 		}
 
 		public void TrackAdded(double start, double end)
@@ -475,7 +402,6 @@ namespace dyvoid.FeatherTween.Internal
 		public void Rent()
 		{
 			released = false;
-			ResetConfig();
 		}
 
 		public void Release()
@@ -486,23 +412,10 @@ namespace dyvoid.FeatherTween.Internal
 			{
 				generation = 1;
 			}
-			entries.Clear();
-			callbacks.Clear();
-			labels.Clear();
-			pendingLabels.Clear();
-			ClearCallbackSlots();
-		}
-
-		private void ClearCallbackSlots()
-		{
-			onStart?.Clear();
-			onPlay?.Clear();
-			onPause?.Clear();
-			onUpdate?.Clear();
-			onStepComplete?.Clear();
-			onComplete?.Clear();
-			onKill?.Clear();
-			onRewind?.Clear();
+			// Reset on the way in, not on the way out: a buffer idling in the
+			// pool must not pin the last sequence's target, link object and
+			// callbacks.
+			ResetConfig();
 		}
 
 		private static int CompareEntries(SequenceChildEntry a, SequenceChildEntry b)
@@ -533,7 +446,7 @@ namespace dyvoid.FeatherTween.Internal
 			callbacks.Clear();
 			labels.Clear();
 			pendingLabels.Clear();
-			ClearCallbackSlots();
+			lifecycle.Clear();
 			cursor = 0d;
 			maxEnd = 0d;
 			joinAnchor = 0d;

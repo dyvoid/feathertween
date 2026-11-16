@@ -236,5 +236,22 @@ namespace dyvoid.FeatherTween.Tests
 			System.GC.Collect();
 			LeakDetector.Drain();
 		}
+
+		[Test]
+		public void ConsumedBuilder_ReleasesItsReferencesToThePool()
+		{
+			// A pooled buffer used to keep the last tween's closures and target
+			// until its next rent, pinning whatever they captured.
+			var v = 0f;
+			var target = new object();
+			var builder = FT.To(() => v, x => v = x, 1f, 1f).SetUpdate(UpdatePhase.Manual).SetTarget(target);
+			var buffer = builder.Buffer;
+
+			builder.Start().Kill();
+
+			Assert.That(buffer.Getter, Is.Null);
+			Assert.That(buffer.Setter, Is.Null);
+			Assert.That(buffer.Target, Is.Null);
+		}
 	}
 }
