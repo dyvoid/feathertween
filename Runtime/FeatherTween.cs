@@ -46,9 +46,9 @@ namespace dyvoid.FeatherTween
 			}
 			set
 			{
-				if (value < 0f)
+				if (!(value >= 0f))
 				{
-					throw new ArgumentOutOfRangeException(nameof(value), "[FeatherTween] Global time scale cannot be negative.");
+					throw new ArgumentOutOfRangeException(nameof(value), "[FeatherTween] Global time scale cannot be negative or NaN.");
 				}
 				FeatherTweenRunner.EnsureInitialized();
 				FeatherTweenRunner.GlobalTimeScale = value;
@@ -58,9 +58,9 @@ namespace dyvoid.FeatherTween
 		/// <summary>Per-phase playback rate; composes with the global scale. Negative values throw.</summary>
 		public static void SetTimeScale(UpdatePhase phase, float scale)
 		{
-			if (scale < 0f)
+			if (!(scale >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(scale), "[FeatherTween] Phase time scale cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(scale), "[FeatherTween] Phase time scale cannot be negative or NaN.");
 			}
 			FeatherTweenRunner.EnsureInitialized();
 			FeatherTweenRunner.SetPhaseTimeScale(phase, scale);
@@ -253,9 +253,12 @@ namespace dyvoid.FeatherTween
 			{
 				throw new ArgumentNullException(nameof(setter));
 			}
-			if (duration < 0f)
+			// Written as !(x >= 0) throughout the time inputs so NaN is rejected
+			// too: every comparison with NaN is false, and a NaN duration or
+			// delay would write NaN to the target on every tick.
+			if (!(duration >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(duration), "Duration cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(duration), "Duration cannot be negative or NaN.");
 			}
 
 			var buf = TweenBuilderBufferPool<T>.Rent();
@@ -280,9 +283,9 @@ namespace dyvoid.FeatherTween
 			{
 				throw new ArgumentNullException(nameof(setter));
 			}
-			if (duration < 0f)
+			if (!(duration >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(duration), "Duration cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(duration), "Duration cannot be negative or NaN.");
 			}
 
 			var buf = TweenBuilderBufferPool<T>.Rent();
@@ -305,9 +308,9 @@ namespace dyvoid.FeatherTween
 			{
 				throw new ArgumentNullException(nameof(setter));
 			}
-			if (duration < 0f)
+			if (!(duration >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(duration), "Duration cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(duration), "Duration cannot be negative or NaN.");
 			}
 
 			var buf = TweenBuilderBufferPool<T>.Rent();

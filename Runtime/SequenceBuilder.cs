@@ -78,9 +78,9 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder SetDelay(float seconds)
 		{
 			ValidateOrThrow();
-			if (seconds < 0f)
+			if (!(seconds >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(seconds), "Delay cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(seconds), "Delay cannot be negative or NaN.");
 			}
 			buffer.Delay = seconds;
 			return this;
@@ -126,9 +126,9 @@ namespace dyvoid.FeatherTween
 			float? delay = null)
 		{
 			ValidateOrThrow();
-			if (delay < 0f)
+			if (delay.HasValue && !(delay.Value >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(delay), "Default delay cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(delay), "Default delay cannot be negative or NaN.");
 			}
 			buffer.SetDefaults(ease, loops, loopType, delay);
 			return this;
@@ -268,10 +268,10 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder Insert<T>(float time, TweenBuilder<T> child)
 		{
 			ValidateOrThrow();
-			if (time < 0f)
+			if (!(time >= 0f))
 			{
 				throw new ArgumentOutOfRangeException(
-					nameof(time), "Insert time cannot be negative; use SetDelay on the sequence to defer.");
+					nameof(time), "Insert time cannot be negative or NaN; use SetDelay on the sequence to defer.");
 			}
 			var (id, gen, absorb, length, infinite) = ConsumeTween(child);
 			buffer.AddEntry(id, gen, time + absorb, length, infinite, SequenceChildKind.Tween, -1);
@@ -291,10 +291,10 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder Insert(float time, SequenceBuilder child)
 		{
 			ValidateOrThrow();
-			if (time < 0f)
+			if (!(time >= 0f))
 			{
 				throw new ArgumentOutOfRangeException(
-					nameof(time), "Insert time cannot be negative; use SetDelay on the sequence to defer.");
+					nameof(time), "Insert time cannot be negative or NaN; use SetDelay on the sequence to defer.");
 			}
 			var (id, gen, length, infinite) = ConsumeSequence(child);
 			buffer.AddEntry(id, gen, time, length, infinite, SequenceChildKind.Tween, -1);
@@ -314,9 +314,9 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder AppendInterval(float seconds)
 		{
 			ValidateOrThrow();
-			if (seconds < 0f)
+			if (!(seconds >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(seconds), "Interval cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(seconds), "Interval cannot be negative or NaN.");
 			}
 			buffer.AdvanceCursor(seconds);
 			return this;
@@ -361,9 +361,9 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder PrependInterval(float seconds)
 		{
 			ValidateOrThrow();
-			if (seconds < 0f)
+			if (!(seconds >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(seconds), "Interval cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(seconds), "Interval cannot be negative or NaN.");
 			}
 			buffer.ShiftAll(seconds);
 			return this;
@@ -387,9 +387,9 @@ namespace dyvoid.FeatherTween
 		{
 			ValidateOrThrow();
 			ValidateLabelName(name);
-			if (time < 0f)
+			if (!(time >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(time), "Label time cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(time), "Label time cannot be negative or NaN.");
 			}
 			if (buffer.TryResolveLabel(name, out _))
 			{
@@ -417,7 +417,7 @@ namespace dyvoid.FeatherTween
 			}
 			if (time < 0d)
 			{
-				throw new ArgumentOutOfRangeException(nameof(position), "Label time cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(position), "Label time cannot be negative or NaN.");
 			}
 			buffer.DefineLabel(name, time);
 			return this;
@@ -427,9 +427,9 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder AddPause(float time, Action onPause = null)
 		{
 			ValidateOrThrow();
-			if (time < 0f)
+			if (!(time >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(time), "Pause time cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(time), "Pause time cannot be negative or NaN.");
 			}
 			var cbIndex = buffer.AddCallbackSlot(onPause);
 			buffer.AddEntry(-1, 0, time, 0d, false, SequenceChildKind.Pause, cbIndex);
