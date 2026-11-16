@@ -29,6 +29,13 @@ stability promise gets made.
   now replays odd cycles backward in time, mirroring the ease (`Yoyo` applies the ease forward on
   the return leg); on a sequence it is the same as `Yoyo`. *Migration*: code that used `Rewind`
   and relied on the `Restart` behavior should use `Restart`.
+- **`Kill` / `Complete` / `Restart` / `Reverse` / `Insert` from an `AppendCallback` or `AddPause` callback are deferred**,
+  like from every other callback. They used to apply immediately, in the middle of the sequence's
+  own walk. *Migration*: none needed unless code relied on the handle being dead on the next line.
+- **`Tween.SetRemainingCycles(-1)` throws `InvalidOperationException` on a zero-duration tween**,
+  matching `SetLoops(-1)` at `Start()`. It used to walk millions of loop boundaries per tick.
+- **Time inputs reject `NaN`** (`duration`, delays, intervals, insert/label/pause times, time
+  scales) with `ArgumentOutOfRangeException`, as they already did negative values.
 - **Mid-play `Sequence.Insert` throws on a child carrying `SetLink`**, matching build-time
   composition. The link used to be dropped silently. *Migration*: link the sequence itself.
 
@@ -69,6 +76,25 @@ stability promise gets made.
 - A record freed mid-tick whose slot was re-rented in the same tick could take the new tween down
   with it at the end-of-tick free.
 - `FT.SetCapacity` with a value above 2^30 never returned.
+- A looping sequence whose tick landed exactly on a cycle boundary (a fixed timestep dividing the
+  duration, or a `Seek` to it) skipped that boundary's `OnStepComplete`/`OnRewind` and never
+  re-armed its children, so later cycles played nothing.
+- A zero-duration tween at the very end of a sequence was never applied, and a zero-duration
+  sequence completed without firing its callbacks or applying its children.
+- With safe mode off (the player default), an exception thrown from a callback or setter leaked
+  every tween that had completed earlier in the same tick, plus the one that threw: they stayed
+  `Completed` in their store slots forever.
+- A setter that killed its own tween still got `OnUpdate`, `OnStepComplete` and `OnComplete` fired
+  after `OnKill`; a child setter or entry callback that killed the parent sequence let the rest of
+  the timeline and `OnComplete` fire on the dead sequence.
+- Mid-play `Sequence.Insert` behind the playhead started the child late and ran it out of step with
+  its window. It now waits for a `Restart`, loop wrap or backward pass, as documented.
+- `SequenceBuilder.Clear()` (and a rejected nested builder) fired `OnKill` on the children of nested
+  sequences, which had never started.
+- Pooled builder buffers kept the last tween's target, link object and getter/setter closures alive
+  until their next use.
+- Installing the PlayerLoop hooks strips any already present first, so a phase can never be hooked
+  twice.
 
 ## [0.1.0] - 2026-07-18
 

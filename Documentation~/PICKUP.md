@@ -3,7 +3,7 @@
 Where the last session left off. Update this when you stop, so the next session starts with context instead of archaeology.
 Keep this file short and current, prune stale detail. Git history is the archive.
 
-Last updated: 2026-10-01 (full code + doc review on `fix/review-findings`, PR against `develop`)
+Last updated: 2026-11-16 (third review pass on `fix/sequence-walk-and-tick-leaks`, PR against `develop`)
 
 ## Current position
 
@@ -16,7 +16,32 @@ Last updated: 2026-10-01 (full code + doc review on `fix/review-findings`, PR ag
 - **M2 in flight**. `SetLink` (PR #4) and awaitables (PR #5) merged to `develop`. After the v0.2.0
   release: zero-alloc fast paths. See `Documentation~/ROADMAP.md`.
 
-## This session (2026-10-01, full review)
+## This session (2026-11-16, third review pass)
+
+On `fix/sequence-walk-and-tick-leaks` (PR against `develop`). Each fix has a regression test that
+fails on the old code. Details and migration notes in CHANGELOG `[Unreleased]`.
+
+- **Sequence walk**: a tick landing exactly on a cycle boundary skipped the crossing, so later
+  cycles played nothing (now crossed on departure, tracked by `SequenceData.entriesCycle`); a
+  zero-duration child at the end of the timeline and a whole zero-duration sequence never fired;
+  mid-play `Insert` behind the playhead ran the child out of step.
+- **Kill re-entrancy**: `AppendCallback`/`AddPause` callbacks were not a callback scope (structural
+  ops applied mid-walk; now deferred); a setter killing its own tween or its parent sequence let
+  callbacks fire after `OnKill` (the step and the walk now stop on `Cancelled`).
+- **Tick**: with safe mode off, an exception out of a callback leaked every tween completed in that
+  tick. End-of-tick frees now run in a `finally`, and the tick collects any `Completed` + auto-kill
+  record it finds.
+- **Smaller**: `SetRemainingCycles(-1)` on a zero-duration tween throws; time inputs reject `NaN`;
+  `Clear()` no longer fires `OnKill` in nested builders; pooled builder buffers drop their
+  references on release; PlayerLoop install is idempotent.
+- **Debt paid**: builder-side callback staging is one class (`BuilderCallbacks`) instead of two
+  copies; `Interpolators.Get<T>()` reads a static generic cache instead of a dictionary.
+
+**Needs a Unity pass before merge**: EditMode + PlayMode + Performance (the allocation guards cover
+`Build()` and the sequence walk, both touched), and a Showcase run-through — its timeline loops and
+scrubs, which is exactly the code that changed.
+
+## Previous session (2026-10-01, full review)
 
 Code + doc review of the whole package, on `fix/review-findings` (PR against `develop`). Fixed,
 each with a regression test that fails on the old code: re-entrant `FT.ManualTick` corrupting the
@@ -64,10 +89,10 @@ pending-wait registry the engine lacks.
 
 ## Test status
 
-- Compile-check harness, run locally 2026-10-01 on `fix/review-findings`: 268 EditMode tests green,
-  release leg (`FEATHERTWEEN_RELEASE`) green, doc check and compile check green. Awaitables have
-  **not** been exercised in real Unity — the stub `Awaitable` is a no-op, so `WaitForCompletion()`'s
-  real completion is untested.
+- Compile-check harness, run locally 2026-11-16 on `fix/sequence-walk-and-tick-leaks`: 285 EditMode
+  tests green, release leg (`FEATHERTWEEN_RELEASE`) 272 green, doc check and compile check green.
+  Awaitables have **not** been exercised in real Unity — the stub `Awaitable` is a no-op, so
+  `WaitForCompletion()`'s real completion is untested.
 - The harness **can** run in this container: `apt-get update && apt-get install -y dotnet-sdk-8.0`
   works (the dotnet-install script host is blocked; apt and nuget.org are not). CI runs only on
   pushes to `main`/`develop` and on PRs.
@@ -89,6 +114,16 @@ pending-wait registry the engine lacks.
   the last `Append`/`AppendInterval`; an `Insert` past that point does not move it. DOTween and GSAP
   append after everything. Now documented as-is (`api/sequences.md`); switching to `Position.End`
   semantics would be a breaking change and wants a decision, plus a Showcase check.
+- **Open API question — an ease that does not end at 1.** Natural completion writes
+  `Lerp(start, end, ease(1))`, so a `Curve`/`Custom` "punch" ease that returns to 0 rests on the
+  start value; `Complete()` / `Kill(true)` and an `EveryLoop` delay hold write the end value
+  outright. The two disagree only for such eases. Pick one (DOTween rests on `ease(1)`); wants a
+  decision, not a patch.
+- **Open API question — an infinite sequence reversed to its start holds there.** ADR 0009 makes
+  an infinite *tween* wrap backward; `SequenceData` clamps at playhead 0 and keeps `Playing`. Either
+  extend the ADR to sequences or document the difference.
+- A zero-duration child crossed *backward* re-applies its end value (`SeekTo` on a zero-length
+  timeline always samples t = 1); GSAP restores the start value there. Niche; not fixed.
 - Performance tests require the consuming project to install `com.unity.test-framework.performance` (test-only dependency).
 - Abandoned (never-started) `SequenceBuilder` pins child store slots until `TweenStore.Reset()` — documented behavior (builders.md, CHANGELOG known limitations), LeakDetector warning is the mitigation.
 - **Branch protection not set**: `develop` exists (created from `main` 2026-09-20). `main` stays the default branch by design — it is the consumer-facing landing page. Still needs, via GitHub settings: no direct push to either branch, PRs targeted at `develop`, CI required to merge. Until then the model is convention, not enforcement.

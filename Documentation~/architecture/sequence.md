@@ -26,8 +26,10 @@ There are no alias names (former `Chain`/`Group` were removed in the ADR 0011 co
 - `Insert(Position.AtLabel("x"))` where `"x"` is not yet defined: deferred until `Start()`; if still undefined at start, throws.
 - `Insert(time: t)` with `t < 0`: throws. The sequence's own delay is the only way to defer.
 - `Insert(time: t)` with `t > current duration`: extends the sequence's duration to `t + child.duration`.
-- `Start()` on an empty sequence: produces a zero-duration `Sequence` that completes on its first tick (callbacks fire normally).
-- Mid-play insertion: a `Sequence` handle's `Insert(...)` accepts new children at any position. If the position is at or before the playhead, the child will not tick until `Restart` or `Seek` revisits that range.
+- `Start()` on an empty sequence: produces a zero-duration `Sequence` that completes on its first tick (callbacks fire normally). A zero-duration timeline gets one zero-length firing pass over its entries instead of a walk.
+- A zero-length child fires when the playhead reaches its position (`next >= Start`), like a callback entry; a child with extent is entered once the playhead is past its start.
+- Cycle boundaries are crossed on departure, not on arrival: `SequenceData` remembers which cycle its entries are armed for (`entriesCycle`) and runs the crossing (`OnStepComplete`/`OnRewind`, re-arm or end-state) when a walk starts in a different cycle. Arrival cannot know which way the playhead goes next, and a tick can stop exactly on a boundary.
+- Mid-play insertion: a `Sequence` handle's `Insert(...)` accepts new children at any position. If the position is before the playhead, the entry is inserted as finished and will not tick until `Restart`, a loop wrap or a backward pass revisits that range.
 - **Cascading auto-kill policy** (`SequenceCancelBehavior`, set via `SequenceBuilder.SetCancelBehavior`):
   - `ContinueOnChildAutoKill` (default): if a child auto-kills, the parent treats it as completed at the current parent-local time and continues. Other children are unaffected.
   - `KillSequenceOnChildAutoKill`: any child auto-kill propagates `Kill(false)` to the parent. The parent's `OnKill` fires; remaining children are killed in turn.

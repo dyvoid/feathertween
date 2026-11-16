@@ -19,7 +19,7 @@ public readonly struct Tween : IEquatable<Tween>
     public void Restart();
     public void Seek(float time, bool fireCallbacks = false);  // preserves play/pause state
     public void SetTimeScale(float scale);
-    public void SetRemainingCycles(int cycles);  // in-progress cycle counts as the first; 0 clamps to 1, negative = forever
+    public void SetRemainingCycles(int cycles);  // in-progress cycle counts as the first; 0 clamps to 1, negative = forever (throws on a zero-duration tween)
     public void CompleteAtCycleEnd();     // stop at the next forward cycle boundary, on the end value
     public void CompleteAtCycleStart();   // stop on a backward/reversed crossing (the cycle-0 start counts), on the start value
     public void Kill(bool complete = false);
@@ -170,7 +170,9 @@ Structural mutation invoked from inside a callback (`Kill`, `Complete`, sequence
 
 Starting a new tween from a callback is immediate and safe: the runner steps a snapshot of the active list taken before the tick, so the new tween first steps on the next tick. Ticking itself is not reentrant: `FT.ManualTick` called from inside a callback, setter or getter throws `InvalidOperationException` instead of corrupting the tick in progress.
 
-Setters and getters are not callbacks: they run outside the deferral scope, so a structural call made from one applies immediately. Keep them to value reads and writes.
+`AppendCallback` and `AddPause` callbacks are callbacks like any other: the same deferral applies.
+
+Setters and getters are not callbacks: they run outside the deferral scope, so a structural call made from one applies immediately. Keep them to value reads and writes. A setter that kills its own tween, or the sequence the tween plays in, ends the step there: `OnKill` is the last thing that fires.
 
 ## Seek
 
