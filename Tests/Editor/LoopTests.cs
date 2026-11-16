@@ -538,5 +538,20 @@ namespace dyvoid.FeatherTween.Tests
 			FeatherTweenRunner.ManualTick(0.75);
 			Assert.That(v, Is.EqualTo(5f).Within(1e-3f), "completed");
 		}
+
+		[Test]
+		public void SetRemainingCycles_Infinite_OnZeroDurationTween_Throws()
+		{
+			// SetLoops(-1) with duration 0 throws at Start(); the handle-side
+			// route to the same state used to slip through and walk millions of
+			// loop boundaries per tick.
+			var v = 0f;
+			var tween = FT.To(() => v, x => v = x, 1f, 0f).SetUpdate(UpdatePhase.Manual).Start();
+
+			Assert.Throws<System.InvalidOperationException>(() => tween.SetRemainingCycles(-1));
+
+			FeatherTweenRunner.ManualTick(0.016);
+			Assert.That(tween.IsAlive, Is.False, "still a one-cycle tween: completed on its first tick");
+		}
 	}
 }

@@ -570,5 +570,282 @@ namespace dyvoid.FeatherTween.Tests
 			Assert.Throws<InvalidOperationException>(
 				() => sb.Append(FloatTween(() => v, x => v = x, 1f, 1f)));
 		}
+
+		[Test]
+		public void ZeroDurationSequence_FiresCallbacks_AndAppliesChildren()
+		{
+			// A sequence with no extent still has entries sitting at time 0. The
+			// walker used to return before visiting them, so the sequence
+			// completed without having done anything.
+			var fired = 0;
+			var v = 0f;
+			var completed = 0;
+			var seq = ManualSequence()
+				.AppendCallback(() => fired++)
+				.Append(FloatTween(() => v, x => v = x, 5f, 0f))
+				.OnComplete(() => completed++)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.1);
+
+			Assert.That(fired, Is.EqualTo(1), "callback at time 0 fired");
+			Assert.That(v, Is.EqualTo(5f), "zero-duration child applied its end value");
+			Assert.That(completed, Is.EqualTo(1));
+			Assert.That(seq.IsAlive, Is.False);
+		}
+
+		[Test]
+		public void ZeroDurationChild_AtTheEndOfTheTimeline_IsApplied()
+		{
+			// The playhead reaches the end of the timeline but never passes it,
+			// so a zero-length child placed there needs "reached", not "passed".
+			var a = 0f;
+			var b = 0f;
+			var childCompleted = 0;
+			ManualSequence()
+				.Append(FloatTween(() => a, x => a = x, 1f, 1f))
+				.Append(FloatTween(() => b, x => b = x, 7f, 0f).OnComplete(() => childCompleted++))
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.5);
+			Assert.That(b, Is.EqualTo(0f), "not reached yet");
+
+			FeatherTweenRunner.ManualTick(1.0);
+			Assert.That(a, Is.EqualTo(1f).Within(1e-4f));
+			Assert.That(b, Is.EqualTo(7f), "applied when the playhead reached the end");
+			Assert.That(childCompleted, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void ZeroDurationChild_AtTheEndOfTheTimeline_IsAppliedByCompleteAndSeek()
+		{
+			var a = 0f;
+			var b = 0f;
+			var seq = ManualSequence().SetAutoKill(false)
+				.Append(FloatTween(() => a, x => a = x, 1f, 1f))
+				.Append(FloatTween(() => b, x => b = x, 7f, 0f))
+				.Start();
+
+			seq.Complete();
+			Assert.That(b, Is.EqualTo(7f), "Complete() applies it");
+
+			seq.Restart();
+			b = 0f;
+			seq.Seek(1f);
+			Assert.That(b, Is.EqualTo(7f), "a silent seek to the end applies it");
+		}
+
+		[Test]
+		public void ZeroDurationChild_AtTheEndOfTheTimeline_FiresOncePerLoop()
+		{
+			var a = 0f;
+			var hits = 0;
+			ManualSequence()
+				.Append(FloatTween(() => a, x => a = x, 1f, 1f))
+				.Append(FloatTween(() => 0f, x => hits++, 1f, 0f))
+				.SetLoops(3)
+				.Start();
+
+			for (var i = 0; i < 10; i++)
+			{
+				FeatherTweenRunner.ManualTick(0.4);
+			}
+
+			Assert.That(hits, Is.EqualTo(3));
+		}
+
+		[Test]
+		public void LoopingSequence_TickLandingExactlyOnACycleBoundary_StillPlaysTheNextCycle()
+		{
+			// The boundary crossing (OnStepComplete + re-arm) only ran when a
+			// single walk went through the boundary. A tick that stopped exactly
+			// on it left the entries finished, so every later cycle did nothing.
+			var v = 0f;
+			var callbacks = 0;
+			var steps = 0;
+			var seq = ManualSequence()
+				.Append(FT.FromTo(x => v = x, 0f, 1f, 1f))
+				.AppendCallback(() => callbacks++)
+				.SetLoops(3)
+				.OnStepComplete(() => steps++)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5); // lands exactly on the first boundary
+			Assert.That(v, Is.EqualTo(1f).Within(1e-4f));
+
+			FeatherTweenRunner.ManualTick(0.5);
+			Assert.That(v, Is.EqualTo(0.5f).Within(1e-4f), "second cycle is playing");
+			Assert.That(steps, Is.EqualTo(1), "the boundary it rested on was crossed on departure");
+
+			FeatherTweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
+			FeatherTweenRunner.ManualTick(0.5);
+
+			Assert.That(callbacks, Is.EqualTo(3), "entry callback fired in every cycle");
+			Assert.That(steps, Is.EqualTo(3));
+			Assert.That(seq.IsAlive, Is.False);
+		}
+
+		[Test]
+		public void LoopingSequence_ReversedOntoACycleBoundary_StillFiresOnRewind()
+		{
+			var v = 0f;
+			var rewinds = 0;
+			var seq = ManualSequence()
+				.Append(FT.FromTo(x => v = x, 0f, 1f, 1f))
+				.SetLoops(2)
+				.OnRewind(() => rewinds++)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(1.5);
+			seq.Reverse();
+			FeatherTweenRunner.ManualTick(0.5); // lands exactly on the boundary, travelling backward
+			FeatherTweenRunner.ManualTick(0.5);
+
+			Assert.That(v, Is.EqualTo(0.5f).Within(1e-4f), "back inside the first cycle");
+			Assert.That(rewinds, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void KillFromAppendCallback_IsDeferredToEndOfTick()
+		{
+			// Entry callbacks were not a callback scope, so a Kill issued from one
+			// freed the sequence in the middle of its own walk and the walk
+			// carried on over the corpse.
+			Sequence seq = default;
+			var v = 0f;
+			var log = new List<string>();
+			seq = ManualSequence()
+				.AppendCallback(() =>
+				{
+					seq.Kill();
+					log.Add(seq.IsAlive ? "kill-deferred" : "kill-immediate");
+				})
+				.AppendCallback(() => log.Add("second"))
+				.Append(FloatTween(() => v, x => v = x, 1f, 1f))
+				.OnComplete(() => log.Add("complete"))
+				.OnKill(() => log.Add("onkill"))
+				.Start();
+
+			FeatherTweenRunner.ManualTick(0.5);
+
+			Assert.That(log, Is.EqualTo(new[] { "kill-deferred", "second", "onkill" }));
+			Assert.That(seq.IsAlive, Is.False, "the deferred kill landed at the end of the tick");
+		}
+
+		[Test]
+		public void KillFromAppendCallback_DuringComplete_StopsTheWalk()
+		{
+			// Outside a tick a deferred command drains as soon as the callback
+			// returns, so the kill lands mid-walk; nothing may fire after OnKill.
+			Sequence seq = default;
+			var v = 0f;
+			var log = new List<string>();
+			seq = ManualSequence()
+				.AppendCallback(() => seq.Kill())
+				.AppendCallback(() => log.Add("second"))
+				.Append(FloatTween(() => v, x => v = x, 1f, 1f))
+				.OnStepComplete(() => log.Add("step"))
+				.OnComplete(() => log.Add("complete"))
+				.OnKill(() => log.Add("onkill"))
+				.Start();
+
+			seq.Complete();
+
+			Assert.That(log, Is.EqualTo(new[] { "onkill" }));
+			Assert.That(v, Is.EqualTo(0f), "the child after the kill never ran");
+			Assert.That(seq.IsAlive, Is.False);
+		}
+
+		[Test]
+		public void KillFromChildSetter_StopsTheWalk()
+		{
+			// A setter runs outside any callback scope, so its Kill applies at
+			// once - while the parent is still walking its entries.
+			Sequence seq = default;
+			var v = 0f;
+			var log = new List<string>();
+			seq = ManualSequence()
+				.Append(FloatTween(() => v, x =>
+				{
+					v = x;
+					if (x >= 1f)
+					{
+						seq.Kill();
+					}
+				}, 1f, 1f).OnComplete(() => log.Add("child-complete")))
+				.AppendCallback(() => log.Add("later"))
+				.OnUpdate(_ => log.Add("update"))
+				.OnComplete(() => log.Add("complete"))
+				.OnKill(() => log.Add("onkill"))
+				.Start();
+
+			FeatherTweenRunner.ManualTick(2.0);
+
+			Assert.That(log, Is.EqualTo(new[] { "onkill" }));
+			Assert.That(seq.IsAlive, Is.False);
+		}
+
+		[Test]
+		public void MidPlayInsert_BehindThePlayhead_WaitsForRestart()
+		{
+			// Documented in api/sequences.md; the walker used to start such a
+			// child late and run it out of step with its own window.
+			var a = 0f;
+			var b = 0f;
+			var seq = ManualSequence()
+				.Append(FloatTween(() => a, x => a = x, 1f, 2f))
+				.Start();
+
+			FeatherTweenRunner.ManualTick(1.0);
+			seq.Insert(0.2f, FloatTween(() => b, x => b = x, 1f, 0.5f));
+
+			FeatherTweenRunner.ManualTick(0.25);
+			Assert.That(b, Is.EqualTo(0f), "window already passed: the child does not tick");
+
+			seq.Restart();
+			FeatherTweenRunner.ManualTick(0.45);
+			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f), "the replay runs it inside its window");
+		}
+
+		[Test]
+		public void MidPlayInsert_AheadOfThePlayhead_StillPlaysThisCycle()
+		{
+			var a = 0f;
+			var b = 0f;
+			var seq = ManualSequence()
+				.Append(FloatTween(() => a, x => a = x, 1f, 2f))
+				.Start();
+
+			FeatherTweenRunner.ManualTick(1.0);
+			seq.Insert(1.5f, FloatTween(() => b, x => b = x, 1f, 0.5f));
+
+			FeatherTweenRunner.ManualTick(0.75);
+			Assert.That(b, Is.EqualTo(0.5f).Within(1e-3f));
+		}
+
+		[Test]
+		public void Clear_DisposesNestedChildrenWithoutOnKill()
+		{
+			// Children of a cleared builder never started. Direct children were
+			// already freed silently; a nested sequence cascaded through OnFree
+			// and fired OnKill on its own children.
+			var v = 0f;
+			var kills = 0;
+			var free = TweenStore.FreeCount;
+			var inner = FT.Sequence()
+				.Append(FloatTween(() => v, x => v = x, 1f, 1f).OnKill(() => kills++))
+				.OnKill(() => kills++);
+			var sb = ManualSequence()
+				.Append(inner)
+				.Append(FloatTween(() => v, x => v = x, 1f, 1f).OnKill(() => kills++));
+
+			sb.Clear();
+
+			Assert.That(kills, Is.Zero);
+			Assert.That(TweenStore.FreeCount, Is.EqualTo(free), "every child slot was returned");
+			sb.Start().Kill();
+		}
 	}
 }
