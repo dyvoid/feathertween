@@ -133,10 +133,10 @@ namespace dyvoid.FeatherTween.Internal
 		// other invalid time input (Documentation~/guides/conventions.md).
 		public static void SetTimeScale(int id, uint gen, float scale)
 		{
-			if (scale < 0f)
+			if (!(scale >= 0f))
 			{
 				throw new System.ArgumentOutOfRangeException(
-					nameof(scale), "[FeatherTween] SetTimeScale rejects negative values; use Reverse().");
+					nameof(scale), "[FeatherTween] SetTimeScale rejects negative and NaN values; use Reverse().");
 			}
 			var data = TweenStore.Get(id, gen);
 			if (data != null)

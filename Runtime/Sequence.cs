@@ -103,9 +103,9 @@ namespace dyvoid.FeatherTween
 		/// <summary>Mid-play insertion of a tween at an absolute sequence time. The builder is consumed. Structural mutation: deferred to end of tick when called from inside a callback. Unlike build-time composition, <c>SetDefaults</c> values from the original builder are not applied (they live in the consumed builder, not the running sequence) — set ease/loops/delay explicitly on the child.</summary>
 		public void Insert<T>(float time, TweenBuilder<T> tween)
 		{
-			if (time < 0f)
+			if (!(time >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(time), "Insert time cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(time), "Insert time cannot be negative or NaN.");
 			}
 			var data = TweenStore.Get(id, generation) as SequenceData;
 			if (data == null)

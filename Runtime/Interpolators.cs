@@ -14,6 +14,17 @@ namespace dyvoid.FeatherTween
 	{
 		private static readonly Dictionary<Type, object> registry = new Dictionary<Type, object>();
 
+		// Get<T> runs on every Build(). A static generic field resolves without
+		// hashing the Type; the dictionary stays as the non-generic view, and the
+		// clearers let Reset() empty every closed Cache<T> it cannot name.
+		private static readonly List<Action> cacheClearers = new List<Action>();
+
+		private static class Cache<T>
+		{
+			public static IInterpolator<T> Value;
+			public static bool Tracked;
+		}
+
 		static Interpolators()
 		{
 			RegisterBuiltins();
@@ -31,15 +42,16 @@ namespace dyvoid.FeatherTween
 				throw new InvalidOperationException(
 					$"[FeatherTween] Cannot re-register IInterpolator<{typeof(T).Name}> while a tween of that type is live.");
 			}
-			registry[typeof(T)] = interpolator;
+			Store(interpolator);
 		}
 
 		/// <summary>Returns the registered interpolator for <typeparamref name="T"/>; throws if none is registered.</summary>
 		public static IInterpolator<T> Get<T>()
 		{
-			if (registry.TryGetValue(typeof(T), out var interp))
+			var cached = Cache<T>.Value;
+			if (cached != null)
 			{
-				return (IInterpolator<T>)interp;
+				return cached;
 			}
 			throw new InvalidOperationException(
 				$"[FeatherTween] No IInterpolator<{typeof(T).Name}> registered.");
@@ -53,18 +65,33 @@ namespace dyvoid.FeatherTween
 		internal static void Reset()
 		{
 			registry.Clear();
+			for (var i = 0; i < cacheClearers.Count; i++)
+			{
+				cacheClearers[i]();
+			}
 			RegisterBuiltins();
+		}
+
+		private static void Store<T>(IInterpolator<T> interpolator)
+		{
+			registry[typeof(T)] = interpolator;
+			Cache<T>.Value = interpolator;
+			if (!Cache<T>.Tracked)
+			{
+				Cache<T>.Tracked = true;
+				cacheClearers.Add(() => Cache<T>.Value = null);
+			}
 		}
 
 		private static void RegisterBuiltins()
 		{
-			registry[typeof(float)] = new FloatInterpolator();
-			registry[typeof(int)] = new IntInterpolator();
-			registry[typeof(Vector2)] = new Vector2Interpolator();
-			registry[typeof(Vector3)] = new Vector3Interpolator();
-			registry[typeof(Vector4)] = new Vector4Interpolator();
-			registry[typeof(Color)] = new ColorInterpolator();
-			registry[typeof(Quaternion)] = new QuaternionInterpolator();
+			Store<float>(new FloatInterpolator());
+			Store<int>(new IntInterpolator());
+			Store<Vector2>(new Vector2Interpolator());
+			Store<Vector3>(new Vector3Interpolator());
+			Store<Vector4>(new Vector4Interpolator());
+			Store<Color>(new ColorInterpolator());
+			Store<Quaternion>(new QuaternionInterpolator());
 		}
 	}
 }

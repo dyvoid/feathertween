@@ -158,7 +158,11 @@ namespace dyvoid.FeatherTween.Internal
 
 		// All value writes funnel through here. Safe mode wraps the setter in a
 		// try/catch; a throw kills the tween (CancelFromError) and the caller
-		// must stop touching it. Returns false when the tween killed itself.
+		// must stop touching it. Returns false when the tween is dead afterwards:
+		// killed by the error path, or by the setter itself - a setter runs
+		// outside any callback scope, so a Kill() it issues (on this tween, its
+		// target, or its parent sequence) applies immediately, and nothing else
+		// may fire on the record after its OnKill.
 		// FEATHERTWEEN_RELEASE compiles the wrapper out to a bare call.
 		private bool ApplySetter(T value)
 		{
@@ -168,17 +172,17 @@ namespace dyvoid.FeatherTween.Internal
 				try
 				{
 					setter(value);
-					return true;
 				}
 				catch (Exception e)
 				{
 					CancelFromError(e);
 					return false;
 				}
+				return Status != TweenStatus.Cancelled;
 			}
 #endif
 			setter(value);
-			return true;
+			return Status != TweenStatus.Cancelled;
 		}
 
 		public override void ResolveStartValues()
@@ -229,6 +233,13 @@ namespace dyvoid.FeatherTween.Internal
 		{
 			if (cycles < 0)
 			{
+				// Same rule as Build(): with no duration the cycle index diverges
+				// (millions of loop boundaries per tick).
+				if (duration <= 0f)
+				{
+					throw new InvalidOperationException(
+						"[FeatherTween] duration must be > 0 when looping forever (SetRemainingCycles(-1)).");
+				}
 				loopCount = -1;
 			}
 			else
@@ -288,6 +299,10 @@ namespace dyvoid.FeatherTween.Internal
 			for (var i = 0; i < remaining; i++)
 			{
 				InvokeOnStepComplete();
+				if (Status == TweenStatus.Cancelled)
+				{
+					return; // killed from the callback (drained outside a tick)
+				}
 			}
 			if (loopCount > 0)
 			{
@@ -566,6 +581,10 @@ namespace dyvoid.FeatherTween.Internal
 				for (var i = lastCycleIndex; i > cycleIndex; i--)
 				{
 					InvokeOnRewind();
+				}
+				if (Status == TweenStatus.Cancelled)
+				{
+					return; // killed from a boundary callback (drained outside a tick)
 				}
 			}
 			lastCycleIndex = cycleIndex;

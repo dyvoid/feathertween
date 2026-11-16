@@ -253,5 +253,29 @@ namespace dyvoid.FeatherTween.Tests
 			Assert.That(after - before, Is.LessThan(1024L * 1024L),
 				$"Steady-state alloc delta over 600 ticks: {after - before} bytes.");
 		}
+
+		[Test]
+		public void NaNTimeInputs_Throw()
+		{
+			// x < 0 is false for NaN, so NaN used to pass every "negative" guard
+			// and end up written to the target.
+			var v = 0f;
+			Assert.Throws<ArgumentOutOfRangeException>(() => FT.To(() => v, x => v = x, 1f, float.NaN));
+			Assert.Throws<ArgumentOutOfRangeException>(() => FT.From(() => v, x => v = x, 1f, float.NaN));
+			Assert.Throws<ArgumentOutOfRangeException>(() => FT.FromTo(x => v = x, 0f, 1f, float.NaN));
+
+			var builder = FT.To(() => v, x => v = x, 1f, 1f).SetUpdate(UpdatePhase.Manual);
+			Assert.Throws<ArgumentOutOfRangeException>(() => builder.SetDelay(float.NaN));
+			var tween = builder.Start();
+			Assert.Throws<ArgumentOutOfRangeException>(() => tween.SetTimeScale(float.NaN));
+			tween.Kill();
+
+			var sb = FT.Sequence();
+			Assert.Throws<ArgumentOutOfRangeException>(() => sb.SetDelay(float.NaN));
+			Assert.Throws<ArgumentOutOfRangeException>(() => sb.AppendInterval(float.NaN));
+			Assert.Throws<ArgumentOutOfRangeException>(() => sb.SetDefaults(delay: float.NaN));
+			Assert.DoesNotThrow(() => sb.SetDefaults(ease: Easing.OutQuad()), "an omitted delay is not a NaN delay");
+			sb.Start().Kill();
+		}
 	}
 }

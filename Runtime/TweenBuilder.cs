@@ -158,9 +158,9 @@ namespace dyvoid.FeatherTween
 		public TweenBuilder<T> SetDelay(float seconds, DelayType delayType = DelayType.FirstLoop)
 		{
 			ValidateOrThrow();
-			if (seconds < 0f)
+			if (!(seconds >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(seconds), "Delay cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(seconds), "Delay cannot be negative or NaN.");
 			}
 			buffer.Delay = seconds;
 			buffer.DelayType = delayType;
@@ -171,7 +171,7 @@ namespace dyvoid.FeatherTween
 		public TweenBuilder<T> OnStart(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnStart(cb);
+			buffer.Lifecycle.AddOnStart(cb);
 			return this;
 		}
 
@@ -179,7 +179,7 @@ namespace dyvoid.FeatherTween
 		public TweenBuilder<T> OnPlay(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnPlay(cb);
+			buffer.Lifecycle.AddOnPlay(cb);
 			return this;
 		}
 
@@ -187,7 +187,7 @@ namespace dyvoid.FeatherTween
 		public TweenBuilder<T> OnPause(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnPause(cb);
+			buffer.Lifecycle.AddOnPause(cb);
 			return this;
 		}
 
@@ -195,7 +195,7 @@ namespace dyvoid.FeatherTween
 		public TweenBuilder<T> OnUpdate(Action<float> cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnUpdate(cb);
+			buffer.Lifecycle.AddOnUpdate(cb);
 			return this;
 		}
 
@@ -203,7 +203,7 @@ namespace dyvoid.FeatherTween
 		public TweenBuilder<T> OnStepComplete(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnStepComplete(cb);
+			buffer.Lifecycle.AddOnStepComplete(cb);
 			return this;
 		}
 
@@ -211,7 +211,7 @@ namespace dyvoid.FeatherTween
 		public TweenBuilder<T> OnRewind(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnRewind(cb);
+			buffer.Lifecycle.AddOnRewind(cb);
 			return this;
 		}
 
@@ -219,7 +219,7 @@ namespace dyvoid.FeatherTween
 		public TweenBuilder<T> OnComplete(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnComplete(cb);
+			buffer.Lifecycle.AddOnComplete(cb);
 			return this;
 		}
 
@@ -230,7 +230,7 @@ namespace dyvoid.FeatherTween
 			ValidateOrThrow();
 			if (state != null && cb != null)
 			{
-				buffer.AddOnComplete(CallbackEntry.FromTargetCapture(state, cb));
+				buffer.Lifecycle.AddOnComplete(CallbackEntry.FromTargetCapture(state, cb));
 			}
 			return this;
 		}
@@ -239,7 +239,7 @@ namespace dyvoid.FeatherTween
 		public TweenBuilder<T> OnKill(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnKill(cb);
+			buffer.Lifecycle.AddOnKill(cb);
 			return this;
 		}
 
@@ -250,7 +250,7 @@ namespace dyvoid.FeatherTween
 			ValidateOrThrow();
 			if (state != null && cb != null)
 			{
-				buffer.AddOnKill(CallbackEntry.FromTargetCapture(state, cb));
+				buffer.Lifecycle.AddOnKill(CallbackEntry.FromTargetCapture(state, cb));
 			}
 			return this;
 		}

@@ -23,6 +23,16 @@ namespace dyvoid.FeatherTween.Internal
 		private bool stopAtNextBoundary;
 		private bool stopAtStartBoundary;
 
+		// The cycle the entries are currently armed for. Crossing a cycle
+		// boundary (boundary callback + re-arm) happens when the walk leaves the
+		// boundary, not when it arrives: arriving cannot know which way the
+		// playhead goes next. Comparing against this on departure is what makes
+		// a tick that lands exactly on a boundary still cross it afterwards.
+		private int entriesCycle;
+
+		// Set by DisposeUnstarted so OnFree cascades without OnKill.
+		private bool unstarted;
+
 		public override double CycleDuration => duration;
 
 		// Progress across all loops [0,1]; an infinite loop reports progress
@@ -313,7 +323,20 @@ namespace dyvoid.FeatherTween.Internal
 
 			if (duration <= 0d)
 			{
+				// No timeline to walk, but entries still sit at local 0: a
+				// callbacks-only sequence, or one made of zero-duration tweens.
+				// Give them a zero-length firing pass; fired entries are marked
+				// finished, so repeated ticks do not refire them.
 				playheadTotal = target;
+				if (requested >= 0d)
+				{
+					var haltedZero = double.NaN;
+					if (!AdvanceLocalForward(0d, 0d, fire, haltOnPause, ref haltedZero))
+					{
+						return false;
+					}
+					paused = !double.IsNaN(haltedZero);
+				}
 				return true;
 			}
 
@@ -339,6 +362,10 @@ namespace dyvoid.FeatherTween.Internal
 			var guard = 0;
 			while (playheadTotal != target)
 			{
+				if (Status == TweenStatus.Cancelled)
+				{
+					return false; // killed from a boundary callback drained mid-walk
+				}
 				if (++guard > 1_000_000)
 				{
 					UnityEngine.Debug.LogError("[FeatherTween] Sequence advance walk failed to converge; aborting.");
@@ -347,6 +374,10 @@ namespace dyvoid.FeatherTween.Internal
 
 				var forward = target > playheadTotal;
 				var c = CurrentCycle(forward);
+				if (c != entriesCycle && !EnterCycle(c, fire))
+				{
+					return false;
+				}
 				var cycleStart = c * duration;
 				var cycleEnd = cycleStart + duration;
 				var segTarget = forward ? Math.Min(target, cycleEnd) : Math.Max(target, cycleStart);
@@ -367,42 +398,46 @@ namespace dyvoid.FeatherTween.Internal
 				}
 
 				playheadTotal = segTarget;
-				if (playheadTotal == target)
-				{
-					break;
-				}
-
-				if (forward)
-				{
-					if (fire)
-					{
-						InvokeOnStepComplete();
-					}
-					// Entering the next cycle: Restart replays from armed entries;
-					// a Yoyo odd cycle starts from the end state the even cycle
-					// just left, and its backward local walk re-arms as it goes.
-					if (!(loopType == LoopType.Yoyo))
-					{
-						RearmEntries();
-					}
-				}
-				else
-				{
-					if (fire)
-					{
-						InvokeOnRewind();
-					}
-					// Entering the previous cycle at its local end. Restart cycles
-					// need entries repositioned to their end state; a Yoyo even→odd
-					// backward crossing lands at local 0 with entries already
-					// re-armed by the walk that got here.
-					if (loopType != LoopType.Yoyo)
-					{
-						SetEntriesToEndState();
-					}
-				}
 			}
 			return true;
+		}
+
+		// Crosses the boundary between the armed cycle and cycle c. Returns false
+		// when the boundary callback killed the sequence.
+		private bool EnterCycle(int c, bool fire)
+		{
+			var forward = c > entriesCycle;
+			entriesCycle = c;
+			if (forward)
+			{
+				if (fire)
+				{
+					InvokeOnStepComplete();
+				}
+				// Restart replays from armed entries; a Yoyo odd cycle starts from
+				// the end state the even cycle just left, and its backward local
+				// walk re-arms as it goes.
+				if (loopType != LoopType.Yoyo)
+				{
+					RearmEntries();
+				}
+			}
+			else
+			{
+				if (fire)
+				{
+					InvokeOnRewind();
+				}
+				// Entering the previous cycle at its local end. Restart cycles
+				// need entries repositioned to their end state; a Yoyo even->odd
+				// backward crossing lands at local 0 with entries already
+				// re-armed by the walk that got here.
+				if (loopType != LoopType.Yoyo)
+				{
+					SetEntriesToEndState();
+				}
+			}
+			return Status != TweenStatus.Cancelled;
 		}
 
 		// Advances the cycle-local playhead from 'from' to 'to' (either
@@ -419,7 +454,7 @@ namespace dyvoid.FeatherTween.Internal
 			{
 				AdvanceLocalBackward(from, to, fire);
 			}
-			return true;
+			return Status != TweenStatus.Cancelled;
 		}
 
 		private bool AdvanceLocalForward(double prev, double next, bool fire, bool haltOnPause, ref double haltedAt)
@@ -446,6 +481,16 @@ namespace dyvoid.FeatherTween.Internal
 			var limit = pauseIndex >= 0 ? pauseIndex : entries.Length - 1;
 			for (var i = 0; i <= limit; i++)
 			{
+				// A child setter or an entry callback can kill this sequence while
+				// it is being walked (a setter runs outside any callback scope,
+				// and outside a tick a deferred Kill drains as soon as the
+				// callback returns). The kill already fired OnKill and freed the
+				// record, so nothing else on the timeline may fire.
+				if (Status == TweenStatus.Cancelled)
+				{
+					return false;
+				}
+
 				ref var e = ref entries[i];
 				if (e.Finished)
 				{
@@ -492,6 +537,10 @@ namespace dyvoid.FeatherTween.Internal
 				}
 			}
 
+			if (Status == TweenStatus.Cancelled)
+			{
+				return false;
+			}
 			if (pauseIndex >= 0)
 			{
 				haltedAt = next;
@@ -502,7 +551,13 @@ namespace dyvoid.FeatherTween.Internal
 		// Returns false when a child auto-kill cancelled the whole sequence.
 		private bool StepChildForward(ref SequenceChildEntry e, double prev, double next, bool fire)
 		{
-			if (next <= e.Start)
+			// A zero-length window (a zero-duration tween, an empty nested
+			// sequence) has no interior to be "inside of": it fires when the
+			// playhead reaches it, like a callback entry. Requiring next > Start
+			// dropped such a child whenever it sat at the very end of the
+			// timeline, which the playhead reaches but never passes.
+			var zeroLength = !e.Infinite && e.Length <= 0d;
+			if (zeroLength ? next < e.Start : next <= e.Start)
 			{
 				return true;
 			}
@@ -538,7 +593,9 @@ namespace dyvoid.FeatherTween.Internal
 			}
 
 			var from = prev > e.Start ? prev : e.Start;
-			var childDelta = next - from;
+			// Any positive delta completes a zero-length child; its own timeline
+			// has no extent for the amount to matter.
+			var childDelta = zeroLength ? 1d : next - from;
 			if (childDelta <= 0d)
 			{
 				return true;
@@ -571,6 +628,10 @@ namespace dyvoid.FeatherTween.Internal
 		{
 			for (var i = entries.Length - 1; i >= 0; i--)
 			{
+				if (Status == TweenStatus.Cancelled)
+				{
+					return; // killed by a child setter mid-walk
+				}
 				ref var e = ref entries[i];
 				switch (e.Kind)
 				{
@@ -699,29 +760,41 @@ namespace dyvoid.FeatherTween.Internal
 			{
 				return true;
 			}
-#if !FEATHERTWEEN_RELEASE
-			if (SafeMode)
+			// A callback scope like every other user callback, so Kill / Complete /
+			// Restart / Reverse / Insert issued from an AppendCallback or AddPause
+			// callback are deferred (Documentation~/api/handles.md) instead of
+			// mutating the sequence in the middle of its own walk.
+			TweenCommandQueue.EnterCallback();
+			try
 			{
-				try
+#if !FEATHERTWEEN_RELEASE
+				if (SafeMode)
 				{
-					callbacks[index]?.Invoke();
-				}
-				catch (Exception e)
-				{
-					UnityEngine.Debug.LogException(e);
-					if (CancelOnError)
+					try
 					{
-						Status = TweenStatus.Cancelled;
-						InvokeOnKill();
-						TweenStore.Free(SelfId);
-						return false;
+						callbacks[index]?.Invoke();
 					}
+					catch (Exception e)
+					{
+						UnityEngine.Debug.LogException(e);
+						if (CancelOnError)
+						{
+							Status = TweenStatus.Cancelled;
+							InvokeOnKill();
+							TweenStore.Free(SelfId);
+							return false;
+						}
+					}
+					return true;
 				}
+#endif
+				callbacks[index]?.Invoke();
 				return true;
 			}
-#endif
-			callbacks[index]?.Invoke();
-			return true;
+			finally
+			{
+				TweenCommandQueue.ExitCallback();
+			}
 		}
 
 		// Walks the playhead to the end with callbacks (Complete / Kill(true)
@@ -756,6 +829,7 @@ namespace dyvoid.FeatherTween.Internal
 		{
 			base.ResetPlayhead();
 			playheadTotal = 0d;
+			entriesCycle = 0;
 			delayRemaining = delay;
 			stopAtNextBoundary = false;
 			stopAtStartBoundary = false;
@@ -776,6 +850,11 @@ namespace dyvoid.FeatherTween.Internal
 				Kind = SequenceChildKind.Tween,
 				CallbackIndex = -1,
 				Order = orderCounter++,
+				// A window that opens behind the playhead has been passed: the
+				// child stays put until a Restart, a loop wrap or a backward walk
+				// revisits it. Left unfinished, the forward walker would start it
+				// late and run it out of step with its own window.
+				Finished = start < LocalPlayhead(),
 			};
 
 			var newEntries = new SequenceChildEntry[entries.Length + 1];
@@ -799,8 +878,27 @@ namespace dyvoid.FeatherTween.Internal
 				duration = end;
 			}
 
-			// If it lands behind the playhead in the current cycle, it plays on
-			// the next loop (or on a backward pass); crossing logic handles both.
+		}
+
+		// Cycle-local playhead in [0, duration]; a Yoyo odd cycle counts down.
+		private double LocalPlayhead()
+		{
+			if (duration <= 0d)
+			{
+				return 0d;
+			}
+			var c = CurrentCycle(forward: true);
+			var local = playheadTotal - c * duration;
+			return loopType == LoopType.Yoyo && (c & 1) == 1 ? duration - local : local;
+		}
+
+		// A builder that is cleared or rejected frees children that never ran.
+		// That is disposal, not a kill: no OnKill, for the nested sequence or
+		// for anything inside it.
+		public void DisposeUnstarted()
+		{
+			unstarted = true;
+			TweenStore.Free(SelfId);
 		}
 
 		public override void OnFree()
@@ -820,7 +918,12 @@ namespace dyvoid.FeatherTween.Internal
 				// Completed children are at their terminal value; freeing them is
 				// disposal, not a kill — no OnKill (Documentation~/api/handles.md). Children cut short by
 				// a parent Kill(false) are cancelled and get OnKill.
-				if (child.Status != TweenStatus.Completed)
+				if (unstarted && child is SequenceData nested)
+				{
+					nested.DisposeUnstarted();
+					continue;
+				}
+				if (!unstarted && child.Status != TweenStatus.Completed)
 				{
 					child.Status = TweenStatus.Cancelled;
 					child.InvokeOnKill();

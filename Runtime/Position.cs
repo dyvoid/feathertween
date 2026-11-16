@@ -39,9 +39,9 @@ namespace dyvoid.FeatherTween
 		/// <summary>An absolute time on the sequence's timeline, in seconds.</summary>
 		public static Position AtTime(float time)
 		{
-			if (time < 0f)
+			if (!(time >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(time), "Position time cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(time), "Position time cannot be negative or NaN.");
 			}
 			return new Position(PositionKind.Time, time, null);
 		}

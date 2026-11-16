@@ -331,13 +331,41 @@ namespace dyvoid.FeatherTween.Tests
 		}
 
 		[Test]
-		public void SelfKillFromSetter_ThenSlotReused_EndOfTickFreeSparesTheNewTenant()
+		public void KilledAfterCompleting_ThenSlotReused_EndOfTickFreeSparesTheNewTenant()
 		{
-			// The runner queues the completing tween for an end-of-tick free. If
-			// the tween was already freed mid-step and its slot re-rented, that
-			// queued free must not land on the new tenant.
-			Tween self = default;
+			// The runner queues a completing tween for an end-of-tick free. If
+			// something frees it before then - here a later tween's setter, which
+			// runs outside any callback scope so its Kill applies immediately -
+			// and the slot is re-rented, the queued free must not land on the
+			// new tenant.
+			Tween first = default;
 			Tween tenant = default;
+			first = FT.To(() => 0f, v => { }, 1f, 1f).SetUpdate(UpdatePhase.Manual).Start();
+			FT.To(() => 0f, v =>
+				{
+					if (first.IsAlive)
+					{
+						first.Kill();
+						tenant = FT.To(() => 0f, x => { }, 1f, 10f).SetUpdate(UpdatePhase.Manual).Start();
+					}
+				}, 1f, 5f)
+				.SetUpdate(UpdatePhase.Manual)
+				.Start();
+
+			FeatherTweenRunner.ManualTick(1.0);
+
+			Assert.That(tenant.Id, Is.EqualTo(first.Id), "precondition: the freed slot was re-rented (LIFO free list)");
+			Assert.That(tenant.IsAlive, Is.True, "the generation-checked end-of-tick free spared the new tenant");
+		}
+
+		[Test]
+		public void SelfKillFromSetter_FiresNothingAfterOnKill()
+		{
+			// A setter runs outside any callback scope, so the Kill applies at
+			// once. The step used to carry on regardless and fire OnUpdate,
+			// OnStepComplete and OnComplete on the record it had just killed.
+			Tween self = default;
+			var log = new System.Collections.Generic.List<string>();
 			self = FT.To(() => 0f, v =>
 				{
 					if (v >= 1f)
@@ -346,19 +374,16 @@ namespace dyvoid.FeatherTween.Tests
 					}
 				}, 1f, 1f)
 				.SetUpdate(UpdatePhase.Manual)
-				.OnUpdate(_ =>
-				{
-					if (!tenant.IsAlive)
-					{
-						tenant = FT.To(() => 0f, x => { }, 1f, 10f).SetUpdate(UpdatePhase.Manual).Start();
-					}
-				})
+				.OnUpdate(_ => log.Add("update"))
+				.OnStepComplete(() => log.Add("step"))
+				.OnComplete(() => log.Add("complete"))
+				.OnKill(() => log.Add("kill"))
 				.Start();
 
 			FeatherTweenRunner.ManualTick(1.0);
 
-			Assert.That(tenant.Id, Is.EqualTo(self.Id), "precondition: the freed slot was re-rented (LIFO free list)");
-			Assert.That(tenant.IsAlive, Is.True, "the generation-checked end-of-tick free spared the new tenant");
+			Assert.That(log, Is.EqualTo(new[] { "kill" }));
+			Assert.That(self.IsAlive, Is.False);
 		}
 	}
 }

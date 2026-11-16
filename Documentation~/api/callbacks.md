@@ -50,7 +50,7 @@ If you reference `this`, a local, or any field outside the supplied state parame
 
 - `OnStart` and the initial `OnPlay` fire on the first tick that actually renders (after any delay), once per playhead lifecycle; `Restart` re-arms them.
 - Subsequent `Resume`/`Play` fire `OnPlay` each time.
-- `OnUpdate(float)` receives the eased in-cycle progress on a tween (`1f` at every cycle end regardless of ease shape) and the normalized playhead (`0..1`) on a sequence.
+- `OnUpdate(float)` receives the eased in-cycle progress on a tween (the ease evaluated at the write, so `1f` at a cycle end for every built-in ease; a `Curve`/`Custom` ease that does not end at 1 reports its own end value) and the normalized playhead (`0..1`) on a sequence.
 - Target-capture overloads exist on `OnComplete`/`OnKill` only; all other slots take plain delegates.
 
 See [handles.md](handles.md) for the lifecycle state machine and the `OnComplete` vs `OnKill` firing matrix.
