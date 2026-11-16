@@ -138,7 +138,7 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder OnStart(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnStart(cb);
+			buffer.Lifecycle.AddOnStart(cb);
 			return this;
 		}
 
@@ -146,7 +146,7 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder OnPlay(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnPlay(cb);
+			buffer.Lifecycle.AddOnPlay(cb);
 			return this;
 		}
 
@@ -154,7 +154,7 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder OnPause(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnPause(cb);
+			buffer.Lifecycle.AddOnPause(cb);
 			return this;
 		}
 
@@ -162,7 +162,7 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder OnUpdate(Action<float> cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnUpdate(cb);
+			buffer.Lifecycle.AddOnUpdate(cb);
 			return this;
 		}
 
@@ -170,7 +170,7 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder OnStepComplete(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnStepComplete(cb);
+			buffer.Lifecycle.AddOnStepComplete(cb);
 			return this;
 		}
 
@@ -178,7 +178,7 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder OnRewind(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnRewind(cb);
+			buffer.Lifecycle.AddOnRewind(cb);
 			return this;
 		}
 
@@ -186,7 +186,7 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder OnComplete(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnComplete(cb);
+			buffer.Lifecycle.AddOnComplete(cb);
 			return this;
 		}
 
@@ -197,7 +197,7 @@ namespace dyvoid.FeatherTween
 			ValidateOrThrow();
 			if (state != null && cb != null)
 			{
-				buffer.AddOnComplete(CallbackEntry.FromTargetCapture(state, cb));
+				buffer.Lifecycle.AddOnComplete(CallbackEntry.FromTargetCapture(state, cb));
 			}
 			return this;
 		}
@@ -206,7 +206,7 @@ namespace dyvoid.FeatherTween
 		public SequenceBuilder OnKill(Action cb)
 		{
 			ValidateOrThrow();
-			buffer.AddOnKill(cb);
+			buffer.Lifecycle.AddOnKill(cb);
 			return this;
 		}
 
@@ -217,7 +217,7 @@ namespace dyvoid.FeatherTween
 			ValidateOrThrow();
 			if (state != null && cb != null)
 			{
-				buffer.AddOnKill(CallbackEntry.FromTargetCapture(state, cb));
+				buffer.Lifecycle.AddOnKill(CallbackEntry.FromTargetCapture(state, cb));
 			}
 			return this;
 		}

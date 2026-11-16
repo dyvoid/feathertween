@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace dyvoid.FeatherTween.Internal
 {
@@ -29,14 +28,7 @@ namespace dyvoid.FeatherTween.Internal
 		private DelayType delayType;
 		private bool safeMode;
 		private bool cancelOnError;
-		private List<CallbackEntry> onStart;
-		private List<CallbackEntry> onPlay;
-		private List<CallbackEntry> onPause;
-		private List<Action<float>> onUpdate;
-		private List<CallbackEntry> onStepComplete;
-		private List<CallbackEntry> onComplete;
-		private List<CallbackEntry> onKill;
-		private List<CallbackEntry> onRewind;
+		private readonly BuilderCallbacks lifecycle = new BuilderCallbacks();
 
 		// Explicit-set flags: SetDefaults on a SequenceBuilder only cascades into
 		// values the user did not set on the child builder.
@@ -47,6 +39,7 @@ namespace dyvoid.FeatherTween.Internal
 
 		public uint Generation => generation;
 		public bool Released => released;
+		public BuilderCallbacks Lifecycle => lifecycle;
 
 		public bool PhaseExplicit => phaseExplicit;
 		public bool EaseExplicit => easeExplicit;
@@ -208,46 +201,6 @@ namespace dyvoid.FeatherTween.Internal
 			}
 		}
 
-		public void AddOnStart(Action cb) => Add(ref onStart, cb);
-		public void AddOnPlay(Action cb) => Add(ref onPlay, cb);
-		public void AddOnPause(Action cb) => Add(ref onPause, cb);
-		public void AddOnStepComplete(Action cb) => Add(ref onStepComplete, cb);
-		public void AddOnComplete(Action cb) => Add(ref onComplete, cb);
-		public void AddOnKill(Action cb) => Add(ref onKill, cb);
-		public void AddOnRewind(Action cb) => Add(ref onRewind, cb);
-
-		public void AddOnComplete(CallbackEntry entry)
-		{
-			onComplete ??= new List<CallbackEntry>();
-			onComplete.Add(entry);
-		}
-
-		public void AddOnKill(CallbackEntry entry)
-		{
-			onKill ??= new List<CallbackEntry>();
-			onKill.Add(entry);
-		}
-
-		public void AddOnUpdate(Action<float> cb)
-		{
-			if (cb == null)
-			{
-				return;
-			}
-			onUpdate ??= new List<Action<float>>();
-			onUpdate.Add(cb);
-		}
-
-		private static void Add(ref List<CallbackEntry> list, Action cb)
-		{
-			if (cb == null)
-			{
-				return;
-			}
-			list ??= new List<CallbackEntry>();
-			list.Add(CallbackEntry.FromAction(cb));
-		}
-
 		// Cascade writes from SequenceBuilder.SetDefaults; bypass the explicit flags.
 		public void ApplyDefaultEase(EaseRef value) => ease = value;
 
@@ -306,7 +259,7 @@ namespace dyvoid.FeatherTween.Internal
 			data.FromValue = snapMode == SnapMode.FromTo ? fromValue : endValue;
 			data.SnapPending = true;
 
-			TransferCallbacks(data);
+			lifecycle.TransferTo(data);
 
 			data.Status = delay > 0f && delayType == DelayType.FirstLoop
 				? TweenStatus.Delayed
@@ -315,50 +268,9 @@ namespace dyvoid.FeatherTween.Internal
 			return data;
 		}
 
-		// Direct loops, no method-group arguments: converting data.AddOnX to a
-		// delegate allocates even when the list is null, which broke the
-		// zero-alloc creation budget (Documentation~/architecture/performance.md). Entries outside OnComplete/OnKill
-		// are always plain (target-capture is OnComplete/OnKill only).
-		private void TransferCallbacks(TweenData data)
-		{
-			if (onStart != null)
-			{
-				for (var i = 0; i < onStart.Count; i++) data.AddOnStart(onStart[i].Plain);
-			}
-			if (onPlay != null)
-			{
-				for (var i = 0; i < onPlay.Count; i++) data.AddOnPlay(onPlay[i].Plain);
-			}
-			if (onPause != null)
-			{
-				for (var i = 0; i < onPause.Count; i++) data.AddOnPause(onPause[i].Plain);
-			}
-			if (onStepComplete != null)
-			{
-				for (var i = 0; i < onStepComplete.Count; i++) data.AddOnStepComplete(onStepComplete[i].Plain);
-			}
-			if (onComplete != null)
-			{
-				for (var i = 0; i < onComplete.Count; i++) data.AddOnComplete(onComplete[i]);
-			}
-			if (onKill != null)
-			{
-				for (var i = 0; i < onKill.Count; i++) data.AddOnKill(onKill[i]);
-			}
-			if (onRewind != null)
-			{
-				for (var i = 0; i < onRewind.Count; i++) data.AddOnRewind(onRewind[i].Plain);
-			}
-			if (onUpdate != null)
-			{
-				for (var i = 0; i < onUpdate.Count; i++) data.AddOnUpdate(onUpdate[i]);
-			}
-		}
-
 		public void Rent()
 		{
 			released = false;
-			ResetConfig();
 		}
 
 		public void Release()
@@ -369,19 +281,10 @@ namespace dyvoid.FeatherTween.Internal
 			{
 				generation = 1;
 			}
-			ClearCallbacks();
-		}
-
-		private void ClearCallbacks()
-		{
-			onStart?.Clear();
-			onPlay?.Clear();
-			onPause?.Clear();
-			onUpdate?.Clear();
-			onStepComplete?.Clear();
-			onComplete?.Clear();
-			onKill?.Clear();
-			onRewind?.Clear();
+			// Reset on the way in, not on the way out: a buffer idling in the
+			// pool must not pin the last tween's target, link object and
+			// getter/setter closures (and whatever those capture).
+			ResetConfig();
 		}
 
 		private void ResetConfig()
@@ -410,7 +313,7 @@ namespace dyvoid.FeatherTween.Internal
 			easeExplicit = false;
 			loopsExplicit = false;
 			delayExplicit = false;
-			ClearCallbacks();
+			lifecycle.Clear();
 		}
 	}
 }
