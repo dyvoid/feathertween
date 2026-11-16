@@ -45,8 +45,10 @@ public readonly struct Position
 - `AddLabel` resolves its position at **definition time** (only `Insert`/`AddPause` defer to `Start()`); a duplicate label name throws.
 - `Insert(time: t)` with `t < 0` throws. The sequence's own delay is the only way to defer.
 - `Insert(time: t)` with `t > current duration` extends the sequence's duration to `t + child.duration`.
-- `Start()` on an empty sequence produces a zero-duration `Sequence` that completes on its first tick.
-- Mid-play insertion: a `Sequence` handle's `Insert(time, child)` accepts new children at any position. If the position is at or before the playhead, the child will not tick until `Restart` or `Seek` revisits that range. A child carrying `SetLink` throws, as it does at build time.
+- `Start()` on an empty sequence produces a zero-duration `Sequence` that completes on its first tick. A zero-duration sequence that does have entries (callbacks, zero-duration tweens) fires them on that tick.
+- A zero-length child (a zero-duration tween, an empty nested sequence) fires when the playhead **reaches** its position, like a callback, including at the very end of the timeline.
+- A looping sequence crosses a cycle boundary when the playhead **leaves** it. A tick that lands exactly on a boundary therefore fires that boundary's `OnStepComplete` (or `OnRewind`, travelling backward) on the next tick that moves; the final boundary fires with completion as usual.
+- Mid-play insertion: a `Sequence` handle's `Insert(time, child)` accepts new children at any position. If the position is before the playhead, the child will not tick until `Restart`, a loop wrap or a backward pass revisits that range. A child carrying `SetLink` throws, as it does at build time.
 - **Cascading auto-kill policy** (`SequenceCancelBehavior`, set via `SequenceBuilder.SetCancelBehavior`):
   - `ContinueOnChildAutoKill` (default): if a child auto-kills, the parent treats it as completed at the current parent-local time and continues. Other children are unaffected.
   - `KillSequenceOnChildAutoKill`: any child auto-kill propagates `Kill(false)` to the parent.
