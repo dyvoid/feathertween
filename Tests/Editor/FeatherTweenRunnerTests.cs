@@ -172,5 +172,31 @@ namespace dyvoid.FeatherTween.Tests
 			FT.ManualTick(1.0);
 			Assert.That(m, Is.EqualTo(1f).Within(1e-4f), "ticking works again once the outer tick returned");
 		}
+
+		[Test]
+		public void ThrowingCallback_DoesNotLeakTweensThatCompletedInTheSameTick()
+		{
+			// Safe mode off is the player-build default: a throwing callback
+			// aborts the tick. The tweens that had already completed in it were
+			// queued for an end-of-tick free that then never ran, and the one
+			// that threw was never queued at all; both sat Completed in their
+			// slots forever, since the tick skips completed records.
+			var free = TweenStore.FreeCount;
+			var a = 0f;
+			var b = 0f;
+			var first = FT.To(() => a, x => a = x, 1f, 0.1f)
+				.SetUpdate(UpdatePhase.Manual).SetSafeMode(false).Start();
+			var thrower = FT.To(() => b, x => b = x, 1f, 0.1f)
+				.SetUpdate(UpdatePhase.Manual).SetSafeMode(false)
+				.OnComplete(() => throw new InvalidOperationException("boom"))
+				.Start();
+
+			Assert.Throws<InvalidOperationException>(() => FeatherTweenRunner.ManualTick(0.2));
+			Assert.That(first.IsAlive, Is.False, "completed before the throw: freed by the aborted tick itself");
+
+			FeatherTweenRunner.ManualTick(0.2);
+			Assert.That(thrower.IsAlive, Is.False, "the thrower is collected on the next tick");
+			Assert.That(TweenStore.FreeCount, Is.EqualTo(free));
+		}
 	}
 }
