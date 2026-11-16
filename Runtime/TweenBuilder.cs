@@ -158,9 +158,9 @@ namespace dyvoid.FeatherTween
 		public TweenBuilder<T> SetDelay(float seconds, DelayType delayType = DelayType.FirstLoop)
 		{
 			ValidateOrThrow();
-			if (seconds < 0f)
+			if (!(seconds >= 0f))
 			{
-				throw new ArgumentOutOfRangeException(nameof(seconds), "Delay cannot be negative.");
+				throw new ArgumentOutOfRangeException(nameof(seconds), "Delay cannot be negative or NaN.");
 			}
 			buffer.Delay = seconds;
 			buffer.DelayType = delayType;
