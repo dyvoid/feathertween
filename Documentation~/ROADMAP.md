@@ -38,7 +38,7 @@ Status values: `Candidate` — idea worth tracking; `Planned` — decision made,
 | `SetLink(GameObject, LinkBehavior)` | Done | `KillOnDestroy`, `KillOnDisable`, `PauseOnDisable`, `PauseOnDisableResumeOnEnable`, `RestartOnEnable`; covers the pooled-object footgun `SetTarget` auto-kill misses (ADR 0012) |
 | Typed shortcuts expansion | Candidate | `RectTransform`, `Material`, `SpriteRenderer`, `Camera`, `Light`, `AudioSource` |
 | Shake / Punch shortcuts | Candidate | `ShakePosition`, `ShakeRotation`, `ShakeScale`, `PunchPosition` |
-| Extension method asmdef | Candidate | Optional `transform.PAMove(...)` wrappers |
+| Extension method asmdef | Candidate | Optional `transform.Move(...)`-style wrappers |
 | Value modifiers | Planned | Optional `Func<T,T>` post-processor applied to the eased value before the setter: snap-to-grid, rounding, angle wrap, clamp |
 | `yoyoEase` | Planned | Separate optional `EaseRef` for the return leg of a Yoyo cycle |
 | Awaitables | Done | `await tween` via our own `TweenAwaiter` struct — no UniTask *or* `Awaitable` dependency (ADR 0013); `WaitForCompletion()` returns `Awaitable` for composition/`AsUniTask`; `ToYieldInstruction()` for coroutines |
