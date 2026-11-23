@@ -53,16 +53,16 @@ crosses.
 ```csharp
 internal static class TweenStore
 {
-    static TweenData[]    _data;        // pooled, indexed by handle.id
-    static uint[]         _generations; // bumped on recycle
-    static Stack<int>     _free;
-    static List<int>      _activeUpdate, _activeLate, _activeFixed, _activeManual;
+    static TweenData[]    data;         // pooled, indexed by handle.id
+    static uint[]         generations;  // bumped on recycle
+    static Stack<int>     freeList;
+    static List<int>      activeUpdate, activeLate, activeFixed, activeManual;
 }
 ```
 
 `Tween` handle = `(int id, uint generation)`. All public ops do a generation check first; mismatched generations no-op safely.
 
-**Pool exhaustion**: when `_free` is empty and the pool is at capacity, `TweenStore` grows by doubling the backing arrays (same strategy as `List<T>`). This is an allocation, but it is bounded to startup / burst-creation periods. A `Debug.LogWarning` is emitted in Editor when growth occurs, so the developer can pre-size via `FT.SetCapacity` instead. There is no eviction and no hard ceiling in v1; refusing to create would be a silent correctness failure worse than the alloc.
+**Pool exhaustion**: when `freeList` is empty and the pool is at capacity, `TweenStore` grows by doubling the backing arrays (same strategy as `List<T>`). This is an allocation, but it is bounded to startup / burst-creation periods. A `Debug.LogWarning` is emitted in Editor when growth occurs, so the developer can pre-size via `FT.SetCapacity` instead. There is no eviction and no hard ceiling in v1; refusing to create would be a silent correctness failure worse than the alloc.
 
 The hot per-tween state is plain fields behind trivial accessors, which keeps the M5 SoA split a mechanical extraction. The fields are not yet grouped into one contiguous region; that is M5 work.
 
@@ -88,7 +88,7 @@ static void RuntimeBootstrap()
 - **Reentrancy**: a tick is not reentrant. Starting one while another is in progress (`FT.ManualTick` from a callback, setter or getter) throws rather than overwrite the shared snapshot and drain the outer tick's deferred commands early.
 - **Editor**: a second hookup via `EditorApplication.update` ticks an editor-only runner.
 - **Manual**: `FeatherTweenRunner.ManualTick(deltaTime)` advances only the `Manual` root. Destroyed-target cleanup is part of the tick: keep calling `ManualTick` or kill explicitly — tweens on destroyed targets in a stopped manual phase are not auto-killed.
-- **Domain reload / Fast Enter Play Mode**: `TweenStore.Reset()` runs at `SubsystemRegistration` time. Editor uses `[InitializeOnLoad]` to also reset on assembly reload. Both cases drop all tweens cleanly so generation ids stay coherent.
+- **Domain reload / Fast Enter Play Mode**: `TweenStore.Reset()` runs at `SubsystemRegistration` time. Editor uses `[InitializeOnLoadMethod]` (`TweenStoreEditorBootstrap`) to also reset on assembly reload. Both cases drop all tweens cleanly so generation ids stay coherent.
 - **Debug visibility**: the M3 editor preview window reads active tweens directly from `TweenStore`. No scene-side proxy needed.
 
 ### Update step (high level)
