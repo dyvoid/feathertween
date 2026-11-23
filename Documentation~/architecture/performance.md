@@ -21,14 +21,18 @@ Implemented in the `Tests/Performance` EditMode asmdef. Two separate concerns:
 
 Deterministic zero-managed-alloc assertions using `System.GC.GetAllocatedBytesForCurrentThread()` around a synchronous `FeatherTweenRunner.ManualTick` loop. `ManualTick` avoids frame/thread noise, so the delta is exact and CI-safe.
 
-- Steady-state tick of 1k tweens after warmup: delta must be exactly 0 bytes.
+- Create/kill cycle after warmup: pooled records and builder buffers make `Start()` alloc-free (with cached static delegates).
+- Steady-state tick of 1k and 10k tweens after warmup: delta must be exactly 0 bytes.
+- Steady-state tick of 100 sequences, and of 1k sequences of 10 children.
+- Steady-state callback dispatch.
 - Tick after a kill/realloc cycle: free-list reuse must not allocate.
 
 ### Throughput benchmarks (report only)
 
 `Unity.PerformanceTesting` `Measure.Method` cases; numbers are machine-dependent and must never gate a build.
 
-- Tick cost at 1k and 10k concurrent float tweens.
+- Tick cost at 1k and 10k concurrent float tweens, with and without `SetLink`.
+- Tick cost of 1k sequences of 10 children.
 - `Start()` cost per tween.
 
 Cross-engine comparison (DOTween, PrimeTween, LitMotion) is planned for M2 with a documented,
