@@ -15,7 +15,9 @@ FeatherTween is distributed as a UPM package.
 > **Pre-1.0**: minor versions may contain breaking changes, as `0.x` implies in semver. Every one is
 > listed in [`CHANGELOG.md`](CHANGELOG.md) with a migration note. Pin a tag if you need stability.
 
-1. Add the repository as an embedded or scoped-registry package in your Unity project.
+1. In `Window > Package Manager`, choose **Add package from git URL** and enter
+   `https://github.com/dyvoid/feathertween.git` (append `#v0.1.0` to pin a release tag), or clone the
+   repository into your project's `Packages/` folder as an embedded package. There is no scoped registry.
 2. Open `Window > Package Manager > FeatherTween > Samples` and import **Showcase** — a guided tour of the whole feature set as one scrubbable, captioned timeline with a player panel.
 
 Running FeatherTween's own test suites additionally requires consumer-project setup
