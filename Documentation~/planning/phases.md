@@ -301,7 +301,7 @@ Composed demo reproducible against DOTween / PrimeTween reference recordings. Pe
 - Zero-alloc target-capture overloads for all callbacks (`OnStart`, `OnPlay`, `OnPause`, `OnUpdate`, `OnStepComplete`, `OnRewind`)
 - Typed shortcuts: `RectTransform`, `Material` (color/float/vector by property name), `SpriteRenderer`, `Camera`, `Light`, `AudioSource`
 - Shake/Punch shortcuts: `ShakePosition`, `ShakeRotation`, `ShakeScale`, `PunchPosition`, `ShakeCamera`
-- `FeatherTween.Extensions` asmdef: optional `transform.PAMove(...)` style extension wrappers around the static shortcuts
+- `FeatherTween.Extensions` asmdef: optional `transform.Move(...)`-style extension wrappers around the static shortcuts
 - 2-state target-capture overloads (`OnComplete<T0,T1>(s0, s1, (s0,s1) => ...)`)
 - `AddPause` and sequence `PlayLabel(string)`
 - More filter overloads (string id if profiler justifies)
