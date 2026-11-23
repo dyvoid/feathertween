@@ -5,7 +5,8 @@ Never place build output or DLLs in a Unity-visible package folder.
 
 Compiles the package Runtime, Samples, and EditMode tests against a minimal
 `UnityEngine` stub (`UnityStubs.cs`) and runs the EditMode suite via NUnitLite.
-This is what CI runs on every push; it covers everything except code that needs
+This is what CI runs on every push to `main` or `develop` and on every pull request
+(`.github/workflows/ci.yml`); it covers everything except code that needs
 the real Unity runtime (PlayerLoop injection, PlayMode tests).
 
 ```sh
@@ -17,6 +18,9 @@ dotnet run --project FeatherTween.TestRunner.csproj -c Release -p:DefineConstant
 
 # compile-check Runtime + Samples only
 dotnet build FeatherTween.CompileCheck.csproj
+
+# XML doc coverage gate: CS1591 as error over Runtime (CI runs this too)
+dotnet build FeatherTween.DocCheck.csproj
 ```
 
 Rules of the stub:
