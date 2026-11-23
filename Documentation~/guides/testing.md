@@ -68,7 +68,7 @@ When FeatherTween is consumed as a UPM package (linked via `file:`), Unity hides
 ```json
 {
   "dependencies": {
-    "com.dyvoid.feathertween": "file:../path/to/Tween"
+    "com.dyvoid.feathertween": "file:../path/to/feathertween"
   },
   "testables": [
     "com.dyvoid.feathertween"
